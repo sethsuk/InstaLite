@@ -11,10 +11,10 @@ async function create_tables(db) {
         first_name VARCHAR(255) NOT NULL, \
         last_name VARCHAR(255) NOT NULL, \
         email VARCHAR(255) NOT NULL, \
-        affliation VARCHAR(255) NOT NULL, \
+        affiliation VARCHAR(255) NOT NULL, \
         birthday DATE NOT NULL, \
         pfp VARCHAR(255), \
-        actor INT, \
+        actor_id INT, \
         PRIMARY KEY(user_id) \
     ); ');
 
