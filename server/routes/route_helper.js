@@ -1,14 +1,13 @@
-const bcrypt = require('bcrypt'); 
+const bcrypt = require('bcrypt');
 
-
-var route_helper = function() {
+var route_helper = function () {
     return {
-
-
         // Function for encrypting passwords WITH SALT
         // Look at the bcrypt hashing routines
         encryptPassword: (password, callback) => {
-            bcrypt.hash(password, 10, callback);
+            // TODO: Implement this
+            const saltRounds = 10;
+            return bcrypt.hash(password, saltRounds, callback);
         },
 
         // Function that validates the user is actually logged in,
@@ -21,7 +20,7 @@ var route_helper = function() {
                 return req.session.user_id != null && req.session.user_id == obj;
         },
 
-        // Checks that every character is a space, letter, number, or one of the following: .,?,_
+        // Checks that every character is a space, letter, number, or one of the following: .,?,_@
         isOK: (str) => {
             if (str == null)
                 return false;
@@ -31,19 +30,19 @@ var route_helper = function() {
                 }
             }
             return true;
-        }        
+        }
     };
 };
 
-var encryptPassword = function(password, callback) {
+var encryptPassword = function (password, callback) {
     return route_helper().encryptPassword(password, callback);
 }
 
-var isOK = function(req) {
+var isOK = function (req) {
     return route_helper().isOK(req);
 }
 
-var isLoggedIn = function(req, obj) {
+var isLoggedIn = function (req, obj) {
     return route_helper().isLoggedIn(req, obj);
 }
 
@@ -52,4 +51,3 @@ module.exports = {
     isLoggedIn,
     encryptPassword
 };
-
