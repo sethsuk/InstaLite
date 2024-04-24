@@ -10,27 +10,34 @@ var createPost = async function (req, res) {
 
     const title = req.body["title"];
     const content = req.body["content"];
-    let parent_id = req.body["parent_id"];
+    const media = req.body["media"];
 
-    if (!title || !content) {
+    if (!title || !media) {
         return res.status(400).json({error: "One or more of the fields you entered was empty, please try again."});
     }
 
-    if (!parent_id) {
-        parent_id = "null";
+    if (!media) {
+        media = "null";
     }
 
-    if(!helper.isOK(title) || !helper.isOK(content) || !helper.isOK(parent_id)) {
+    if(!helper.isOK(title) || !helper.isOK(content)) {
         return res.status(400).json({error: "Invalid Input"});
     }
 
     try {
         await db.send_sql(`
-            INSERT INTO posts (parent_post, title, content, author_id)
-            VALUES (${parent_id}, '${title}', '${content}', ${req.session.user_id})`);
+            INSERT INTO posts (title, media, content, user_id)
+            VALUES (${title}, '${media}', '${content}', ${req.session.user_id});
+        `);
 
         return res.status(201).json({message: "Post created."});
     } catch (err) {
         return res.status(500).json({error: 'Error querying database.'});
     }
 };
+
+const routes = {
+    create_post: createPost
+};
+
+module.exports = routes;

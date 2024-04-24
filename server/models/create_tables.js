@@ -6,7 +6,7 @@ async function create_tables(db) {
 
     // create users table
     // foreign key of actor_nconst
-    var q2 = db.create_tables('CREATE TABLE IF NOT EXISTS users ( \
+    var q1 = db.create_tables('CREATE TABLE IF NOT EXISTS users ( \
         user_id INT NOT NULL AUTO_INCREMENT, \
         username VARCHAR(255) NOT NULL, \
         hashed_password VARCHAR(255) NOT NULL, \
@@ -21,7 +21,7 @@ async function create_tables(db) {
     );');
 
     // create friends table
-    var q1 = db.create_tables('CREATE TABLE IF NOT EXISTS friends ( \
+    var q2 = db.create_tables('CREATE TABLE IF NOT EXISTS friends ( \
         followed INT, \
         follower INT, \
         FOREIGN KEY (follower) REFERENCES users(user_id), \
@@ -79,6 +79,7 @@ async function create_tables(db) {
         post_id INT NOT NULL AUTO_INCREMENT, \
         title VARCHAR(255), \
         media VARCHAR(255), \
+        content VARCHAR(255), \
         user_id INT NOT NULL, \
         PRIMARY KEY(post_id) \
     );');
@@ -110,9 +111,11 @@ async function create_tables(db) {
         post_id INT NOT NULL,
         user_id INT NOT NULL,
         content VARCHAR(255) NOT NULL,
+        parent_id INT,
         PRIMARY KEY (comment_id),
         FOREIGN KEY (post_id) REFERENCES posts(post_id),
-        FOREIGN KEY (user_id) REFERENCES users(user_id)
+        FOREIGN KEY (user_id) REFERENCES users(user_id),
+        FOREIGN KEY (parent_id) REFERENCES comments(comment_id)
     );`);
 
     // create social rank users table
