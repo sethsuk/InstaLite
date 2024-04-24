@@ -15,6 +15,26 @@ var signup = async function (req, res) {
         return res.status(400).json({ error: 'Illegal input.' });
     }
 
+    // birthday validation 
+    var regex = /^\d{4}-\d{2}-\d{2}$/;
+
+    if (!regex.test(birthday)) {
+        return res.status(400).json({ error: "Invalid date format." });
+    }
+
+    var dateParts = birthday.split("-");
+
+    var day = parseInt(dateParts[2], 10);
+    var month = parseInt(dateParts[1], 10) - 1; // Months are 0-based in JavaScript
+    var year = parseInt(dateParts[0], 10);
+
+    var inputDate = new Date(year, month, day);
+    var currentDate = new Date();
+
+    if (currentDate < inputDate) {  // Compare input date with current date
+        return res.status(400).json({ error: "Birthday cannot be in the future." });
+    }
+
     try {
         const query1 = `SELECT username FROM users WHERE username = "${username}";`;
         const users = await db.send_sql(query1);
