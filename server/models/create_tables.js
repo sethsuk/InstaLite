@@ -14,7 +14,7 @@ async function create_tables(db) {
         affiliation VARCHAR(255) NOT NULL, \
         birthday DATE NOT NULL, \
         pfp VARCHAR(255), \
-        actor_id INT, \
+        actor_id VARCHAR(255), \
         PRIMARY KEY (user_id) \
     ); ');
 
@@ -95,7 +95,7 @@ async function create_tables(db) {
     CREATE TABLE IF NOT EXISTS users_rank
     (
         user_id INT NOT NULL,
-        rank INT NOT NULL,
+        user_rank INT NOT NULL,
         PRIMARY KEY (user_id),
         FOREIGN KEY (user_id) REFERENCES users(user_id)
     );`);
@@ -105,7 +105,7 @@ async function create_tables(db) {
     CREATE TABLE IF NOT EXISTS posts_rank
     (
         post_id INT NOT NULL,
-        rank INT NOT NULL,
+        post_rank INT NOT NULL,
         PRIMARY KEY (post_id),
         FOREIGN KEY (post_id) REFERENCES posts(post_id)
     );`);
@@ -115,13 +115,17 @@ async function create_tables(db) {
     CREATE TABLE IF NOT EXISTS hashtags_rank
     (
         hashtag_id INT NOT NULL,
-        rank INT NOT NULL,
+        hashtag_rank INT NOT NULL,
         PRIMARY KEY (hashtag_id),
         FOREIGN KEY (hashtag_id) REFERENCES hashtags(hashtag_id)
     );`);
 
 
-    return await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11]);
+    await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11]);
+
+    dbaccess.close_db()
+
+    return;
 }
 
 // Database connection setup
@@ -129,3 +133,5 @@ const db = dbaccess.get_db_connection();
 
 var result = create_tables(dbaccess);
 console.log('Tables created');
+
+// 
