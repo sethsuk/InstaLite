@@ -28,8 +28,6 @@ function get_db_connection() {
         ...config.database,
         user: process.env.RDS_USER,
         password: process.env.RDS_PWD,
-        host: process.env.RDS_HOST,
-        database: process.env.RDS_DATABASE
     };
 
     // Create a MySQL connection
