@@ -1,5 +1,6 @@
 const mysql = require('mysql');
 const config = require('../../config.json'); // Load database configuration
+const process = require('process');
 
 // Implementation of a singleton pattern for database connections
 var the_db = null;
@@ -99,5 +100,6 @@ async function create_tables(query, params = []) {
  */
 async function insert_items(query, params = []) {
     result = await send_sql(query, params);
+
     return result.affectedRows;
 }

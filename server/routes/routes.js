@@ -19,12 +19,6 @@ const routes = {
     reject_friend_request: friend_routes.reject_friend_request,
     get_friends: friend_routes.get_friends,
     remove_friend: friend_routes.remove_friend,
-
-
-
-
-
-
 };
 
 module.exports = routes; 
