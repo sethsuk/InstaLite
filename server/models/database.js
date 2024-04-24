@@ -1,5 +1,5 @@
 const mysql = require('mysql');
-const config = require('../config.json'); // Load database configuration
+const config = require('../../config.json'); // Load database configuration
 
 // Implementation of a singleton pattern for database connections
 var the_db = null;
