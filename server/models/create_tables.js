@@ -1,4 +1,6 @@
-const dbaccess = require('./database.js');
+const dbaccess = require('./db_access');
+const config = require('../../config.json'); // Load configuration
+
 
 async function create_tables(db) {
 
@@ -143,7 +145,11 @@ async function create_tables(db) {
         FOREIGN KEY (hashtag_id) REFERENCES hashtags(hashtag_id)
     );`);
 
-    return await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14]);
+    await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14]);
+  
+    dbaccess.close_db()
+
+    return;
 }
 
 // Database connection setup
@@ -151,3 +157,5 @@ const db = dbaccess.get_db_connection();
 
 var result = create_tables(dbaccess);
 console.log('Tables created');
+
+// 

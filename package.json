@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "loader": "^2.1.1",
+    "mysql": "^2.18.1",
+    "process": "^0.11.10"
+  },
+  "main": "app.js",
+  "scripts": {
+    "start": "node --experimental-vm-modules app.js",
+    "create_tables": "node server/models/create_tables.js",
+    "chroma": "node --experimental-vm-modules models/chroma_access.js",
+    "index": "node --experimental-vm-modules index_data.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --outputFile=test_results.json --json"
+  }
+}
