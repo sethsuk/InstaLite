@@ -136,6 +136,9 @@ var postLogin = async function(req, res) {
     }
 };
 
+// Create Post
+
+// Create HashTag
 
 /* Here we construct an object that contains a field for each route
    we've defined, so we can call the routes from app.js. */
