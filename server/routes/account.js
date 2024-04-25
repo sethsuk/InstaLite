@@ -90,7 +90,7 @@ var suggestHashtag = async function (req, res) {
         const userId = req.session.user_id;
         const query = `SELECT tag FROM hashtags 
         WHERE hashtag_id NOT IN (SELECT hashtag_id FROM user_hashtags WHERE user_id = ${userId}) 
-        ORDER BY count DESC LIMIT 10`;
+        ORDER BY count DESC LIMIT 15`;
         const results = await db.send_sql(query);
         res.json(results.map(row => row.tag));
     } catch (error) {
@@ -99,8 +99,8 @@ var suggestHashtag = async function (req, res) {
 }
 
 
-// POST /add hashtag
-var addHashtag = async function (req, res) {
+// POST /add hashtag // add multiple hashtags !!!!!!
+var updateHashtag = async function (req, res) {
     const { hashtag } = req.body;
     const username = req.params.username;
     if (!helper.isLoggedIn(req, username)) {
@@ -110,6 +110,11 @@ var addHashtag = async function (req, res) {
         return res.status(400).send({ error: 'Invalid input.' });
     }
     try {
+        // check if the hashtags are already associated with them !!!!!!
+
+
+
+
         const query1 = `INSERT INTO hashtags (tag) VALUES ("${hashtag}") ON DUPLICATE KEY UPDATE count = count + 1`;
         await db.insert_items(query1);
         const query2 = `SELECT hashtag_id FROM hashtags WHERE tag = "${hashtag}"`;
@@ -164,6 +169,8 @@ var changeActor = async function (req, res) {
 
 
 }
+
+
 
 
 var account_routes = {

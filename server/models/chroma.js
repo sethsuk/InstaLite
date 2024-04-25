@@ -2,9 +2,14 @@ var path = require('path');
 const fs = require('fs');
 const tf = require('@tensorflow/tfjs-node');
 const faceapi = require('@vladmandic/face-api');
+const { ChromaClient } = require("chromadb");
 
 let optionsSSDMobileNet;
 const modelsDir = path.join(__dirname, '..', 'model');
+
+const client = new ChromaClient({ host: 'localhost', port: 8000 });
+let collection;
+
 
 async function initializeFaceModels() {
     console.log("Initializing FaceAPI...");
@@ -107,10 +112,49 @@ async function findTopKMatches(collection, image, k) {
 }
 
 
+async function initializeCollection() {
+    await initializeFaceModels();
+
+    collection = await client.getOrCreateCollection({
+        name: "face-api",
+        embeddingFunction: null,
+        metadata: { "hnsw:space": "l2" },
+    });
+
+    console.info("Looking for files");
+    const promises = [];
+    const directoryPath = path.join(__dirname, '..', "images"); // Adjust directory path as necessary
+    fs.readdir(directoryPath, function (err, files) {
+        if (err) {
+            console.error("Could not list the directory.", err);
+            return;
+        }
+        files.forEach(function (file) {
+            console.info("Adding task for " + file + " to index.");
+            promises.push(indexAllFaces(path.join(directoryPath, file), file, collection));
+        });
+        Promise.all(promises)
+            .then(() => {
+                console.info("All images indexed.");
+            })
+            .catch((err) => {
+                console.error("Error indexing images:", err);
+            });
+    });
+}
+
+function getCollection() {
+    if (!collection) {
+        throw new Error("Collection has not been initialized.");
+    }
+    return collection;
+}
 
 
 module.exports = {
     getEmbeddings,
     indexAllFaces,
-    findTopKMatches
+    findTopKMatches,
+    initializeCollection,
+    getCollection
 }
