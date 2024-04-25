@@ -1,6 +1,7 @@
 var db = require('../models/database.js');
 const bcrypt = require('bcrypt');
-const helper = require('../routes/route_helper.js');
+const config = require('../../config.json'); // Load configuration
+const helper = require('./route_helper.js');
 const s3 = require('../models/s3.js');
 
 //POST /add new hashtags to table 
@@ -12,10 +13,10 @@ const s3 = require('../models/s3.js');
 // hashtags are array of interests 
 var signup = async function (req, res) {
     const { username, password, first_name, last_name, email, affiliation, birthday, interests } = req.body
-    const file = req.file;
+    // const file = req.file;
 
-    if (!helper.isOK(username) || !helper.isOK(linked_id) || !helper.isOK(first_name)
-        || !helper.isOK(last_name) || !helper.isOK(email) || !interests.every(helper.isOK)) {
+    if (!helper.isOK(username) || !helper.isOK(first_name) || !helper.isOK(last_name) || 
+        !helper.isOK(email) || !helper.isOK(affiliation) || !interests.every(helper.isOK)) {
         return res.status(400).json({ error: 'Illegal input.' });
     }
 
@@ -40,9 +41,9 @@ var signup = async function (req, res) {
     }
 
     try {
-        const query1 = `SELECT username FROM users WHERE username = "${username}";`;
+        const query1 = `SELECT COUNT(*) FROM users WHERE username = '${username}'`;
         const users = await db.send_sql(query1);
-        if (users.length > 0) {
+        if (users[0]["COUNT(*)"] != 0 > 0) {
             return res.status(409).json({ error: "An account with this username already exists, please try again." });
         }
 
@@ -52,11 +53,11 @@ var signup = async function (req, res) {
             }
 
             // upload to s3 (keyed on username)
-            const url = await s3.uploadFileToS3(file, username);
+            // const url = await s3.uploadFileToS3(file, username);
 
             // insert to users table 
-            const query2 = `INSERT INTO users (username, hashed_password, first_name, last_name, email, affiliation, birthday, pfp_url) 
-                VALUES ("${username}", "${hash}", "${first_name}", "${last_name}", "${email}", "${affiliation}", "${birthday}", "${url}");`;
+            const query2 = `INSERT INTO users (username, hashed_password, first_name, last_name, email, affiliation, birthday, pfp_url, actor_nconst) 
+                VALUES ("${username}", "${hash}", "${first_name}", "${last_name}", "${email}", "${affiliation}", "${birthday}", null, null);`;
             await db.insert_items(query2);
 
             const results = await db.send_sql(`SELECT user_id FROM users WHERE username = "${username}";`);
@@ -71,12 +72,13 @@ var signup = async function (req, res) {
                     hashtag = { hashtag_id: insertResult.insertId };
                 }
                 // Link user to hashtag
-                await db.query(`INSERT INTO user_hashtags (user_id, hashtag_id) VALUES (${userId}, ${hashtag.hashtag_id});`);
+                await db.send_sql(`INSERT INTO user_hashtags (user_id, hashtag_id) VALUES (${userId}, ${hashtag.hashtag_id});`);
             }
 
             res.status(200).json({ username: username });
         })
     } catch (error) {
+        console.log(error);
         res.status(500).json({ error: 'Error querying database.' });
     }
 };
@@ -153,6 +155,4 @@ var registration_routes = {
     logout: logout,
 }
 
-var thisIsSethsChanges = null;
-
-module.exports = registration_routes 
+module.exports = registration_routes;

@@ -4,7 +4,8 @@ var db = require('../models/database.js');
 var path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
-const helper = require('../routes/route_helper.js');
+const config = require('../../config.json'); // Load configuration
+const helper = require('./route_helper.js');
 const chromadb = require('../models/chroma.js');
 
 const multer = require("multer");
