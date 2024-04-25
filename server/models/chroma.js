@@ -41,13 +41,16 @@ const getArray = (array) => {
 /**
  * Compute the face embeddings within an image file
  * 
- * @param {*} image 
+ * @param {*} imageFile 
  * @param {bool} isBuffer
  * @returns List of detected faces' embeddings
  */
-async function getEmbeddings(image, isBuffer) {
+async function getEmbeddings(imageFile, isBuffer) {
+    let image;
     if (!isBuffer) {
-        const image = fs.readFileSync(image);
+        image = fs.readFileSync(imageFile);
+    } else {
+        image = imageFile; // In case it's already a buffer, use it directly
     }
     const tensor = tf.node.decodeImage(image, 3);
 
