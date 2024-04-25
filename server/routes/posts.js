@@ -71,6 +71,7 @@ var createPost = async function (req, res) {
     }
 };
 
+var thisIsANewFeature = null;
 
 const routes = {
     create_post: createPost
