@@ -119,7 +119,7 @@ const getPfp = async function (req, res) {
 
 var pfp_routes = {
     get_top_5_actors: getTop5Actors,
-    get_actor_infp: getActorInfo,
+    get_actor_info: getActorInfo,
     associate_actor: associateActor,
     get_pfp: getPfp
 }
