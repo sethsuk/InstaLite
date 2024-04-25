@@ -6,6 +6,8 @@ const s3 = require('../models/s3.js');
 //POST /add new hashtags to table 
 
 
+// THIS IS THE CHANGE TO SIGNUP
+
 // POST /signup
 // hashtags are array of interests 
 var signup = async function (req, res) {
