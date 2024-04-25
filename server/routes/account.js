@@ -1,7 +1,12 @@
 var db = require('../models/database.js');
-const config = require('../config.json'); // Load configuration
-const helper = require('../routes/route_helper.js');
+const config = require('../../config.json'); // Load configuration
+const helper = require('./route_helper.js');
 const { hash } = require('bcrypt');
+
+// GET / test hello world.
+var getHelloWorld = function(req, res) {
+    res.status(200).send({message: "Hello, world!"});
+}
 
 // POST /change email 
 var changeEmail = async function (req, res) {
@@ -170,16 +175,16 @@ var changeActor = async function (req, res) {
 
 }
 
-
+// TODO addHashtag
 
 
 var account_routes = {
     change_email: changeEmail,
     change_password: changePassword,
     change_affiliation: changeAffiliation,
-    add_hashtag: addHashtag,
     remove_hashtag: removeHashtag,
-    change_actor: changeActor
+    change_actor: changeActor,
+    get_helloworld: getHelloWorld
 }
 
 module.exports = account_routes 

@@ -1,6 +1,7 @@
 var db = require('../models/database.js');
 const bcrypt = require('bcrypt');
-const helper = require('../routes/route_helper.js');
+const config = require('../../config.json'); // Load configuration
+const helper = require('./route_helper.js');
 
 // POST /createPost
 var createPost = async function (req, res) {

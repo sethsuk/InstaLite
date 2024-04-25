@@ -1,12 +1,15 @@
-const routes = require('./routes.js');
+const account = require('./account.js');
+const friends = require('./friends.js');
+const pfp = require('./pfp.js');
+const posts = require('./posts.js');
+const registration = require('./registration.js');
 
 module.exports = {
     register_routes
 }
 
 function register_routes(app) {
-    app.get('/', routes.get_helloworld);
-    app.post('/register', routes.post_register);
-    app.post('/login', routes.post_login);
-    app.post('/:username/createPost', posts.create_post); 
+    app.get('/', account.get_helloworld);
+    app.post('/signup', registration.signup);
+    app.post('/login', registration.login);
 }
