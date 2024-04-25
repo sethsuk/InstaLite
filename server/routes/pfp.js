@@ -23,6 +23,7 @@ const getTop5Actors = async function (req, res) {
         const collection = chromadb.getCollection;
         const matches = await chromodb.findTopKMatches(collection, image, 5);
 
+
         let actors = [];
 
         // Process matches to get actor details
