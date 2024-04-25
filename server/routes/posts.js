@@ -5,7 +5,7 @@ const helper = require('../routes/route_helper.js');
 // POST /createPost
 var createPost = async function (req, res) {
     if (!helper.isLoggedIn(req, user_id)) {
-        return res.status(403).json({error: 'Not logged in.'});
+        return res.status(403).json({ error: 'Not logged in.' });
     }
 
     const title = req.body["title"];
@@ -20,8 +20,8 @@ var createPost = async function (req, res) {
         media = "null";
     }
 
-    if(!helper.isOK(title) || !helper.isOK(content)) {
-        return res.status(400).json({error: "Invalid Input"});
+    if (!helper.isOK(title) || !helper.isOK(content)) {
+        return res.status(400).json({ error: "Invalid Input" });
     }
 
     try {
@@ -30,9 +30,9 @@ var createPost = async function (req, res) {
             VALUES (${title}, '${media}', '${content}', ${req.session.user_id});
         `);
 
-        return res.status(201).json({message: "Post created."});
+        return res.status(201).json({ message: "Post created." });
     } catch (err) {
-        return res.status(500).json({error: 'Error querying database.'});
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 };
 
@@ -71,8 +71,6 @@ var createPost = async function (req, res) {
     }
 };
 
-
-// THIS IS MY CHANGE
 
 const routes = {
     create_post: createPost

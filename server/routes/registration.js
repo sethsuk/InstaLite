@@ -3,6 +3,8 @@ const bcrypt = require('bcrypt');
 const helper = require('../routes/route_helper.js');
 const s3 = require('../models/s3.js');
 
+//POST /add new hashtags to table 
+
 
 // POST /signup
 // hashtags are array of interests 
