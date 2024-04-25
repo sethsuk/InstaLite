@@ -149,9 +149,10 @@ var removeHashtag = async function (req, res) {
         // Decrement the count in the hashtags table
         const query3 = `UPDATE hashtags SET count = count - 1 WHERE hashtag_id = ${hashtagId}`;
         await db.send_sql(query3);
-        res.status(200).json('Hashtag removed successfully');
+        
+        return res.status(200).json('Hashtag removed successfully');
     } catch (error) {
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 
 }
