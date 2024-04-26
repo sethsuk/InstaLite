@@ -225,29 +225,7 @@
                 <version>1.2.1</version>
                 <executions>
                     <execution>
-                        <id>local</id>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>edu.upenn.cis.nets2120.hw3.local.ComputeRanksLocal</mainClass>
-                            <arguments>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>livy</id>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>edu.upenn.cis.nets2120.hw3.livy.ComputeRanksLivy</mainClass>
-                            <arguments>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>foaf_spark</id>
+                        <id>ComputeRanks</id>
                         <goals>
                             <goal>java</goal>
                         </goals>
