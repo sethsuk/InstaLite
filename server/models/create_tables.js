@@ -86,8 +86,18 @@ async function create_tables(db) {
         PRIMARY KEY(post_id) \
     );');
 
+    // create post_likes table
+    var q9 = db.create_tables('CREATE TABLE IF NOT EXISTS post_likes ( \
+        post_id INT NOT NULL, \
+        user_id INT NOT NULL, \
+        likes INT DEFAULT 0, \
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
+        FOREIGN KEY (post_id) REFERENCES posts(post_id), \
+        FOREIGN KEY (user_id) REFERENCES users(user_id) \
+    );');
+
     // create hashtag to posts table 
-    var q9 = db.create_tables('CREATE TABLE IF NOT EXISTS hashtags_to_posts( \
+    var q10 = db.create_tables('CREATE TABLE IF NOT EXISTS hashtags_to_posts( \
         hashtag_id INT NOT NULL, \
         post_id INT NOT NULL, \
         FOREIGN KEY (hashtag_id) REFERENCES hashtags(hashtag_id), \
@@ -95,7 +105,7 @@ async function create_tables(db) {
     );');
 
     // create recommendations table
-    var q10 = db.create_tables(`
+    var q11 = db.create_tables(`
     CREATE TABLE IF NOT EXISTS recommendations
     (
         recommend_to INT NOT NULL,
@@ -106,7 +116,7 @@ async function create_tables(db) {
     );`);
 
     // create comments table
-    var q11 = db.create_tables(`
+    var q12 = db.create_tables(`
     CREATE TABLE IF NOT EXISTS comments
     (
         comment_id INT NOT NULL AUTO_INCREMENT,
@@ -122,7 +132,7 @@ async function create_tables(db) {
     );`);
 
     // create hashtag to comments table 
-    var q12 = db.create_tables('CREATE TABLE IF NOT EXISTS hashtags_to_comments( \
+    var q13 = db.create_tables('CREATE TABLE IF NOT EXISTS hashtags_to_comments( \
         hashtag_id INT NOT NULL, \
         comment_id INT NOT NULL, \
         FOREIGN KEY (hashtag_id) REFERENCES hashtags(hashtag_id), \
@@ -130,7 +140,7 @@ async function create_tables(db) {
     );');
 
     // create social rank users table
-    var q13 = db.create_tables(`
+    var q14 = db.create_tables(`
     CREATE TABLE IF NOT EXISTS users_rank
     (
         user_id INT NOT NULL,
@@ -140,7 +150,7 @@ async function create_tables(db) {
     );`);
 
     // create social rank posts table
-    var q14 = db.create_tables(`
+    var q15 = db.create_tables(`
     CREATE TABLE IF NOT EXISTS posts_rank
     (
         post_id INT NOT NULL,
@@ -150,7 +160,7 @@ async function create_tables(db) {
     );`);
 
     // create social rank hashtags table
-    var q15 = db.create_tables(`
+    var q16 = db.create_tables(`
     CREATE TABLE IF NOT EXISTS hashtags_rank
     (
         hashtag_id INT NOT NULL,
@@ -159,7 +169,7 @@ async function create_tables(db) {
         FOREIGN KEY (hashtag_id) REFERENCES hashtags(hashtag_id)
     );`);
 
-    await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15]);
+    await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16]);
   
     dbaccess.close_db()
 
