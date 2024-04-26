@@ -53,14 +53,15 @@ public class SocialRankJob extends SparkJob<List<MyPair<String, Double>>> {
 
         return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
     }
-
+    
+    //user_hashtags
     protected JavaPairRDD<String, String> getUserToHashTag(String filePath) {
         JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
 
         return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
     }
 
-
+    // hashtags_to_posts
     protected JavaPairRDD<String, String> getHashTagToPost(String filePath) {
         JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
 
@@ -68,32 +69,20 @@ public class SocialRankJob extends SparkJob<List<MyPair<String, Double>>> {
     }
 
 
-
+    // likes
     protected JavaPairRDD<String, String> getUserToPost(String filePath) {
         JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
 
         return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
     }
 
+    // friends
     protected JavaPairRDD<String, String> getUserToUser(String filePath) {
         JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
 
         return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
     }
 
-
-    
-    /**
-     * Retrieves the sinks from the given network.
-     *
-     * @param network the input network represented as a JavaPairRDD
-     * @return a JavaRDD containing the nodes with no outgoing edges (sinks)
-     */
-    protected JavaRDD<String> getSinks(JavaPairRDD<String, String> network) {
-        JavaRDD<String> hasOutgoing = network.map(edge -> edge._2()).distinct();
-        JavaRDD<String> allNodes = network.map(edge -> edge._1()).distinct();
-        return allNodes.subtract(hasOutgoing);            
-    }
 
     protected JavaPairRDD<String, Double> createRankContribs(JavaPairRDD<String, String> edgeRDD, JavaPairRDD<String, Double> previousRanks, Double spreadAmt) {
         // Find outdegree of each vertex
@@ -117,6 +106,9 @@ public class SocialRankJob extends SparkJob<List<MyPair<String, Double>>> {
     public List<MyPair<String, Double>> run(boolean debug) throws IOException, InterruptedException {
         System.out.println("Running");
 
+
+        // TODO: Ensure that the ids being read in can be differentiated by the type of object they are 
+        
         // Get RDDs for userToHashtag, hashtagToPost, userToPost, and userToUser (all RDDs are follower to followed)
         JavaPairRDD<String, String> userToHashtag = getUserToHashTag(Config.SOCIAL_NET_PATH);
         JavaPairRDD<String, String> hashtagToPost = getHashTagToPost(Config.SOCIAL_NET_PATH);
@@ -152,31 +144,22 @@ public class SocialRankJob extends SparkJob<List<MyPair<String, Double>>> {
             // Calculate the total rank from all sources
             newRank = rankContribs.reduceByKey((v1, v2) -> v1 + v2);
 
-
             // Subtract the ranks from each other and find the largest absolute difference
             JavaPairRDD<String, Double> differences = newRank.join(previousRank).mapToPair(entry -> new Tuple2<>(entry._1(), Math.abs(entry._2()._2() - entry._2()._1())));
             maxDifference = differences.values().reduce((v1,v2) -> Math.max(v1, v2));
             previousRank = newRank;
-            
-            // logger.debug("Current ranks after "+ iterations + " iterations: ");
-            // for(Tuple2<String, Double> t: newRank.collect()){
-            //     logger.debug(t._1() + ": " + t._2());
-            // }
 
             System.out.println("Max difference for iteration " + iterations + ": " + maxDifference);
         } while (maxDifference > this.d_max && iterations < this.i_max);
         // Sort by rank in descending order
         newRank = previousRank;
         newRank = newRank.mapToPair(entry -> new Tuple2<>(entry._2(), entry._1())).sortByKey(false).mapToPair(entry -> new Tuple2<>(entry._2(), entry._1()));
-        // // Return the top 1000 entries
-        List<MyPair<String, Double>> list = newRank.map(entry -> new MyPair<>(entry._1(), entry._2())).collect();
         
+        // TODO: write results to users_rank, hashtags_rank, posts_rank
+        // posts_rank = newRank.filter(entry -> entry._1()[0].equals('p'))
+
+
         List<MyPair<String, Double>> result = new LinkedList<>();
-        for (int i = 0; i < 10; i++) {
-            result.add(list.get(i));
-        }
-        
-        
         return result;
     }
 

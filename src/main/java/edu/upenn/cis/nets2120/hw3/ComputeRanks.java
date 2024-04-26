@@ -6,6 +6,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 import edu.upenn.cis.nets2120.config.Config;
 
@@ -44,16 +46,56 @@ public class ComputeRanks extends SparkJob<List<Tuple2<String, Double>>> {
         return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
     }
 
-    /**
-     * Retrieves the sinks in the provided graph.
-     *
-     * @param network The input graph represented as a JavaPairRDD.
-     * @return A JavaRDD containing the nodes with no outgoing edges.
-     */
-    protected JavaRDD<String> getSinks(JavaPairRDD<String, String> network) {
-        JavaRDD<String> hasOutgoing = network.map(edge -> edge._2()).distinct();
-        JavaRDD<String> allNodes = network.map(edge -> edge._1()).distinct();
-        return allNodes.subtract(hasOutgoing);       
+    //user_hashtags
+    protected JavaPairRDD<String, String> getUserToHashTag(String filePath) {
+
+        Dataset<Row> dataset = spark.read().format("jdbc")
+        .option("url", "jdbc:mysql://"+Config.RDS_LOCATION+"/imdbdatabase")
+        .option("dbtable", "recommendations")
+        .option("user", "admin")
+        .option("password", "rds-password")
+        .load();
+
+        JavaRDD<Row> rdd = dataset.rdd().toJavaRDD();
+        JavaPairRDD<String, String> pairRdd = rdd.mapToPair(entry -> new Tuple2<>(Integer.valueOf(entry.getInt(0)).toString(), Integer.valueOf(entry.getInt(1)).toString()));
+        return pairRdd;
+
+        // JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
+
+        // return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
+    }
+
+    // hashtags_to_posts
+    protected JavaPairRDD<String, String> getHashTagToPost(String filePath) {
+        JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
+
+        return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
+    }
+
+
+    // likes
+    protected JavaPairRDD<String, String> getUserToPost(String filePath) {
+        JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
+
+        return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
+    }
+
+    // friends
+    protected JavaPairRDD<String, String> getUserToUser(String filePath) {
+        JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
+
+        return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
+    }
+
+
+    protected JavaPairRDD<String, Double> createRankContribs(JavaPairRDD<String, String> edgeRDD, JavaPairRDD<String, Double> previousRanks, Double spreadAmt) {
+        // Find outdegree of each vertex
+        JavaPairRDD<String, Integer> numOutboundEdges = edgeRDD.mapToPair((edge) -> new Tuple2<>(edge._1(), 1)).reduceByKey((v1, v2) -> v1 + v2);
+        // Get the value that people who have an inbound edge from a vertex should recieve
+        JavaPairRDD<String, Double> toPropagate = numOutboundEdges.mapToPair((node) -> new Tuple2<>(node._1(), spreadAmt/node._2())).join(previousRanks).mapToPair((pair) -> new Tuple2<>(pair._1(), pair._2()._1() * pair._2()._2()));
+        // Create rank contributions for each edge, mapping the value that should be propagated
+        JavaPairRDD<String, Double> rankContribs = edgeRDD.join(toPropagate).mapToPair(edge -> new Tuple2<>(edge._2()._1(), edge._2()._2()));
+        return rankContribs;
     }
 
     /**
@@ -66,52 +108,63 @@ public class ComputeRanks extends SparkJob<List<Tuple2<String, Double>>> {
      * @throws InterruptedException if the execution is interrupted
      */
     public List<Tuple2<String, Double>> run(boolean debug) throws IOException, InterruptedException {       
-        // Load the social network, aka. the edges (followed, follower)
-        JavaPairRDD<String, String> edgeRDD = getSocialNetwork(Config.SOCIAL_NET_PATH);
+        System.out.println("Running");
 
-        logger.info("This graph contains {} nodes and {} edges", edgeRDD.values().distinct().count(), edgeRDD.count());
 
-        // Find the sinks in edgeRDD as PairRDD
-        JavaRDD<String> sinks = getSinks(edgeRDD);
-        logger.info("There are {} sinks", sinks.count());
+        // TODO: Ensure that the ids being read in can be differentiated by the type of object they are 
+        
+        // Get RDDs for userToHashtag, hashtagToPost, userToPost, and userToUser (all RDDs are follower to followed)
+        JavaPairRDD<String, String> userToHashtag = getUserToHashTag(Config.SOCIAL_NET_PATH);
+        // JavaPairRDD<String, String> hashtagToPost = getHashTagToPost(Config.SOCIAL_NET_PATH);
+        // JavaPairRDD<String, String> userToPost = getUserToPost(Config.SOCIAL_NET_PATH);
+        // JavaPairRDD<String, String> userToUser = getUserToUser(Config.SOCIAL_NET_PATH);
+        // JavaPairRDD<String, String>[] edgeRDDs = new JavaPairRDD[]{userToHashtag, hashtagToPost, userToPost, userToUser};
+        JavaPairRDD<String, String>[] edgeRDDs = new JavaPairRDD[]{userToHashtag};
 
-        JavaPairRDD<String, String> backlinks = sinks.mapToPair(sink -> new Tuple2<>(sink, sink)).join(edgeRDD).mapToPair(e -> new Tuple2<>(e._2()._2(), e._2()._1()));
-        logger.info("Added {} backlinks", backlinks.count());
+        // // Get all outbound edges for hashtags and posts
+        // JavaPairRDD<String, String> hashTagOutbound = userToHashtag.mapToPair(e -> new Tuple2<>(e._2(), e._1())).union(hashtagToPost);
+        // JavaPairRDD<String, String> postOutbound = userToPost.mapToPair(e -> new Tuple2<>(e._2(), e._1())).union(hashtagToPost.mapToPair(e -> new Tuple2<>(e._2(), e._1())));
+        
+        JavaRDD<String> allNodes = new JavaRDD<String>(null, null);
+        for (JavaPairRDD<String, String> RDD: edgeRDDs) {
+            allNodes = allNodes.union(RDD.keys()).union(RDD.values());
 
-        edgeRDD = edgeRDD.union(backlinks);
+        }
 
-        JavaPairRDD<String, Integer> numOutgoingEdges = edgeRDD.mapToPair(edge -> new Tuple2<>(edge._2(), 1)).reduceByKey((v1, v2) -> v1 + v2);
-        JavaPairRDD<String, Double> nodeTransferRDD = numOutgoingEdges.mapToPair(node -> new Tuple2<>(node._1(), (1.0/node._2())));
-        JavaRDD<String> allNodes = edgeRDD.map(e -> e._1()).union(edgeRDD.map(e -> e._2()));
         JavaPairRDD<String, Double> previousRank = allNodes.distinct().mapToPair(node -> new Tuple2<>(node, 1.0));
         JavaPairRDD<String, Double> newRank;
-        JavaPairRDD<String, String> flipped = edgeRDD.mapToPair(e -> new Tuple2<>(e._2(), e._1()));
 
-        int iterations = 0;
-        Double maxDifference;
-        do {
-            iterations++;
-            // Calculate the values that should be propagated to people followed by each node
-            JavaPairRDD<String, Double> toPropagate = nodeTransferRDD.join(previousRank).mapToPair(node -> new Tuple2<>(node._1(), node._2()._1() * node._2()._2()));
+        // int iterations = 0;
+        // Double maxDifference;
+        // do {
+        //     iterations++;
             
-            
-            JavaPairRDD<String, Double> messages = flipped.join(toPropagate).mapToPair(edge -> new Tuple2<>(edge._2()._1(), edge._2()._2()));
-            
-            // Calculate the rank, without the bias term
-            JavaPairRDD<String, Double> rankNoBias = messages.reduceByKey((v1, v2) -> v1 + v2);
+        //     // Get rank contributions from individual types of edges
+        //     JavaPairRDD<String, Double> rankContribs = createRankContribs(hashTagOutbound, previousRank, 1.0);
+        //     rankContribs = rankContribs.union(createRankContribs(postOutbound, previousRank, 1.0));
+        //     rankContribs = rankContribs.union(createRankContribs(userToHashtag, previousRank, 0.3));
+        //     rankContribs = rankContribs.union(createRankContribs(userToPost, previousRank, 0.4));
+        //     rankContribs = rankContribs.union(createRankContribs(userToUser, previousRank, 0.3));
 
+        //     // Calculate the total rank from all sources
+        //     newRank = rankContribs.reduceByKey((v1, v2) -> v1 + v2);
 
-            // Scale the biasless rank by 0.85, add the 0.15 bias
-            newRank = rankNoBias.mapToPair(rank -> new Tuple2<>(rank._1(), rank._2() * 0.85 + 0.15));
-            // Subtract the ranks from each other and find the largest absolute difference
-            JavaPairRDD<String, Double> differences = newRank.join(previousRank).mapToPair(entry -> new Tuple2<>(entry._1(), Math.abs(entry._2()._2() - entry._2()._1())));
-            maxDifference = differences.values().reduce((v1,v2) -> Math.max(v1, v2));
-            previousRank = newRank;
+        //     // Subtract the ranks from each other and find the largest absolute difference
+        //     JavaPairRDD<String, Double> differences = newRank.join(previousRank).mapToPair(entry -> new Tuple2<>(entry._1(), Math.abs(entry._2()._2() - entry._2()._1())));
+        //     maxDifference = differences.values().reduce((v1,v2) -> Math.max(v1, v2));
+        //     previousRank = newRank;
 
-        } while (maxDifference > this.d_max && iterations < this.i_max);
-        // Sort by rank in descending order
+        //     System.out.println("Max difference for iteration " + iterations + ": " + maxDifference);
+        // } while (maxDifference > this.d_max && iterations < this.i_max);
+        // // Sort by rank in descending order
+        newRank = previousRank;
         newRank = newRank.mapToPair(entry -> new Tuple2<>(entry._2(), entry._1())).sortByKey(false).mapToPair(entry -> new Tuple2<>(entry._2(), entry._1()));
-        // Return the top 1000 entries
-        return newRank.collect().subList(0, (int) Math.min(max_answers, newRank.count()));
+        
+        // TODO: write results to users_rank, hashtags_rank, posts_rank
+        // posts_rank = newRank.filter(entry -> entry._1()[0].equals('p'))
+
+
+       
+        return newRank.collect();
     }
 }
