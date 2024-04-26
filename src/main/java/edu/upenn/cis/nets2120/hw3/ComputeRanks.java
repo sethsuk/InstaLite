@@ -1,14 +1,11 @@
 package edu.upenn.cis.nets2120.hw3;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,7 +13,6 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SparkSession;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.upenn.cis.nets2120.config.Config;
 import edu.upenn.cis.nets2120.storage.SparkConnector;
@@ -81,10 +77,15 @@ public class ComputeRanks {
 
     private JavaPairRDD<String, String> getEdges(Connection connection, String table, String field1, String field2) {
         try {
-            ResultSet result = connection.createStatement().executeQuery("SELECT DISTINCT followed, follower FROM friends ORDER BY followed LIMIT 500;");
+            ResultSet result = connection.createStatement().executeQuery("SELECT DISTINCT " + field1+", "+field2 +" FROM "+table+";");
             List<Tuple2<String, String>> l = new ArrayList<>();            
             while(result.next()){
-                l.add(new Tuple2<>(result.getString("follower"), result.getString("followed")));
+                // Add char in front of ids to ensure ids are unique across all tables
+                if (table != "friends") {
+                    l.add(new Tuple2<>(field1.charAt(0) + String.valueOf(result.getInt(field1)), field2.charAt(0) + String.valueOf(result.getInt(field2))));
+                } else {
+                    l.add(new Tuple2<>("u" + String.valueOf(result.getInt(field1)), "u" + String.valueOf(result.getInt(field2))));
+                }
             }
 
             return context.parallelize(l).mapToPair(entry -> entry);
@@ -105,17 +106,15 @@ public class ComputeRanks {
     }
 
     /**
-     * Send recommendation results back to the database
+     * Send rank results back to the database
      *
-     * @param recommendations List: (followed: String, follower: String)
-     *                        The list of recommendations to send back to the database
+     * @param ranks List: The list of recommendations to send back to the database
      */
-    public void sendResultsToDatabase(List<Tuple2<Tuple2<String, String>, Integer>> recommendations) {
+    public void sendResultsToDatabase(JavaPairRDD<String, Double> ranks, String table_name) {
         try (Connection connection = DriverManager.getConnection(Config.DATABASE_CONNECTION, Config.DATABASE_USERNAME,
                 Config.DATABASE_PASSWORD)) {
-            JavaRDD<Tuple2<Tuple2<String,String>,Integer>> recStream = context.parallelize(recommendations);
-            List<String> l = recStream.map(entry -> 
-                "INSERT INTO recommendations VALUES ('" + entry._1()._1() + "', '"+ entry._1()._2() + "', "+ entry._2() +  ");"
+            List<String> l = ranks.map(entry -> 
+                "INSERT INTO " + table_name + " VALUES ('" + entry._1() + "', '"+ entry._2() + ");"
             ).collect();
          
             if(l.size() > 0){
@@ -149,10 +148,10 @@ public class ComputeRanks {
         Connection connection = getJDBCConnection();
 
         // Get RDDs for userToHashtag, hashtagToPost, userToPost, and userToUser (all RDDs are follower to followed)
-        JavaPairRDD<String, String> userToHashtag = getEdges(connection, "user_hashtags", "", "");
-        JavaPairRDD<String, String> hashtagToPost = getEdges(connection, "hashtags_to_posts", "", "");;
-        JavaPairRDD<String, String> userToPost = getEdges(connection, "likes", "", "");;
-        JavaPairRDD<String, String> userToUser = getEdges(connection, "friends", "", "");
+        JavaPairRDD<String, String> userToHashtag = getEdges(connection, "user_hashtags", "user_id", "hashtag_id");
+        JavaPairRDD<String, String> hashtagToPost = getEdges(connection, "hashtags_to_posts", "hashtag_id", "post_id");;
+        JavaPairRDD<String, String> userToPost = getEdges(connection, "post_likes", "user_id", "post_id");;
+        JavaPairRDD<String, String> userToUser = getEdges(connection, "friends", "followed", "follower");
         JavaPairRDD<String, String>[] edgeRDDs = new JavaPairRDD[]{userToHashtag, hashtagToPost, userToPost, userToUser};
 
         // Get all outbound edges for hashtags and posts
@@ -195,9 +194,13 @@ public class ComputeRanks {
         newRank = newRank.mapToPair(entry -> new Tuple2<>(entry._2(), entry._1())).sortByKey(false).mapToPair(entry -> new Tuple2<>(entry._2(), entry._1()));
         
         // TODO: write results to users_rank, hashtags_rank, posts_rank
+        JavaPairRDD<String, Double> users_rank = newRank.filter(rank -> rank._1().charAt(0) == 'u');
+        JavaPairRDD<String, Double> hashtags_rank = newRank.filter(rank -> rank._1().charAt(0) == 'h');
+        JavaPairRDD<String, Double> posts_rank = newRank.filter(rank -> rank._1().charAt(0) == 'p');
         
-        List<Tuple2<Tuple2<String, String>, Integer>> collectedRecommendations = newRank.collect();
-        sendResultsToDatabase(collectedRecommendations);
+        sendResultsToDatabase(users_rank, "user_rank");
+        sendResultsToDatabase(hashtags_rank, "hashtag_rank");
+        sendResultsToDatabase(posts_rank, "post_rank");
 
         logger.info("*** Finished social ranks! ***");
     }
