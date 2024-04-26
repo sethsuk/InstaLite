@@ -7,15 +7,10 @@ package edu.upenn.cis.nets2120.config;
  */
 public class Config {
 
-    // For test drivers
-    public static void setSocialPath(String path) {
-        SOCIAL_NET_PATH = path;
-    }
-
     
-    public static final String DATABASE_CONNECTION = "jdbc:mysql://localhost:3306/imdbdatabase";
-    public static final String DATABASE_USERNAME = "admin";
-    public static final String DATABASE_PASSWORD = "rds-password";
+    public static final String DATABASE_CONNECTION = "jdbc:mysql://localhost:3306/javaswingersdatabase";
+    public static final String DATABASE_USERNAME = System.getenv("DATABASE_USERNAME");;
+    public static final String DATABASE_PASSWORD = System.getenv("DATABASE_PASSWORD");
 
     public static final String SPARK_APP_NAME = "IMDBRelations";
     public static final String SPARK_MASTER_URL = "local[*]";
@@ -25,7 +20,6 @@ public class Config {
     /**
      * The path to the space-delimited social network data
      */
-    public static String SOCIAL_NET_PATH = "s3a://penn-cis545-files/movie_friends.txt";
 
     public static String LOCAL_SPARK = "local[*]";
 
@@ -36,8 +30,6 @@ public class Config {
     public static String SECRET_ACCESS_KEY = System.getenv("AWS_SECRET_ACCESS_KEY");
     public static String SESSION_TOKEN = System.getenv("AWS_SESSION_TOKEN");
 
-    // public static String RDS_LOCATION = "javaswingersdatabase.cjwsbhoe8mtb.us-east-1.rds.amazonaws.com:3306";
-    public static String RDS_LOCATION = "imdbdatabase.c3ueouesmj5l.us-east-1.rds.amazonaws.com";
     /**
      * How many RDD partitions to use?
      */
