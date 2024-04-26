@@ -1,92 +1,98 @@
 package edu.upenn.cis.nets2120.hw3;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.SparkSession;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import edu.upenn.cis.nets2120.config.Config;
-
+import edu.upenn.cis.nets2120.storage.SparkConnector;
 import scala.Tuple2;
 
-import java.util.*;
-import java.lang.Math;
-
-public class ComputeRanks extends SparkJob<List<Tuple2<String, Double>>> {
-    /**
-     * The basic logger
-     */
+public class ComputeRanks {
     static Logger logger = LogManager.getLogger(ComputeRanks.class);
 
-    // Convergence condition variables
-    protected double d_max; // largest change in a node's rank from iteration i to iteration i+1
-    protected int i_max; // max number of iterations
-    int max_answers = 1000;
+    /**
+     * Connection to Apache Spark
+     */
+    SparkSession spark;
+    JavaSparkContext context;
 
-    public ComputeRanks(double d_max, int i_max, int answers, boolean debug) {
-        super(true, true, debug);
-        this.d_max = d_max;
-        this.i_max = i_max;
-        this.max_answers = answers;
+    public ComputeRanks() {
+        System.setProperty("file.encoding", "UTF-8");
     }
 
     /**
-     * Fetch the social network from the S3 path, and create a (followed, follower)
-     * edge graph
+     * Initialize the database connection. Do not modify this method.
      *
-     * @param filePath
-     * @return JavaPairRDD: (followed: String, follower: String)
+     * @throws InterruptedException User presses Ctrl-C
      */
-    protected JavaPairRDD<String, String> getSocialNetwork(String filePath) {
-        JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
-        return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
+    public void initialize() throws InterruptedException {
+        logger.info("Connecting to Spark...");
+
+        spark = SparkConnector.getSparkConnection();
+        context = SparkConnector.getSparkContext();
+
+        logger.debug("Connected!");
     }
 
-    //user_hashtags
-    protected JavaPairRDD<String, String> getUserToHashTag(String filePath) {
+    /**
+     * Fetch the social network from mysql using a JDBC connection, and create a (followed, follower) edge graph
+     *
+     * @return JavaPairRDD: (followed: String, follower: String) The social network
+     */
+    public Connection getJDBCConnection() {
+    
+        logger.info("Connecting to database...");
+        Connection connection = null;
 
-        Dataset<Row> dataset = spark.read().format("jdbc")
-        .option("url", "jdbc:mysql://"+Config.RDS_LOCATION+"/imdbdatabase")
-        .option("dbtable", "recommendations")
-        .option("user", "admin")
-        .option("password", "rds-password")
-        .load();
+        try {
+            connection = DriverManager.getConnection(Config.DATABASE_CONNECTION, Config.DATABASE_USERNAME,
+                    Config.DATABASE_PASSWORD);
+        } catch (SQLException e) {
+            logger.error("Connection to database failed: " + e.getMessage(), e);
+            logger.error("Please make sure the RDS server is correct, the tunnel is enabled, and you have run the mysql command to create the database.");
+            System.exit(1);
+        }
 
-        JavaRDD<Row> rdd = dataset.rdd().toJavaRDD();
-        JavaPairRDD<String, String> pairRdd = rdd.mapToPair(entry -> new Tuple2<>(Integer.valueOf(entry.getInt(0)).toString(), Integer.valueOf(entry.getInt(1)).toString()));
-        return pairRdd;
+        if (connection == null) {
+            logger.error("Failed to make connection - Connection is null");
+            System.exit(1);
+        }
 
-        // JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
-
-        // return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
+        logger.info("Successfully connected to database!");
+        return connection;
+        
     }
 
-    // hashtags_to_posts
-    protected JavaPairRDD<String, String> getHashTagToPost(String filePath) {
-        JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
 
-        return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
+    private JavaPairRDD<String, String> getEdges(Connection connection, String table, String field1, String field2) {
+        try {
+            ResultSet result = connection.createStatement().executeQuery("SELECT DISTINCT followed, follower FROM friends ORDER BY followed LIMIT 500;");
+            List<Tuple2<String, String>> l = new ArrayList<>();            
+            while(result.next()){
+                l.add(new Tuple2<>(result.getString("follower"), result.getString("followed")));
+            }
+
+            return context.parallelize(l).mapToPair(entry -> entry);
+        } catch (Exception e) {
+            logger.error("SQL error occurred: " + e.getMessage(), e);
+        }
+        return context.emptyRDD().mapToPair(x -> new Tuple2<>("", ""));
     }
-
-
-    // likes
-    protected JavaPairRDD<String, String> getUserToPost(String filePath) {
-        JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
-
-        return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
-    }
-
-    // friends
-    protected JavaPairRDD<String, String> getUserToUser(String filePath) {
-        JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
-
-        return file.map(line -> line.split("\\s")).mapToPair(list -> new Tuple2<>(list[1], list[0])).distinct();
-    }
-
 
     protected JavaPairRDD<String, Double> createRankContribs(JavaPairRDD<String, String> edgeRDD, JavaPairRDD<String, Double> previousRanks, Double spreadAmt) {
         // Find outdegree of each vertex
@@ -99,33 +105,61 @@ public class ComputeRanks extends SparkJob<List<Tuple2<String, Double>>> {
     }
 
     /**
-     * Main functionality in the program: read and process the social network
-     * Runs the SocialRank algorithm to compute the ranks of nodes in a social network.
+     * Send recommendation results back to the database
      *
-     * @param debug a boolean value indicating whether to enable debug mode
-     * @return a list of tuples containing the node ID and its corresponding SocialRank value
-     * @throws IOException          if there is an error reading the social network data
-     * @throws InterruptedException if the execution is interrupted
+     * @param recommendations List: (followed: String, follower: String)
+     *                        The list of recommendations to send back to the database
      */
-    public List<Tuple2<String, Double>> run(boolean debug) throws IOException, InterruptedException {       
-        System.out.println("Running");
+    public void sendResultsToDatabase(List<Tuple2<Tuple2<String, String>, Integer>> recommendations) {
+        try (Connection connection = DriverManager.getConnection(Config.DATABASE_CONNECTION, Config.DATABASE_USERNAME,
+                Config.DATABASE_PASSWORD)) {
+            JavaRDD<Tuple2<Tuple2<String,String>,Integer>> recStream = context.parallelize(recommendations);
+            List<String> l = recStream.map(entry -> 
+                "INSERT INTO recommendations VALUES ('" + entry._1()._1() + "', '"+ entry._1()._2() + "', "+ entry._2() +  ");"
+            ).collect();
+         
+            if(l.size() > 0){
+                for(int i = 0; i < l.size(); i++){
+                    try{
+                        connection.prepareStatement(l.get(i)).executeUpdate();
+                    } catch (SQLException e) {
+                        System.err.println("Error creating recommendations table: " + e.getMessage());
+                        throw e;
+                    }
+                }
+            }
 
+        } catch (SQLException e) {
+            logger.error("Error sending recommendations to database: " + e.getMessage(), e);
+        }
+    }
 
-        // TODO: Ensure that the ids being read in can be differentiated by the type of object they are 
-        
+    /**
+     * Main functionality in the program: read and process the social network. Do not modify this method.
+     *
+     * @throws IOException          File read, network, and other errors
+     * @throws InterruptedException User presses Ctrl-C
+     */
+    public void run() throws IOException, InterruptedException {
+        logger.info("Running");
+
+        Double d_max = 30.0;
+        Double i_max = 15.0;
+
+        Connection connection = getJDBCConnection();
+
         // Get RDDs for userToHashtag, hashtagToPost, userToPost, and userToUser (all RDDs are follower to followed)
-        JavaPairRDD<String, String> userToHashtag = getUserToHashTag(Config.SOCIAL_NET_PATH);
-        // JavaPairRDD<String, String> hashtagToPost = getHashTagToPost(Config.SOCIAL_NET_PATH);
-        // JavaPairRDD<String, String> userToPost = getUserToPost(Config.SOCIAL_NET_PATH);
-        // JavaPairRDD<String, String> userToUser = getUserToUser(Config.SOCIAL_NET_PATH);
-        // JavaPairRDD<String, String>[] edgeRDDs = new JavaPairRDD[]{userToHashtag, hashtagToPost, userToPost, userToUser};
-        JavaPairRDD<String, String>[] edgeRDDs = new JavaPairRDD[]{userToHashtag};
+        JavaPairRDD<String, String> userToHashtag = getEdges(connection, "user_hashtags", "", "");
+        JavaPairRDD<String, String> hashtagToPost = getEdges(connection, "hashtags_to_posts", "", "");;
+        JavaPairRDD<String, String> userToPost = getEdges(connection, "likes", "", "");;
+        JavaPairRDD<String, String> userToUser = getEdges(connection, "friends", "", "");
+        JavaPairRDD<String, String>[] edgeRDDs = new JavaPairRDD[]{userToHashtag, hashtagToPost, userToPost, userToUser};
 
-        // // Get all outbound edges for hashtags and posts
-        // JavaPairRDD<String, String> hashTagOutbound = userToHashtag.mapToPair(e -> new Tuple2<>(e._2(), e._1())).union(hashtagToPost);
-        // JavaPairRDD<String, String> postOutbound = userToPost.mapToPair(e -> new Tuple2<>(e._2(), e._1())).union(hashtagToPost.mapToPair(e -> new Tuple2<>(e._2(), e._1())));
+        // Get all outbound edges for hashtags and posts
+        JavaPairRDD<String, String> hashTagOutbound = userToHashtag.mapToPair(e -> new Tuple2<>(e._2(), e._1())).union(hashtagToPost);
+        JavaPairRDD<String, String> postOutbound = userToPost.mapToPair(e -> new Tuple2<>(e._2(), e._1())).union(hashtagToPost.mapToPair(e -> new Tuple2<>(e._2(), e._1())));
         
-        JavaRDD<String> allNodes = new JavaRDD<String>(null, null);
+        JavaRDD<String> allNodes = context.emptyRDD();
         for (JavaPairRDD<String, String> RDD: edgeRDDs) {
             allNodes = allNodes.union(RDD.keys()).union(RDD.values());
 
@@ -134,37 +168,62 @@ public class ComputeRanks extends SparkJob<List<Tuple2<String, Double>>> {
         JavaPairRDD<String, Double> previousRank = allNodes.distinct().mapToPair(node -> new Tuple2<>(node, 1.0));
         JavaPairRDD<String, Double> newRank;
 
-        // int iterations = 0;
-        // Double maxDifference;
-        // do {
-        //     iterations++;
+        int iterations = 0;
+        Double maxDifference;
+        do {
+            iterations++;
             
-        //     // Get rank contributions from individual types of edges
-        //     JavaPairRDD<String, Double> rankContribs = createRankContribs(hashTagOutbound, previousRank, 1.0);
-        //     rankContribs = rankContribs.union(createRankContribs(postOutbound, previousRank, 1.0));
-        //     rankContribs = rankContribs.union(createRankContribs(userToHashtag, previousRank, 0.3));
-        //     rankContribs = rankContribs.union(createRankContribs(userToPost, previousRank, 0.4));
-        //     rankContribs = rankContribs.union(createRankContribs(userToUser, previousRank, 0.3));
+            // Get rank contributions from individual types of edges
+            JavaPairRDD<String, Double> rankContribs = createRankContribs(hashTagOutbound, previousRank, 1.0);
+            rankContribs = rankContribs.union(createRankContribs(postOutbound, previousRank, 1.0));
+            rankContribs = rankContribs.union(createRankContribs(userToHashtag, previousRank, 0.3));
+            rankContribs = rankContribs.union(createRankContribs(userToPost, previousRank, 0.4));
+            rankContribs = rankContribs.union(createRankContribs(userToUser, previousRank, 0.3));
 
-        //     // Calculate the total rank from all sources
-        //     newRank = rankContribs.reduceByKey((v1, v2) -> v1 + v2);
+            // Calculate the total rank from all sources
+            newRank = rankContribs.reduceByKey((v1, v2) -> v1 + v2);
 
-        //     // Subtract the ranks from each other and find the largest absolute difference
-        //     JavaPairRDD<String, Double> differences = newRank.join(previousRank).mapToPair(entry -> new Tuple2<>(entry._1(), Math.abs(entry._2()._2() - entry._2()._1())));
-        //     maxDifference = differences.values().reduce((v1,v2) -> Math.max(v1, v2));
-        //     previousRank = newRank;
+            // Subtract the ranks from each other and find the largest absolute difference
+            JavaPairRDD<String, Double> differences = newRank.join(previousRank).mapToPair(entry -> new Tuple2<>(entry._1(), Math.abs(entry._2()._2() - entry._2()._1())));
+            maxDifference = differences.values().reduce((v1,v2) -> Math.max(v1, v2));
+            previousRank = newRank;
 
-        //     System.out.println("Max difference for iteration " + iterations + ": " + maxDifference);
-        // } while (maxDifference > this.d_max && iterations < this.i_max);
-        // // Sort by rank in descending order
+            System.out.println("Max difference for iteration " + iterations + ": " + maxDifference);
+        } while (maxDifference > d_max && iterations < i_max);
+        // Sort by rank in descending order
         newRank = previousRank;
         newRank = newRank.mapToPair(entry -> new Tuple2<>(entry._2(), entry._1())).sortByKey(false).mapToPair(entry -> new Tuple2<>(entry._2(), entry._1()));
         
         // TODO: write results to users_rank, hashtags_rank, posts_rank
-        // posts_rank = newRank.filter(entry -> entry._1()[0].equals('p'))
+        
+        List<Tuple2<Tuple2<String, String>, Integer>> collectedRecommendations = newRank.collect();
+        sendResultsToDatabase(collectedRecommendations);
 
+        logger.info("*** Finished social ranks! ***");
+    }
 
-       
-        return newRank.collect();
+    /**
+     * Graceful shutdown
+     */
+    public void shutdown() {
+        logger.info("Shutting down");
+
+        if (spark != null) {
+            spark.close();
+        }
+    }
+
+    public static void main(String[] args) {
+        final ComputeRanks fofs = new ComputeRanks();
+        try {
+            fofs.initialize();
+            fofs.run();
+        } catch (final IOException ie) {
+            logger.error("IO error occurred: " + ie.getMessage(), ie);
+        } catch (final InterruptedException e) {
+            logger.error("Interrupted: " + e.getMessage(), e);
+        } finally {
+            fofs.shutdown();
+        }
     }
 }
