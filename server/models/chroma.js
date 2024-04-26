@@ -1,5 +1,6 @@
 var path = require('path');
 const fs = require('fs');
+const fsp = require('fs').promises;
 const tf = require('@tensorflow/tfjs-node');
 const faceapi = require('@vladmandic/face-api');
 const { ChromaClient } = require("chromadb");
@@ -125,26 +126,22 @@ async function initializeCollection() {
     });
 
     console.info("Looking for files");
-    const promises = [];
     const directoryPath = path.join(__dirname, '..', "images"); // Adjust directory path as necessary
-    fs.readdir(directoryPath, function (err, files) {
-        if (err) {
-            console.error("Could not list the directory.", err);
-            return;
-        }
-        files.forEach(function (file) {
+
+    try {
+        const files = await fsp.readdir(directoryPath);
+        const indexPromises = files.map(file => {
             console.info("Adding task for " + file + " to index.");
-            promises.push(indexAllFaces(path.join(directoryPath, file), file, collection));
+            return indexAllFaces(path.join(directoryPath, file), file, collection);
         });
-        Promise.all(promises)
-            .then(() => {
-                console.info("All images indexed.");
-            })
-            .catch((err) => {
-                console.error("Error indexing images:", err);
-            });
-    });
+
+        await Promise.all(indexPromises);
+        console.info("All images indexed.");
+    } catch (err) {
+        console.error("Error listing directory or indexing images:", err);
+    }
 }
+
 
 function getCollection() {
     if (!collection) {

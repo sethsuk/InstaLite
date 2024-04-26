@@ -1,7 +1,6 @@
 var db = require('../models/database.js');
 const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
-const { awaitMediaLoaded } = require('face-api.js');
 
 // POST /send friend request
 var sendFriendRequest = async function (req, res) {
