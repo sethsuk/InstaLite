@@ -14,7 +14,7 @@ var createPost = async function (req, res) {
     const media = req.body["media"];
 
     if (!title || !media) {
-        return res.status(400).json({error: "One or more of the fields you entered was empty, please try again."});
+        return res.status(400).json({ error: "One or more of the fields you entered was empty, please try again." });
     }
 
     if (!media) {

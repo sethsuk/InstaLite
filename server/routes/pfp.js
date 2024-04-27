@@ -4,15 +4,11 @@ var db = require('../models/database.js');
 var path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
-const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 const chromadb = require('../models/chroma.js');
 
-const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
 
-
-// return a list of actor names and corresponding image urls 
+// GET /return a list of actor names and corresponding image urls 
 const getTop5Actors = async function (req, res) {
     try {
         const username = req.params.username;
@@ -21,9 +17,8 @@ const getTop5Actors = async function (req, res) {
         }
         const image = await s3.getImageFromS3(username);
 
-        const collection = chromadb.getCollection;
+        const collection = chromadb.getCollection();
         const matches = await chromodb.findTopKMatches(collection, image, 5);
-
 
         let actors = [];
 
@@ -31,16 +26,17 @@ const getTop5Actors = async function (req, res) {
         for (var item of matches) {
             for (var i = 0; i < item.ids[0].length; i++) {
                 let actorNconst = item.documents[0][i].replace('.jpg', '');
+                const info = await getInfoHelper(actorNconst);
+
                 actors.push({
                     nconst: actorNconst,
-                    distance: Math.sqrt(item.distances[0][i])
+                    distance: Math.sqrt(item.distances[0][i]),
+                    name: info ? info.name : null,
+                    imageUrl: info ? info.imageUrl : null
                 });
             }
         }
-
-        // Return top-5 similar actors nconst    !!!!! change to return name and url !!!!
-        res.status(200).json({ actors: actors });
-
+        res.status(200).json({ actors });
     } catch (error) {
         res.status(500).json({ error: 'Error querying database.' });
     }
@@ -69,35 +65,43 @@ const associateActor = async function (req, res) {
 // GET /get actor name and image url 
 const getActorInfo = async function (req, res) {
     const nconst = req.qeury.nconst;
+    try {
+        const actorInfo = await getInfoHelper(nconst);
+        if (actorInfo) {
+            res.status(200).json({ actorInfo });
+        } else {
+            res.status(404).json({ error: 'Actor not found.' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Error retrieving actor information.' });
+    }
+}
 
-    // Define the path to the CSV file
-    const csvFilePath = path.join(__dirname, '..', 'desired.csv');
 
-    const results = [];
+async function getInfoHelper(nconst) {
+    return new Promise((resolve, reject) => {
+        // Define the path to the CSV file
+        const csvFilePath = path.join(__dirname, '..', 'desired.csv');
+        const results = [];
 
-    fs.createReadStream(csvFilePath)
-        .pipe(csv(['nconst', 'name', 'image', 'url']))
-        .on('data', (data) => {
-            if (data.nconst === nconst) {
-                results.push({
-                    nconst: data.nconst,
-                    name: data.name.replace('_', ' '),
-                    imageUrl: data.url
-                });
-            }
-        })
-        .on('end', () => {
-            if (results.length > 0) {
-                res.json(results[0]);
-            } else {
-                res.status(404).json({ error: 'Actor not found.' });
-            }
-        })
-        .on('error', (err) => {
-            console.error(err);
-            res.status(500).json({ error: 'Error reading CSV file.' });
-        });
-
+        fs.createReadStream(csvFilePath)
+            .pipe(csv(['nconst', 'name', 'image', 'url']))
+            .on('data', (data) => {
+                if (data.nconst === nconst) {
+                    results.push({
+                        nconst: data.nconst,
+                        name: data.name.replace('_', ' '),
+                        imageUrl: data.url
+                    });
+                }
+            })
+            .on('end', () => {
+                resolve(results.length > 0 ? results[0] : null);
+            })
+            .on('error', (err) => {
+                reject(err);
+            });
+    });
 }
 
 

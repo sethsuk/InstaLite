@@ -3,8 +3,8 @@ const app = express();
 const port = 8080;
 const registry = require('./routes/register_routes.js');
 
-const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 var path = require('path');
 const fs = require('fs');
@@ -22,6 +22,7 @@ app.use(express.json());
 app.use(session({
     secret: 'nets2120_insecure', saveUninitialized: true, cookie: { httpOnly: false }, resave: true
 }));
+
 
 registry.register_routes(app);
 
