@@ -23,23 +23,21 @@ var createPost = async function (req, res) {
     }
 
     try {
+        var results;
+        
         if (!content) {
-            await db.send_sql(`
+            results = await db.send_sql(`
                 INSERT INTO posts (title, media, user_id)
                 VALUES ('${title}', '${media}', ${req.session.user_id});
             `);
         } else {
-            await db.send_sql(`
+            results = await db.send_sql(`
                 INSERT INTO posts (title, media, content, user_id)
                 VALUES ('${title}', '${media}', '${content}', ${req.session.user_id});
             `);
         }
 
-        var postInfo = await db.send_sql(`
-            SELECT post_id from posts WHERE title = '${title}' AND media = '${media}'
-        `);
-
-        var post_id = postInfo[0]["post_id"];
+        var post_id = results.insertId;
 
         // link hashtags to posts
         for (const tag of hashtags) {

@@ -3,6 +3,7 @@ const friends = require('./friends.js');
 const pfp = require('./pfp.js');
 const posts = require('./posts.js');
 const registration = require('./registration.js');
+const comments = require('./comments.js');
 
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
@@ -41,4 +42,6 @@ function register_routes(app) {
 
     app.post('/:username/createPost', posts.create_post);
     app.post('/:username/likePost', posts.like_post);
+
+    app.post('/:username/createComment', comments.create_comment);
 }
