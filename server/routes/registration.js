@@ -5,17 +5,41 @@ const helper = require('./route_helper.js');
 const s3 = require('../models/s3.js');
 
 //POST /add new hashtags to table 
+var addHashtags = async function (req, res) {
+    const { interests } = req.body;
+    if (!interests) {
+        return res.status(400).json({ error: 'One or more of the fields you entered was empty, please try again.' });
+    }
+    if (!interests.every(helper.isOK)) {
+        return res.status(400).json({ error: 'Illegal input.' });
+    }
 
+    try {
+        for (const interest of interests) {
+            await db.send_sql(`INSERT INTO hashtags (tag) VALUES ("${interest}")
+            ON DUPLICATE KEY UPDATE count = count + 1;`);
+        }
+        res.status(200).json({ message: "Hashtags added successfully." });
+    } catch (error) {
+        res.status(500).json({ error: 'Error querying database.' });
+    }
+}
 
-// THIS IS THE CHANGE TO SIGNUP
 
 // POST /signup
 // hashtags are array of interests 
 var signup = async function (req, res) {
     const { username, password, first_name, last_name, email, affiliation, birthday, interests } = req.body
-    // const file = req.file;
+    // if (!req.file) {
+    //    return res.status(400).json({ error: 'No file uploaded.' });
+    // }
+    // const image = fs.readFileSync(req.file.path);
 
-    if (!helper.isOK(username) || !helper.isOK(first_name) || !helper.isOK(last_name) || 
+    if (!username || !password || !first_name || !last_name || !email || !affiliation || !birthday || !interests) {
+        return res.status(400).json({ error: 'One or more of the fields you entered was empty, please try again.' });
+    }
+
+    if (!helper.isOK(username) || !helper.isOK(first_name) || !helper.isOK(last_name) ||
         !helper.isOK(email) || !helper.isOK(affiliation) || !interests.every(helper.isOK)) {
         return res.status(400).json({ error: 'Illegal input.' });
     }
@@ -53,7 +77,7 @@ var signup = async function (req, res) {
             }
 
             // upload to s3 (keyed on username)
-            // const url = await s3.uploadFileToS3(file, username);
+            // const url = await s3.uploadFileToS3(image, username); 
 
             // insert to users table 
             const query2 = `INSERT INTO users (username, hashed_password, first_name, last_name, email, affiliation, birthday, pfp_url, actor_nconst) 
@@ -65,14 +89,8 @@ var signup = async function (req, res) {
 
             // link user to hashtags
             for (const tag of interests) {
-                // Check if the hashtag already exists, if not, add it 
                 let [hashtag] = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
-                if (!hashtag) {
-                    const insertResult = await db.send_sql(`INSERT INTO hashtags (tag) VALUES ("${tag}")`);
-                    hashtag = { hashtag_id: insertResult.insertId };
-                }
-                // Link user to hashtag
-                await db.send_sql(`INSERT INTO user_hashtags (user_id, hashtag_id) VALUES (${userId}, ${hashtag.hashtag_id});`);
+                await db.insert_items(`INSERT INTO user_hashtags (user_id, hashtag_id) VALUES (${userId}, ${hashtag.hashtag_id});`);
             }
 
             res.status(200).json({ username: username });
@@ -149,10 +167,11 @@ var logout = async function (req, res) {
 
 
 var registration_routes = {
-    login: login,
-    get_top_10_hashtags: getTop10Hashtags,
+    add_hashtags: addHashtags,
     signup: signup,
-    logout: logout,
+    get_top_10_hashtags: getTop10Hashtags,
+    login: login,
+    logout: logout
 }
 
 module.exports = registration_routes;
