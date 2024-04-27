@@ -37,7 +37,6 @@ var createPost = async function (req, res) {
     }
 };
 
-
 const routes = {
     create_post: createPost
 };
