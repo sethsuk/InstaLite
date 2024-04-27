@@ -40,7 +40,7 @@ async function create_tables(db) {
 
     // create online table 
     var q4 = db.create_tables('CREATE TABLE IF NOT EXISTS online ( \
-        session_id INT PRIMARY KEY, \
+        session_id INT AUTO_INCREMENT PRIMARY KEY, \
         user_id INT, \
         FOREIGN KEY (user_id) REFERENCES users(user_id) \
     );');
@@ -78,7 +78,7 @@ async function create_tables(db) {
     var q8 = db.create_tables('CREATE TABLE IF NOT EXISTS posts ( \
         post_id INT NOT NULL AUTO_INCREMENT, \
         title VARCHAR(255), \
-        media VARCHAR(255), \
+        media VARCHAR(255) UNIQUE, \
         content VARCHAR(255), \
         user_id INT NOT NULL, \
         likes INT DEFAULT 0, \
@@ -90,7 +90,6 @@ async function create_tables(db) {
     var q9 = db.create_tables('CREATE TABLE IF NOT EXISTS post_likes ( \
         post_id INT NOT NULL, \
         user_id INT NOT NULL, \
-        likes INT DEFAULT 0, \
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
         FOREIGN KEY (post_id) REFERENCES posts(post_id), \
         FOREIGN KEY (user_id) REFERENCES users(user_id) \
