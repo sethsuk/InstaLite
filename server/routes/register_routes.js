@@ -40,4 +40,5 @@ function register_routes(app) {
     app.post('/:username/removeFriend', friends.remove_friend);
 
     app.post('/:username/createPost', posts.create_post);
+    app.post('/:username/likePost', posts.like_post);
 }

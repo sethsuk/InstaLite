@@ -41,16 +41,9 @@ var createPost = async function (req, res) {
 
         var post_id = postInfo[0]["post_id"];
 
-        console.log(hashtags);
-
         // link hashtags to posts
         for (const tag of hashtags) {
-            console.log(tag);
-
             let hashtag = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
-
-            console.log(hashtag);
-            console.log(hashtag[0].hashtag_id)
 
             await db.insert_items(`INSERT INTO hashtags_to_posts (post_id, hashtag_id) VALUES (${post_id}, ${hashtag[0].hashtag_id});`);
         }
@@ -75,8 +68,20 @@ var likePost = async function (req, res) {
     }
 
     try {
+        var existingLikeQuery = await db.send_sql(`SELECT user_id FROM post_likes WHERE post_id = ${post_id} AND user_id = ${req.session.user_id}`);
 
+        if (existingLikeQuery.length != 0) {
+            return res.status(400).json({error: "Already liked post."});
+        }
+
+
+        var likesQuery = await db.send_sql(`SELECT likes FROM posts WHERE post_id = ${post_id}`);
+        var numOfLikes = likesQuery[0].likes + 1;
+
+        await db.send_sql(`UPDATE posts SET likes = ${numOfLikes} WHERE post_id = ${post_id};`);
+        await db.send_sql(`INSERT INTO post_likes (post_id, user_id) VALUES (${post_id}, ${req.session.user_id});`);
     
+        return res.status(201).json({ message: "Post liked." });
     } catch (err) {
         console.log(err);
         return res.status(500).json({ error: 'Error querying database.' });
@@ -84,7 +89,8 @@ var likePost = async function (req, res) {
 };
 
 const routes = {
-    create_post: createPost
+    create_post: createPost,
+    like_post: likePost
 };
 
 module.exports = routes;
