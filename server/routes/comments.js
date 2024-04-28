@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 
-// POST /creaeComments
+// POST /createComments
 var createComment = async function (req, res) {
     if (!helper.isLoggedIn(req, req.session.user_id)) {
         return res.status(403).json({ error: 'Not logged in.' });

@@ -9,7 +9,8 @@ var sendFriendRequest = async function (req, res) {
     if (!helper.isOK(receiverId)) {
         return res.status(400).json({ error: 'Invalid input.' });
     }
-    if (!helper.isLoggedIn(req, req.params.username)) {
+
+    if (!helper.isLoggedIn(req, req.session.user_id)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
@@ -44,7 +45,7 @@ var sendFriendRequest = async function (req, res) {
 
 // GET /get pending friend requets 
 var getFriendRequests = async function (req, res) {
-    if (!helper.isLoggedIn(req, req.params.username)) {
+    if (!helper.isLoggedIn(req, req.session.user_id)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
     const receiverId = req.session.user_id;
@@ -70,9 +71,10 @@ var getFriendRequests = async function (req, res) {
 var acceptFriendRequest = async function (req, res) {
     const { requestId } = req.body;
 
-    if (!helper.isLoggedIn(req, req.params.username)) {
+    if (!helper.isLoggedIn(req, req.session.user_id)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
+    
     try {
         const receiverId = req.session.user_id;
         const query1 = `UPDATE friend_requests SET status = 'accepted'
@@ -97,9 +99,10 @@ var acceptFriendRequest = async function (req, res) {
 var rejectFriendRequest = async function (req, res) {
     const { requestId } = req.body;
 
-    if (!helper.isLoggedIn(req, req.params.username)) {
+    if (!helper.isLoggedIn(req, req.session.user_id)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
+
     try {
         const receiverId = req.session.user_id;
         const query = `UPDATE friend_requests SET status = 'accepted'
@@ -115,7 +118,7 @@ var rejectFriendRequest = async function (req, res) {
 
 // GET /get friends (indicate which friends are currently logged in!!)
 var getFriends = async function (req, res) {
-    if (!helper.isLoggedIn(req, req.params.username)) {
+    if (!helper.isLoggedIn(req, req.session.user_id)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
@@ -143,7 +146,7 @@ var getFriends = async function (req, res) {
 var removeFriend = async function (req, res) {
     const { friendId } = req.body;
 
-    if (!helper.isLoggedIn(req, req.params.username)) {
+    if (!helper.isLoggedIn(req, req.session.user_id)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
     try {
