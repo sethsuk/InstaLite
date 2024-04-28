@@ -119,9 +119,9 @@ var login = async function (req, res) {
             req.session.username = user.username;
 
             await db.insert_items(`INSERT INTO online (session_id, user) 
-                VALUES (${req.sessionID}, ${user.user_id});`);
+                VALUES ("${req.sessionID}", ${user.user_id});`);
 
-            await db.insert_items(`INSERT INTO online (session_id, user_id) VALUES (${req.sessionID}, ${user.user_id})`);
+            await db.insert_items(`INSERT INTO online (session_id, user_id) VALUES ("${req.sessionID}", ${user.user_id})`);
 
             return res.status(200).json({ username: username });
         } else {
