@@ -4,6 +4,7 @@ const pfp = require('./pfp.js');
 const posts = require('./posts.js');
 const registration = require('./registration.js');
 const comments = require('./comments.js');
+const home = require('./home.js')
 
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
@@ -44,4 +45,6 @@ function register_routes(app) {
     app.post('/:username/likePost', posts.like_post);
 
     app.post('/:username/createComment', comments.create_comment);
+
+    app.get('/:username/getPosts', home.get_posts);
 }
