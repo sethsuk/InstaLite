@@ -40,7 +40,7 @@ async function create_tables(db) {
 
     // create online table 
     var q4 = db.create_tables('CREATE TABLE IF NOT EXISTS online ( \
-        session_id INT PRIMARY KEY, \
+        session_id VARCHAR(255) PRIMARY KEY, \
         user_id INT, \
         FOREIGN KEY (user) REFERENCES users(user_id) \
     );');
@@ -146,7 +146,7 @@ async function create_tables(db) {
     );`);
 
     await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14]);
-  
+
     dbaccess.close_db()
 
     return;
