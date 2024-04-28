@@ -47,4 +47,5 @@ function register_routes(app) {
     app.post('/:username/createComment', comments.create_comment);
 
     app.get('/:username/getPosts', home.get_posts);
+    app.get('/:username/getNotifications', home.get_notifications);
 }
