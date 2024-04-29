@@ -5,7 +5,11 @@ var path = require('path');
 // Configure the AWS SDK with the region and credentials
 AWS.config.update({
     region: 'us-east-1',
-    // credentials: if not set, AWS SDK will look for them in environment variables or default credential file locations
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        sessionToken: process.env.AUTH_TOKEN
+    }
 });
 
 const s3 = new AWS.S3();

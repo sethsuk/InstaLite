@@ -1,29 +1,55 @@
 var db = require('../models/database.js');
 const bcrypt = require('bcrypt');
-const helper = require('../routes/route_helper.js');
+const config = require('../../config.json'); // Load configuration
+const helper = require('./route_helper.js');
 const s3 = require('../models/s3.js');
 
 //POST /add new hashtags to table 
+var addHashtags = async function (req, res) {
+    const { interests } = req.body;
+    if (!interests) {
+        return res.status(400).json({ error: 'One or more of the fields you entered was empty, please try again.' });
+    }
+    
+    if (!interests.every(helper.isOK)) {
+        return res.status(400).json({ error: 'Illegal input.' });
+    }
 
+    try {
+        for (const interest of interests) {
+            await db.send_sql(`INSERT INTO hashtags (tag) VALUES ("${interest}")
+            ON DUPLICATE KEY UPDATE count = count + 1;`);
+        }
+        res.status(200).json({ message: "Hashtags added successfully." });
+    } catch (error) {
+        res.status(500).json({ error: 'Error querying database.' });
+    }
+}
 
-// THIS IS THE CHANGE TO SIGNUP
 
 // POST /signup
 // hashtags are array of interests 
 var signup = async function (req, res) {
     const { username, password, first_name, last_name, email, affiliation, birthday, interests } = req.body
-    const file = req.file;
+    // if (!req.file) {
+    //    return res.status(400).json({ error: 'No file uploaded.' });
+    // }
+    // const image = fs.readFileSync(req.file.path);
 
-    if (!helper.isOK(username) || !helper.isOK(linked_id) || !helper.isOK(first_name)
-        || !helper.isOK(last_name) || !helper.isOK(email) || !interests.every(helper.isOK)) {
-        return res.status(400).json({ error: 'Illegal input.' });
+    if (!username || !password || !first_name || !last_name || !email || !affiliation || !birthday || !interests) {
+        return res.status(400).json({ error: 'One or more of the fields you entered was empty, please try again.' });
+    }
+
+    if (!helper.isOK(username) || !helper.isOK(first_name) || !helper.isOK(last_name) ||
+        !helper.isOK(email) || !helper.isOK(affiliation) || !interests.every(helper.isOK)) {
+        return res.status(401).json({ error: 'Illegal input.' });
     }
 
     // birthday validation 
     var regex = /^\d{4}-\d{2}-\d{2}$/;
 
     if (!regex.test(birthday)) {
-        return res.status(400).json({ error: "Invalid date format." });
+        return res.status(401).json({ error: "Invalid date format."});
     }
 
     var dateParts = birthday.split("-");
@@ -32,17 +58,29 @@ var signup = async function (req, res) {
     var month = parseInt(dateParts[1], 10) - 1; // Months are 0-based in JavaScript
     var year = parseInt(dateParts[0], 10);
 
+    if (month < 0 || month > 11) {
+        return res.status(401).json({ error: "Invalid date format."});
+    }
+
+    var lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+
+    if (day < 1 || day > lastDayOfMonth) {
+        return res.status(401).json({ error: "Invalid date format."});
+    }
+
     var inputDate = new Date(year, month, day);
     var currentDate = new Date();
+
+    console.log(inputDate);
 
     if (currentDate < inputDate) {  // Compare input date with current date
         return res.status(400).json({ error: "Birthday cannot be in the future." });
     }
 
     try {
-        const query1 = `SELECT username FROM users WHERE username = "${username}";`;
+        const query1 = `SELECT COUNT(*) FROM users WHERE username = '${username}'`;
         const users = await db.send_sql(query1);
-        if (users.length > 0) {
+        if (users[0]["COUNT(*)"] != 0) {
             return res.status(409).json({ error: "An account with this username already exists, please try again." });
         }
 
@@ -52,11 +90,11 @@ var signup = async function (req, res) {
             }
 
             // upload to s3 (keyed on username)
-            const url = await s3.uploadFileToS3(file, username);
+            // const url = await s3.uploadFileToS3(image, username); 
 
             // insert to users table 
-            const query2 = `INSERT INTO users (username, hashed_password, first_name, last_name, email, affiliation, birthday, pfp_url) 
-                VALUES ("${username}", "${hash}", "${first_name}", "${last_name}", "${email}", "${affiliation}", "${birthday}", "${url}");`;
+            const query2 = `INSERT INTO users (username, hashed_password, first_name, last_name, email, affiliation, birthday, pfp_url, actor_nconst) 
+                VALUES ("${username}", "${hash}", "${first_name}", "${last_name}", "${email}", "${affiliation}", "${birthday}", null, null);`;
             await db.insert_items(query2);
 
             const results = await db.send_sql(`SELECT user_id FROM users WHERE username = "${username}";`);
@@ -64,19 +102,14 @@ var signup = async function (req, res) {
 
             // link user to hashtags
             for (const tag of interests) {
-                // Check if the hashtag already exists, if not, add it 
                 let [hashtag] = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
-                if (!hashtag) {
-                    const insertResult = await db.send_sql(`INSERT INTO hashtags (tag) VALUES ("${tag}")`);
-                    hashtag = { hashtag_id: insertResult.insertId };
-                }
-                // Link user to hashtag
-                await db.query(`INSERT INTO user_hashtags (user_id, hashtag_id) VALUES (${userId}, ${hashtag.hashtag_id});`);
+                await db.insert_items(`INSERT INTO user_hashtags (user_id, hashtag_id) VALUES (${userId}, ${hashtag.hashtag_id});`);
             }
 
             res.status(200).json({ username: username });
         })
     } catch (error) {
+        console.log(error);
         res.status(500).json({ error: 'Error querying database.' });
     }
 };
@@ -100,6 +133,7 @@ var login = async function (req, res) {
     if (!username || !password) {
         return res.status(400).json({ error: 'One or more of the fields you entered was empty, please try again.' });
     }
+
     if (!helper.isOK(username)) {
         return res.status(400).json({ error: 'Illegal input.' });
     }
@@ -107,6 +141,7 @@ var login = async function (req, res) {
     try {
         const query = `SELECT user_id, username, hashed_password FROM users WHERE username = "${username}";`;
         const users = await db.send_sql(query);
+
         if (users.length === 0) {
             return res.status(401).json({ error: 'Username and/or password are invalid.' });
         }
@@ -118,9 +153,6 @@ var login = async function (req, res) {
             req.session.user_id = user.user_id;
             req.session.username = user.username;
 
-            await db.insert_items(`INSERT INTO online (session_id, user) 
-                VALUES ("${req.sessionID}", ${user.user_id});`);
-
             // await db.insert_items(`INSERT INTO online (session_id, user_id) VALUES (${req.sessionID}, ${user.user_id})`);
             await db.insert_items(`INSERT INTO online (user_id) VALUES (${user.user_id})`);
 
@@ -130,6 +162,8 @@ var login = async function (req, res) {
         }
 
     } catch (error) {
+        console.log(error);
+
         res.status(500).json({ error: 'Error querying database.' });
     }
 };
@@ -141,17 +175,20 @@ var logout = async function (req, res) {
         const userId = req.session.user_id;
         req.session.user_id = null;
         req.session.username = null;
-        await db.query(`DELETE FROM online WHERE user = ${userId};`);
+
+        await db.send_sql(`DELETE FROM online WHERE user_id = ${userId};`);
+
         res.status(200).json({ message: "You were successfully logged out." });
     }
 };
 
 
 var registration_routes = {
-    login: login,
-    get_top_10_hashtags: getTop10Hashtags,
+    add_hashtags: addHashtags,
     signup: signup,
-    logout: logout,
+    get_top_10_hashtags: getTop10Hashtags,
+    login: login,
+    logout: logout
 }
 
-module.exports = registration_routes 
+module.exports = registration_routes;
