@@ -40,7 +40,7 @@ async function create_tables(db) {
 
     // create online table 
     var q4 = db.create_tables('CREATE TABLE IF NOT EXISTS online ( \
-        session_id VARCHAR(255) PRIMARY KEY, \
+        session_id INT AUTO_INCREMENT PRIMARY KEY, \
         user_id INT, \
         FOREIGN KEY (user) REFERENCES users(user_id) \
     );');
