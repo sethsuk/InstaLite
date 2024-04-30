@@ -15,19 +15,19 @@ module.exports = {
 
 function register_routes(app) {
     app.get('/', account.get_helloworld);
-    app.post('/:username/changeEmail', account.change_email);
-    app.post('/:username/changePassword', account.change_password);
-    app.post('/:username/changeAffiliation', account.change_affiliation);
-    app.post('/:username/suggestHashtags', account.suggest_hashtags);
+    app.post('/:username/changeEmail', account.change_email); // verified
+    app.post('/:username/changePassword', account.change_password); // verified
+    app.post('/:username/changeAffiliation', account.change_affiliation); // verified
+    app.post('/:username/suggestHashtags', account.suggest_hashtags); // verified
     app.post('/:username/updateHashtags', account.update_hashtags);
-    app.post('/:username/removeHashtags', account.remove_hashtags);
+    app.post('/:username/removeHashtags', account.remove_hashtags); // verified
     app.post('/:username/updatePfp', account.update_pfp);
 
     app.post('/addHashtags', registration.add_hashtags);
-    app.post('/signup', registration.signup); // with s3 it should be app.post('/signup', upload.single('image'), registration.signup);
-    app.post('/login', registration.login);
+    app.post('/signup', registration.signup); // with s3 it should be app.post('/signup', upload.single('image'), registration.signup); // verified
+    app.post('/login', registration.login); // verified
     app.get('/getTop10Hashtags', registration.get_top_10_hashtags);
-    app.post('/:username/logout', registration.logout);
+    app.post('/:username/logout', registration.logout); // verified
 
     app.get('/:username/getTop5Actors', pfp.get_top_5_actors);
     app.post('/:username/associateActor', pfp.associate_actor);
@@ -41,11 +41,11 @@ function register_routes(app) {
     app.get('/:username/getFriends', friends.get_friends);
     app.post('/:username/removeFriend', friends.remove_friend);
 
-    app.post('/:username/createPost', posts.create_post);
-    app.post('/:username/likePost', posts.like_post);
+    app.post('/:username/createPost', posts.create_post); // verified
+    app.post('/:username/likePost', posts.like_post); // verified
 
-    app.post('/:username/createComment', comments.create_comment);
+    app.post('/:username/createComment', comments.create_comment); // verified
 
-    app.get('/:username/getPosts', home.get_posts);
-    app.get('/:username/getNotifications', home.get_notifications);
+    app.get('/:username/getPosts', home.get_posts); // verified
+    app.get('/:username/getNotifications', home.get_notifications); // verified
 }
