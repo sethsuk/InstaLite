@@ -10,7 +10,7 @@ var addHashtags = async function (req, res) {
     if (!interests) {
         return res.status(400).json({ error: 'One or more of the fields you entered was empty, please try again.' });
     }
-    
+
     if (!interests.every(helper.isOK)) {
         return res.status(400).json({ error: 'Illegal input.' });
     }
@@ -49,7 +49,7 @@ var signup = async function (req, res) {
     var regex = /^\d{4}-\d{2}-\d{2}$/;
 
     if (!regex.test(birthday)) {
-        return res.status(401).json({ error: "Invalid date format."});
+        return res.status(401).json({ error: "Invalid date format." });
     }
 
     var dateParts = birthday.split("-");
@@ -59,13 +59,13 @@ var signup = async function (req, res) {
     var year = parseInt(dateParts[0], 10);
 
     if (month < 0 || month > 11) {
-        return res.status(401).json({ error: "Invalid date format."});
+        return res.status(401).json({ error: "Invalid date format." });
     }
 
     var lastDayOfMonth = new Date(year, month + 1, 0).getDate();
 
     if (day < 1 || day > lastDayOfMonth) {
-        return res.status(401).json({ error: "Invalid date format."});
+        return res.status(401).json({ error: "Invalid date format." });
     }
 
     var inputDate = new Date(year, month, day);
@@ -125,7 +125,8 @@ var getTop10Hashtags = async function (req, res) {
     try {
         const query = 'SELECT tag FROM hashtags ORDER BY count DESC LIMIT 10';
         const results = await db.send_sql(query);
-        res.status(200).json(results.map(row => row.tag));
+        const hashtags = results.map(row => row.tag);
+        res.status(200).json({ hashtags });
     } catch (error) {
         res.status(500).json({ error: 'Error querying database.' });
     }

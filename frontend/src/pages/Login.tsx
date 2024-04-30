@@ -4,7 +4,7 @@ import config from '../../config.json';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   // TODO: set appropriate state variables for username and password 
   const [username, setUsername] = useState('');
@@ -18,19 +18,17 @@ export default function Login() {
       const response = await axios.post(`${rootURL}/login`, {
         username: username,
         password: password
-      }, { withCredentials: true });
+      });
 
-      console.log('Response: ' + response);
       if (response.status === 200) {
         console.log('User ' + username + ' logged in');
-        alert("Login successful!");
-        navigate('/home');
+        navigate(`/${username}/`);
       } else {
-        alert("Log in failed");
+        alert("v1 Log in failed");
       }
     } catch (error) {
       console.error(error);
-      alert("Log in failed");
+      alert("v2 Log in failed.");
     }
   };
 
@@ -45,14 +43,14 @@ export default function Login() {
       </div>
       <div className='space-x-24 flex flex-row items-center justify-center'>
         <div className='space-y-2'>
-            <div className='pt-4'>
-              <p>Don't have an account?</p>
-            </div>
-            <div className='w-full flex justify-center'>
-                <button type="button" className='px-4 py-2 rounded-md bg-indigo-500 outline-none text-white'
-                  onClick={signup}>Sign up</button>
-              </div>
+          <div className='pt-4'>
+            <p>Don't have an account?</p>
           </div>
+          <div className='w-full flex justify-center'>
+            <button type="button" className='px-4 py-2 rounded-md bg-indigo-500 outline-none text-white'
+              onClick={signup}>Sign up</button>
+          </div>
+        </div>
         <form>
           <div className='rounded-md bg-slate-300 p-6 space-y-2 w-full'>
             <div className='font-bold flex w-full justify-center text-2xl mb-4'>
@@ -72,10 +70,10 @@ export default function Login() {
               <button type="button" className='px-4 py-2 rounded-md bg-indigo-500 outline-none font-bold text-white'
                 onClick={handleLogin}>Log in</button>
             </div>
-        
+
           </div>
         </form>
-        
+
       </div>
     </div>
   )
