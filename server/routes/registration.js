@@ -104,6 +104,11 @@ var signup = async function (req, res) {
             for (const tag of interests) {
                 let [hashtag] = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
                 await db.insert_items(`INSERT INTO user_hashtags (user_id, hashtag_id) VALUES (${userId}, ${hashtag.hashtag_id});`);
+
+                // Increment hashtag count
+                await db.send_sql(`
+                    UPDATE hashtags SET count = count + 1 WHERE hashtag_id = ${hashtag.hashtag_id}
+                `);
             }
 
             res.status(200).json({ username: username });
