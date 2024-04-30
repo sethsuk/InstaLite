@@ -57,14 +57,7 @@ export default function SignupActor() {
                             </ToggleButton>
                         ))}
                     </ToggleButtonGroup>
-                    <div className='flex justify-between'>
-                        <button
-                            type="button" // Change to "button" if this should not submit the form
-                            className='px-4 py-2 rounded-md bg-slate-400 outline-none font-semibold text-white'
-                            onClick={() => navigate(-1)}
-                        >
-                            Back
-                        </button>
+                    <div className='flex justify-end'>
                         <button
                             type="submit"
                             className='px-4 py-2 rounded-md bg-indigo-500 outline-none font-bold text-white'

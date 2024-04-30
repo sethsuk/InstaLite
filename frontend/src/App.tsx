@@ -14,7 +14,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path='/signup' element={<Signup />} />
-        <Route path='/:username/signupactor' element={<SignupActor />} />
+        <Route path='/signupactor' element={<SignupActor />} />
         <Route path='/:username/' element={<Home />} />
         <Route path='/:username/profile' element={<Profile />} />
         <Route path='/:username/profileactor' element={<ProfileActor />} />
