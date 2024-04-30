@@ -13,6 +13,7 @@ export default function Signup() {
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
@@ -78,11 +79,18 @@ export default function Signup() {
     };
 
     const handleSubmit = async () => {
-        const formData = new FormData();
-        // TODO: add to formData 
-        if (file) {
-            formData.append('image', file);
+        if (password !== confirmPassword) {
+            alert('Passwords do not match.');
+            return;
         }
+
+        if (!file) {
+            alert('Please select a profile photo.')
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
         formData.append('username', username);
         formData.append('password', password);
         formData.append('first_name', firstName);
@@ -106,14 +114,13 @@ export default function Signup() {
 
             if (response.status === 200) {
                 alert("Sign up successful!");
-                navigate('/signupactor');
+                navigate(`/${username}/signupactor`);
             } else {
                 console.log('Response Status: ' + response.status);
                 alert("v1 Registration failed.");
             }
         } catch (error) {
             console.error(error);
-            console.log('Error 1');
             alert("v2 Registration failed.");
         }
     };
@@ -235,6 +242,7 @@ export default function Signup() {
                                     id="birthday"
                                     type="text"
                                     className='outline-none bg-white rounded-md border border-slate-100 p-2'
+                                    placeholder='YYYY-MM-DD'
                                     value={birthday}
                                     onChange={(e) => setBirthday(e.target.value)}
                                     onKeyDown={handleKeyDown}
@@ -271,6 +279,16 @@ export default function Signup() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     onKeyDown={handleKeyDown}
+                                />
+                            </div>
+                            <div className='flex space-x-4 items-center justify-between'>
+                                <label htmlFor="confirmPassword" className='font-semibold'>Confirm Password</label>
+                                <input
+                                    id="confirmPassword"
+                                    type="password"
+                                    className='outline-none bg-white rounded-md border border-slate-100 p-2'
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
                                 />
                             </div>
                         </div>
