@@ -28,6 +28,39 @@ db.send_sql('TRUNCATE TABLE online');
 
 registry.register_routes(app);
 
+const { Kafka } = require('kafkajs');
+let kafka_config = {
+    groupId: "nets-2120-group-a",
+    bootstrapServers: ["localhost:9092"],
+    topic: "Twitter-Kafka"
+};
+
+const kafka = new Kafka({
+    clientId: 'my-app',
+    brokers: kafka_config.bootstrapServers
+});
+
+const consumer = kafka.consumer({ 
+    groupId: kafka_config.groupId, 
+    bootstrapServers: kafka_config.bootstrapServers}
+);
+
+const run = async () => {
+    // Consuming
+    await consumer.connect();
+    console.log(`Following topic ${kafka_config.topic}`);
+    await consumer.subscribe({ topic: kafka_config.topic, fromBeginning: true });
+
+    await consumer.run({
+        eachMessage: async ({ topic, partition, message }) => {
+            console.log(
+                JSON.parse(message.value.toString())
+            );
+        },
+    });
+};
+
+run().catch(console.error);
 
 // chromadb.initializeCollection()
 //     .then(() => {
