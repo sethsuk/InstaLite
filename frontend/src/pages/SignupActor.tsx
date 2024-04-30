@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import avatar from '../assets/avatar.svg';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';
@@ -16,11 +16,11 @@ export default function SignupActor() {
     //call backend axios to retrieve actors 
     //save output into an array and feed into 'actors'
     const actors: ActorInfo[] = [
-        {id: 1, name: 'Actor 1', imageSrc: avatar},
-        {id: 2, name: 'Actor 2', imageSrc: avatar},
-        {id: 3, name: 'Actor 3', imageSrc: avatar},
-        {id: 4, name: 'Actor 4', imageSrc: avatar},
-        {id: 5, name: 'Actor 5', imageSrc: avatar}
+        { id: 1, name: 'Actor 1', imageSrc: avatar },
+        { id: 2, name: 'Actor 2', imageSrc: avatar },
+        { id: 3, name: 'Actor 3', imageSrc: avatar },
+        { id: 4, name: 'Actor 4', imageSrc: avatar },
+        { id: 5, name: 'Actor 5', imageSrc: avatar }
     ];
 
     const handleActorSelect = (
@@ -68,6 +68,7 @@ export default function SignupActor() {
                         <button
                             type="submit"
                             className='px-4 py-2 rounded-md bg-indigo-500 outline-none font-bold text-white'
+                        // onclick = {handleSubmit}
                         >
                             Get started
                         </button>

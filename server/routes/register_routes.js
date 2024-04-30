@@ -21,7 +21,7 @@ function register_routes(app) {
     app.post('/:username/suggestHashtags', account.suggest_hashtags);
     app.post('/:username/updateHashtags', account.update_hashtags);
     app.post('/:username/removeHashtags', account.remove_hashtags);
-    app.post('/:username/updatePfp', account.update_pfp);
+    app.post('/:username/updatePfp', account.update_pfp); // with s3 it should be app.post('...', upload.single('image'), ...);
 
     app.post('/addHashtags', registration.add_hashtags);
     app.post('/signup', registration.signup); // with s3 it should be app.post('/signup', upload.single('image'), registration.signup);
