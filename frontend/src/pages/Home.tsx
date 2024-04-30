@@ -37,6 +37,7 @@ export default function Home() {
           <CreatePostComponent updatePosts={fetchData} />
           {
               // TODO: map each post to a PostComponent
+              //sdfdfsdfsdf
               posts.map((p) => (
                 <PostComponent title={p['title']} user={p['username']} description={p['content']} key={p['post_id']} />
            ))
