@@ -23,7 +23,8 @@
     "mysql": "^2.18.1",
     "mysql2": "^3.9.7",
     "path": "^0.12.7",
-    "process": "^0.11.10"
+    "process": "^0.11.10",
+    "kafkajs": "2.2.4"
   },
   "scripts": {
     "start": "node --experimental-vm-modules app.js",
