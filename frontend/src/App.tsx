@@ -7,6 +7,7 @@ import SignupActor from "./pages/SignupActor";
 import ChatInterface from "./pages/ChatInterface";
 import Profile from "./pages/Profile";
 import ProfileActor from "./pages/ProfileActor";
+import Post from "./pages/Post";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path='/signup' element={<Signup />} />
         <Route path='/signupactor' element={<SignupActor />} />
         <Route path='/' element={<Home />} />
+        <Route path='/post' element={<Post />} />
         <Route path='/profile' element={<Profile />} />
         <Route path='/profileactor' element={<ProfileActor />} />
         <Route path='/friends' element={<Friends />} />
