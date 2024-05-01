@@ -90,25 +90,22 @@ export default function Signup() {
         }
 
         const formData = new FormData();
-        formData.append('image', file);
-        formData.append('username', username);
-        formData.append('password', password);
-        formData.append('first_name', firstName);
-        formData.append('last_name', lastName);
-        formData.append('email', email);
-        formData.append('birthday', birthday);
-        formData.append('affiliation', affiliation);
-        const interests = Array.from(new Set([...hashtags, ...selectedItems]));
-        interests.forEach((interest) => {
-            formData.append('interests', interest);
-        });
+        formData.append('file', file);
+        const jsonData = {
+            username: username,
+            password: password,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            birthday: birthday,
+            affiliation: affiliation,
+            interests: Array.from(new Set([...hashtags, ...selectedItems]))
+        };
+        // Append the JSON data as a string under the key 'json_data'
+        formData.append('json_data', JSON.stringify(jsonData));
 
         try {
-            const response = await axios.post(`${rootURL}/signup`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            const response = await axios.post(`${rootURL}/signup`, formData);
 
             console.log('Response: ' + response);
 
@@ -127,7 +124,7 @@ export default function Signup() {
 
     return (
         <div className='w-screen h-screen flex items-center justify-center'>
-            <form>
+            <form onSubmit={handleSubmit}>
                 <div className='rounded-md bg-slate-200 p-12 space-y-12 w-full'>
                     <div className='font-bold flex w-full justify-center text-2xl mb-4'>
                         Create a new account
@@ -295,7 +292,7 @@ export default function Signup() {
                     </div>
                     <div className='w-full flex justify-between'>
                         <button
-                            type="submit"
+                            type="button"
                             className='px-4 py-2 rounded-md bg-slate-400 outline-none font-semibold text-white'
                             onClick={() => navigate("/login")}
                         >
@@ -304,7 +301,6 @@ export default function Signup() {
                         <button
                             type="submit"
                             className='px-4 py-2 rounded-md bg-indigo-500 outline-none font-bold text-white'
-                            onClick={handleSubmit}
                         >
                             Continue
                         </button>

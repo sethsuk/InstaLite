@@ -15,11 +15,16 @@ export default function Profile() {
 
     const navigate = useNavigate();
 
-    const [posts, setPosts] = useState([]);
-    //update backend
-    const currInterests = ["Interest 1", "Interest 2", "Interest 3", "Interest 4", "Interest 5"];
-    const suggestedInterests = ["Interest 6", "Interest 7", "Interest 8", "Interest 9", "Interest 10", "Interest 11", "Interest 12", "Interest 13", "Interest 14", "Interest 15"];
+    const [email, setEmail] = useState('');
+    const [currPassword, setCurrPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [affiliation, setAffiliation] = useState('');
+    const [currInterests, setCurrInterests] = useState([]);
+    const [suggestedInterests, setSuggestedInterests] = useState([]);
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
+    const [hashtagsInput, setHashtagsInput] = useState<string>('');
+    const [hashtags, setHashtags] = useState<string[]>([]);
+    const [file, setFile] = useState<File | null>(null);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.name;
@@ -35,18 +40,160 @@ export default function Profile() {
         });
     };
 
-    const fetchData = async () => {
+    // TODO
+    const fetchCurrInterests = async () => {
         try {
-            const response = await axios.get(`${rootURL}/feed`);
-            setPosts(response.data.results);
+            const response = await axios.get(`${rootURL}/${username}/`);
+            setCurrInterests(response.data.results);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    const fetchSuggestedInterests = async () => {
+        try {
+            const response = await axios.get(`${rootURL}/${username}/suggestHashtags`);
+            setSuggestedInterests(response.data.tags);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
 
     useEffect(() => {
-        fetchData();
+        fetchCurrInterests();
+        fetchSuggestedInterests();
     }, []);
+
+
+    const profileActor = () => {
+        navigate(`/${username}/profileactor`);
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setFile(e.target.files[0]);
+            const fileLabel = document.getElementById('file-label');
+            if (fileLabel) {
+                fileLabel.innerText = e.target.files[0].name;
+            }
+
+            const formData = new FormData();
+            if (file) {
+                formData.append('image', file);
+            }
+            const response = await axios.post(`${rootURL}/${username}/updatePfp`, formData);
+            if (response.status === 200) {
+                profileActor();
+            } else {
+                console.error('Fail to upload photo.');
+                alert("Failed to upload photo.");
+            }
+        } else {
+            setFile(null);
+            const fileLabel = document.getElementById('file-label');
+            if (fileLabel) {
+                fileLabel.innerText = 'No file chosen';
+            }
+        }
+    };
+
+    const handleEmail = async () => {
+        try {
+            const response = await axios.post(`${rootURL}/${username}/changeEmail`, {
+                newEmail: email
+            });
+            if (response.status === 200) {
+                console.log("Email changed successfully.");
+                setEmail('');
+            }
+        } catch (error) {
+            console.error("Failed to update email:", error);
+            alert("Failed to update email.");
+        }
+    };
+
+    const handleAffiliation = async () => {
+        try {
+            const response = await axios.post(`${rootURL}/${username}/changeAffiliation`, {
+                newAffiliation: affiliation
+            });
+            if (response.status === 200) {
+                console.log("Affiliation changed successfully.");
+                setAffiliation('');
+            }
+        } catch (error) {
+            console.error("Failed to update affiliation:", error);
+            alert("Failed to update affiliation.");
+        }
+    };
+
+    const handlePassword = async () => {
+        try {
+            const response = await axios.post(`${rootURL}/${username}/changePassword`, {
+                currentPassword: currPassword,
+                newPassword: newPassword
+            });
+            if (response.status === 200) {
+                console.log("Password changed successfully:", response.data);
+                setCurrPassword('');
+                setNewPassword('');
+            }
+        } catch (error) {
+            console.error("Failed to update password:", error);
+            alert("Failed to update password.");
+        }
+    }
+
+    const handleAddHashtags = async () => {
+        try {
+            const newTags = hashtagsInput.split(/[\s,]+/).filter(tag => tag && !hashtags.includes(tag));
+            if (newTags.length > 0) {
+                setHashtags([...hashtags, ...newTags]);
+            }
+            const response = await axios.post(`${rootURL}/addHashtags`, {
+                interests: hashtags
+            });
+            if (response.status === 200) {
+                console.log("Hashtags added successfully.");
+            }
+        } catch (error) {
+            console.error("Failed to add hashtags:", error);
+            alert("Failed to add hashtags.");
+        }
+    };
+
+    const handleAddInterests = async () => {
+        try {
+            const interests = Array.from(new Set([...hashtags, ...selectedItems]));
+            const response = await axios.post(`${rootURL}/${username}/updateHashtags`, {
+                hashtags: interests
+            });
+            if (response.status === 200) {
+                console.log("Interests added successfully.");
+                setHashtagsInput('');
+                fetchCurrInterests();
+                fetchSuggestedInterests();
+            }
+        } catch (error) {
+            console.error("Failed to add interests:", error);
+            alert("Failed to add interests.");
+        }
+    };
+
+    const handleRemoveInterests = async () => {
+        try {
+            const response = await axios.post(`${rootURL}/${username}/removeHashtags`, {
+                hashtags: selectedItems
+            });
+            if (response.status === 200) {
+                console.log("Interests removed successfully.");
+            }
+        } catch (error) {
+            console.error("Failed to remove interests:", error);
+            alert("Failed to remove interests.");
+        }
+    };
+
 
     return (
         <div className='w-screen h-screen space-y-8'>
@@ -59,20 +206,25 @@ export default function Profile() {
                     <div className='flex flex-row space-x-40'>
                         <div className='flex flex-col space-y-12'>
                             <div className='flex flex-col space-y-4'>
-                                <h2 className='font-semibold'> Upload your profile photo</h2>
-                                <button
-                                    type="submit"
-                                    className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'
-                                >
-                                    Update image
-                                </button>
+                                <h2 className='font-semibold'> Update your profile photo</h2>
+                                <input
+                                    type="file"
+                                    id="profile-photo"
+                                    style={{ display: 'none' }}
+                                    onChange={handleFileChange}
+                                    accept="image/*"
+                                />
+                                <label htmlFor="profile-photo" className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white cursor-pointer'>
+                                    Select Photo
+                                </label>
+                                <span id="file-label">No file chosen</span>
                             </div>
                             <div className='flex flex-col space-y-4'>
                                 <h2 className='font-semibold'> Update associated actor</h2>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'
-                                    //navigate to /profileactor
+                                    onClick={profileActor}
                                 >
                                     Update actor
                                 </button>
@@ -88,12 +240,34 @@ export default function Profile() {
                                         id="email"
                                         type="text"
                                         className='outline-none bg-white rounded-md border border-slate-100 p-2'
-                                        value={username}
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
                                     />
                                 </div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'
+                                    onClick={handleEmail}
+                                >
+                                    Update email
+                                </button>
+                            </div>
+                            <div className='flex flex-col space-y-6'>
+                                <h2 className='font-semibold'> Change affiliation </h2>
+                                <div className='flex space-x-4 items-center justify-between'>
+                                    <label htmlFor="email">New affiliation</label>
+                                    <input
+                                        id="affiliation"
+                                        type="text"
+                                        className='outline-none bg-white rounded-md border border-slate-100 p-2'
+                                        value={affiliation}
+                                        onChange={(e) => setAffiliation(e.target.value)}
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'
+                                    onClick={handleAffiliation}
                                 >
                                     Update email
                                 </button>
@@ -106,21 +280,24 @@ export default function Profile() {
                                         id="email"
                                         type="text"
                                         className='outline-none bg-white rounded-md border border-slate-100 p-2'
-                                        value={username}
+                                        value={currPassword}
+                                        onChange={(e) => setCurrPassword(e.target.value)}
                                     />
                                 </div>
                                 <div className='flex space-x-4 items-center justify-between'>
                                     <label htmlFor="email">New password</label>
                                     <input
-                                        id="email"
+                                        id="password"
                                         type="text"
                                         className='outline-none bg-white rounded-md border border-slate-100 p-2'
-                                        value={username}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
                                     />
                                 </div>
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'
+                                    onClick={handlePassword}
                                 >
                                     Update password
                                 </button>
@@ -159,12 +336,13 @@ export default function Profile() {
                                     id="user-hashtag"
                                     type="text"
                                     className='outline-none bg-white rounded-md border border-slate-100 p-2'
-                                    value={username}
+                                    value={hashtagsInput}
+                                    onChange={(e) => setHashtagsInput(e.target.value)}
                                 />
                                 <button
-                                    type="submit"
+                                    type="button"
                                     className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'
-                                    //add hashtag
+                                    onClick={handleAddHashtags}
                                 >
                                     Add hashtag
                                 </button>
@@ -172,8 +350,9 @@ export default function Profile() {
                         </div>
                     </div>
                     <button
-                        type="submit"
+                        type="button"
                         className='w-fit px-4 py-2 rounded-md bg-indigo-500 outline-none font-semibold text-white'
+                        onClick={handleAddInterests}
                     >
                         Add interests
                     </button>
@@ -200,9 +379,9 @@ export default function Profile() {
 
                     </div>
                     <button
-                        type="submit"
+                        type="button"
                         className='w-fit px-4 py-2 rounded-md bg-indigo-500 outline-none font-semibold text-white'
-                        //onclick = 
+                        onClick={handleRemoveInterests}
                     >
                         Remove interests
                     </button>
@@ -211,4 +390,3 @@ export default function Profile() {
         </div>
     )
 }
-

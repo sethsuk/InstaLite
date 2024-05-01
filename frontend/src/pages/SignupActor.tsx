@@ -26,7 +26,7 @@ export default function SignupActor() {
                 const response = await axios.get(`${rootURL}/${username}/getTop10Actors`);
                 setActors(response.data.actors);
             } catch (error) {
-                console.error("Error fetching hashtags:", error);
+                console.error("Error fetching actors:", error);
             }
         };
 
@@ -41,10 +41,11 @@ export default function SignupActor() {
     };
 
     const handleSubmit = async () => {
-        // TODO: Implement your submit logic here
         try {
             console.log(selectedActor);
-            const response = await axios.post(`${rootURL}/${username}/associateActor`);
+            const response = await axios.post(`${rootURL}/${username}/associateActor`, {
+                actorNconst: selectedActor
+            });
             console.log('Response: ' + response);
 
             if (response.status === 200) {
@@ -62,7 +63,7 @@ export default function SignupActor() {
 
     return (
         <div className='w-screen h-screen flex items-center justify-center'>
-            <form>
+            <form onSubmit={handleSubmit}>
                 <div className='rounded-md bg-slate-200 p-12 space-y-12 w-full'>
                     <div className='font-bold flex w-full justify-center text-2xl mb-4'>
                         Associate yourself with an actor
@@ -85,7 +86,6 @@ export default function SignupActor() {
                         <button
                             type="submit"
                             className='px-4 py-2 rounded-md bg-indigo-500 outline-none font-bold text-white'
-                            onClick={handleSubmit}
                         >
                             Get started
                         </button>

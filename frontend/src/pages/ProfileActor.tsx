@@ -1,38 +1,66 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import avatar from '../assets/avatar.svg';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
+import config from '../../config.json';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';
 import Navbar from '../components/Navigation';
 
 type ActorInfo = {
-    id: number;
+    nconst: string;
     name: string;
-    imageSrc: string;
+    imageUrl: string;
 };
 
 export default function SignupActor() {
     const navigate = useNavigate();
-    const [selectedActor, setSelectedActor] = useState<number | null>(null);
 
-    const actors: ActorInfo[] = [
-        {id: 1, name: 'Actor 1', imageSrc: avatar},
-        {id: 2, name: 'Actor 2', imageSrc: avatar},
-        {id: 3, name: 'Actor 3', imageSrc: avatar},
-        {id: 4, name: 'Actor 4', imageSrc: avatar},
-        {id: 5, name: 'Actor 5', imageSrc: avatar}
-    ];
+    const { username } = useParams();
+    const rootURL = config.serverRootURL;
+
+    const [selectedActor, setSelectedActor] = useState<string | null>(null);
+    const [actors, setActors] = useState<ActorInfo[]>([]);
+
+    // Fetch top5 similar actors 
+    useEffect(() => {
+        const fetchActors = async () => {
+            try {
+                const response = await axios.get(`${rootURL}/${username}/getTop10Actors`);
+                setActors(response.data.actors);
+            } catch (error) {
+                console.error("Error fetching actors:", error);
+            }
+        };
+
+        fetchActors();
+    }, []);
 
     const handleActorSelect = (
         event: React.MouseEvent<HTMLElement>,
-        newActorId: number | null
+        newActorNconst: string | null
     ) => {
-        setSelectedActor(newActorId);
+        setSelectedActor(newActorNconst);
     };
 
     const handleSubmit = async () => {
-        // TODO: Implement your submit logic here
-        console.log(selectedActor); // Example: logging selected actor
+        try {
+            console.log(selectedActor);
+            const response = await axios.post(`${rootURL}/${username}/associateActor`, {
+                actorNconst: selectedActor
+            });
+            console.log('Response: ' + response);
+
+            if (response.status === 200) {
+                navigate(`/${username}/`);
+            } else {
+                console.log('Response Status: ' + response.status);
+                alert("v1 Failed to associate actor.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert('v2 Failed to associate actor.');
+        }
     };
+
 
     return (
         <div className='w-screen h-screen'>
@@ -50,8 +78,8 @@ export default function SignupActor() {
                         className="grid grid-cols-3 gap-2"
                     >
                         {actors.map((actor) => (
-                            <ToggleButton value={actor.id} key={actor.id} className="flex flex-col items-center justify-center">
-                                <img src={actor.imageSrc} alt={actor.name} className="w-24 h-24 mb-2" />
+                            <ToggleButton value={actor.nconst} key={actor.nconst} className="flex flex-col items-center justify-center">
+                                <img src={actor.imageUrl} alt={actor.name} className="w-24 h-24 mb-2" />
                                 {actor.name}
                             </ToggleButton>
                         ))}
@@ -60,7 +88,7 @@ export default function SignupActor() {
                         <button
                             type="button" // Change to "button" if this should not submit the form
                             className='px-4 py-2 rounded-md bg-slate-400 outline-none font-semibold text-white'
-                            onClick={() => navigate(-1)}
+                            onClick={() => navigate(`/${username}/profile`)}
                         >
                             Back
                         </button>
