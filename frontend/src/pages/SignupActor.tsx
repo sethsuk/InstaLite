@@ -26,7 +26,7 @@ export default function SignupActor() {
                 const response = await axios.get(`${rootURL}/${username}/getTop10Actors`);
                 setActors(response.data.actors);
             } catch (error) {
-                console.error("Error fetching hashtags:", error);
+                console.error("Error fetching actors:", error);
             }
         };
 
@@ -41,10 +41,11 @@ export default function SignupActor() {
     };
 
     const handleSubmit = async () => {
-        // TODO: Implement your submit logic here
         try {
             console.log(selectedActor);
-            const response = await axios.post(`${rootURL}/${username}/associateActor`);
+            const response = await axios.post(`${rootURL}/${username}/associateActor`, {
+                actorNconst: selectedActor
+            });
             console.log('Response: ' + response);
 
             if (response.status === 200) {

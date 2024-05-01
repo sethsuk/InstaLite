@@ -90,25 +90,22 @@ export default function Signup() {
         }
 
         const formData = new FormData();
-        formData.append('image', file);
-        formData.append('username', username);
-        formData.append('password', password);
-        formData.append('first_name', firstName);
-        formData.append('last_name', lastName);
-        formData.append('email', email);
-        formData.append('birthday', birthday);
-        formData.append('affiliation', affiliation);
-        const interests = Array.from(new Set([...hashtags, ...selectedItems]));
-        interests.forEach((interest) => {
-            formData.append('interests', interest);
-        });
+        formData.append('file', file);
+        const jsonData = {
+            username: username,
+            password: password,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            birthday: birthday,
+            affiliation: affiliation,
+            interests: Array.from(new Set([...hashtags, ...selectedItems]))
+        };
+        // Append the JSON data as a string under the key 'json_data'
+        formData.append('json_data', JSON.stringify(jsonData));
 
         try {
-            const response = await axios.post(`${rootURL}/signup`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
+            const response = await axios.post(`${rootURL}/signup`, formData);
 
             console.log('Response: ' + response);
 
