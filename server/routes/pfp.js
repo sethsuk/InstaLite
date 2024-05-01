@@ -46,25 +46,30 @@ const getTop5Actors = async function (req, res) {
 // POST 
 const associateActor = async function (req, res) {
     const { actorNconst } = req.body;
+
     const username = req.session.username;
     if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
+
     if (!helper.isOK(actorNconst)) {
         return res.status(400).send({ error: 'Invalid input.' });
     }
+    
     try {
         const query = `UPDATE users SET actor_nconst = "${actorNconst}" WHERE username = "${username}";`;
         await db.send_sql(query);
+
+        // TODO RETURN SUCCESS
     } catch (error) {
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 }
 
 
 // GET /get actor name and image url 
 const getActorInfo = async function (req, res) {
-    const nconst = req.qeury.nconst;
+    const nconst = req.query.nconst;
     try {
         const actorInfo = await getInfoHelper(nconst);
         if (actorInfo) {

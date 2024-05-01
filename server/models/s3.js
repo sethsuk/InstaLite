@@ -14,7 +14,7 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-const bucketName = 'YOUR_BUCKET_NAME';
+const bucketName = 'project-java-swingers-upenn-nets2120-2024sp';
 
 // Function to upload a file to S3
 const uploadFileToS3 = async (file, key) => {
@@ -23,6 +23,7 @@ const uploadFileToS3 = async (file, key) => {
         Bucket: bucketName,
         Key: key, // file name you want to save as in S3
         Body: file,
+        ContentType: 'image/jpeg',
         ACL: 'public-read', // or another ACL depending on your needs
     };
 

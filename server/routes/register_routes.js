@@ -24,7 +24,7 @@ function register_routes(app) {
     app.post('/:username/updatePfp', account.update_pfp);
 
     app.post('/addHashtags', registration.add_hashtags);
-    app.post('/signup', registration.signup); // with s3 it should be app.post('/signup', upload.single('image'), registration.signup); // verified
+    app.post('/signup', upload.single('file'), registration.signup); // with s3 it should be app.post('/signup', upload.single('image'), registration.signup); // verified
     app.post('/login', registration.login); // verified
     app.get('/getTop10Hashtags', registration.get_top_10_hashtags); // verified
     app.post('/:username/logout', registration.logout); // verified
@@ -41,11 +41,16 @@ function register_routes(app) {
     app.get('/:username/getFriends', friends.get_friends);
     app.post('/:username/removeFriend', friends.remove_friend);
 
-    app.post('/:username/createPost', posts.create_post); // verified
+    app.post('/:username/createPost', posts.create_post); // verified for no image
     app.post('/:username/likePost', posts.like_post); // verified
 
     app.post('/:username/createComment', comments.create_comment); // verified
 
     app.get('/:username/getPosts', home.get_posts); // verified
     app.get('/:username/getNotifications', home.get_notifications); // verified
+
+
+    // ------------
+
+    app.post('/dummyS3Upload', upload.single('file'), registration.dummy_s3_upload);
 }
