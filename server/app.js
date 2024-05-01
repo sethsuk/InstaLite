@@ -29,8 +29,13 @@ db.send_sql('TRUNCATE TABLE online');
 registry.register_routes(app);
 
 const { Kafka } = require('kafkajs');
+const {  CompressionTypes, CompressionCodecs } = require('kafkajs')
+
+const SnappyCodec = require('kafkajs-snappy')
+
+CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec
 let kafka_config = {
-    groupId: "nets-2120-group-a",
+    groupId: "nets-2120-group-java-swingers",
     bootstrapServers: ["localhost:9092"],
     topic: "Twitter-Kafka"
 };
@@ -55,7 +60,7 @@ const run = async () => {
         eachMessage: async ({ topic, partition, message }) => {
             let post = JSON.parse(message.value.toString());
             console.log(post);
-            results = await db.send_sql(`INSERT INTO posts (title, content, user_id) VALUES ('Kafka Test', '${post.tex}', 5);`);
+            results = await db.send_sql(`INSERT INTO posts (title, media, content, user_id) VALUES ('Kafka Test', 'https://variety.com/wp-content/uploads/2023/07/Twitter-rebrands-X.jpg', '${post.text}', 5);`);
         },
     });
 };
