@@ -24,7 +24,7 @@ function register_routes(app) {
     app.post('/:username/updatePfp', account.update_pfp); // with image it should be app.post('...', upload.single('image'), ...);
 
     app.post('/addHashtags', registration.add_hashtags);
-    app.post('/signup', registration.signup); // with image it should be app.post('/signup', upload.single('image'), registration.signup); // verified
+    app.post('/signup', upload.single('file'), registration.signup); // verified
     app.post('/login', registration.login); // verified
     app.get('/getTop10Hashtags', registration.get_top_10_hashtags);
     app.post('/:username/logout', registration.logout); // verified
