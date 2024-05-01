@@ -28,12 +28,13 @@ const getTop5Actors = async function (req, res) {
                 let actorNconst = item.documents[0][i].replace('.jpg', '');
                 const info = await getInfoHelper(actorNconst);
 
-                actors.push({
-                    nconst: actorNconst,
-                    distance: Math.sqrt(item.distances[0][i]),
-                    name: info ? info.name : null,
-                    imageUrl: info ? info.imageUrl : null
-                });
+                if (info) {
+                    actors.push({
+                        nconst: actorNconst,
+                        name: info.name,
+                        imageUrl: info.imageUrl
+                    });
+                }
             }
         }
         res.status(200).json({ actors });
