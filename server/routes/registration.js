@@ -3,6 +3,34 @@ const bcrypt = require('bcrypt');
 const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 const s3 = require('../models/s3.js');
+const fs = require('fs');
+
+
+//POST /dummyS3Upload to S3 bucket
+var dummyS3Upload = async function (req, res) {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+    }
+
+    console.log(req.file);
+
+    const image = fs.readFileSync(req.file.path);
+
+    console.log(image);
+
+    try {
+        // upload to s3 (keyed on username)
+        const url = await s3.uploadFileToS3(image, "test/dummy.jpeg"); 
+
+        var location = await s3.getUrlFromS3("test/dummy.jpeg")
+
+        return res.status(200).json({ message: location });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Error querying database.' });
+    }
+}
+
 
 //POST /add new hashtags to table 
 var addHashtags = async function (req, res) {
@@ -20,9 +48,10 @@ var addHashtags = async function (req, res) {
             await db.send_sql(`INSERT INTO hashtags (tag) VALUES ("${interest}")
             ON DUPLICATE KEY UPDATE count = count + 1;`);
         }
-        res.status(200).json({ message: "Hashtags added successfully." });
+
+        return res.status(200).json({ message: "Hashtags added successfully." });
     } catch (error) {
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 }
 
@@ -30,11 +59,18 @@ var addHashtags = async function (req, res) {
 // POST /signup
 // hashtags are array of interests 
 var signup = async function (req, res) {
-    const { username, password, first_name, last_name, email, affiliation, birthday, interests } = req.body
-    // if (!req.file) {
-    //    return res.status(400).json({ error: 'No file uploaded.' });
-    // }
-    // const image = fs.readFileSync(req.file.path);
+    
+
+    console.log(req.file);
+    console.log(JSON.parse(req.body.json_data));
+    
+    const { username, password, first_name, last_name, email, affiliation, birthday, interests } = JSON.parse(req.body.json_data)
+
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+    }
+    
+    const image = fs.readFileSync(req.file.path);
 
     if (!username || !password || !first_name || !last_name || !email || !affiliation || !birthday || !interests) {
         return res.status(400).json({ error: 'One or more of the fields you entered was empty, please try again.' });
@@ -71,7 +107,6 @@ var signup = async function (req, res) {
     var inputDate = new Date(year, month, day);
     var currentDate = new Date();
 
-    console.log(inputDate);
 
     if (currentDate < inputDate) {  // Compare input date with current date
         return res.status(400).json({ error: "Birthday cannot be in the future." });
@@ -89,12 +124,14 @@ var signup = async function (req, res) {
                 return res.status(500).json({ error: 'Error hashing password.' });
             }
 
-            // upload to s3 (keyed on username)
-            // const url = await s3.uploadFileToS3(image, username); 
+            // // upload to s3 (keyed on username)
+            await s3.uploadFileToS3(image, `profile_pictures/${username}`); 
+
+            var url = await s3.getUrlFromS3(`profile_pictures/${username}`);
 
             // insert to users table 
             const query2 = `INSERT INTO users (username, hashed_password, first_name, last_name, email, affiliation, birthday, pfp_url, actor_nconst) 
-                VALUES ("${username}", "${hash}", "${first_name}", "${last_name}", "${email}", "${affiliation}", "${birthday}", null, null);`;
+                VALUES ("${username}", "${hash}", "${first_name}", "${last_name}", "${email}", "${affiliation}", "${birthday}", "${url}", null);`;
             await db.insert_items(query2);
 
             const results = await db.send_sql(`SELECT user_id FROM users WHERE username = "${username}";`);
@@ -111,24 +148,28 @@ var signup = async function (req, res) {
                 `);
             }
 
-            res.status(200).json({ username: username });
+            return res.status(200).json({ username: username });
         })
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 };
 
 
-// GET / get top-10 popular hashtags 
+// GET / get top-10 popular hashtags / for new users, existing users use suggestHashtags
 var getTop10Hashtags = async function (req, res) {
     try {
-        const query = 'SELECT tag FROM hashtags ORDER BY count DESC LIMIT 10';
+        const query = `
+        SELECT tag FROM hashtags
+        JOIN hashtags_rank ON hashtags.hashtag_id = hashtags_rank.hashtag_id
+        ORDER BY hashtags_rank.hashtag_rank DESC LIMIT 10`;
         const results = await db.send_sql(query);
-        const hashtags = results.map(row => row.tag);
-        res.status(200).json({ hashtags });
+
+        return res.status(200).json({hashtags: results.map(row => row.tag)});
     } catch (error) {
-        res.status(500).json({ error: 'Error querying database.' });
+        console.log(error);
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 }
 
@@ -170,7 +211,7 @@ var login = async function (req, res) {
     } catch (error) {
         console.log(error);
 
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 };
 
@@ -184,7 +225,7 @@ var logout = async function (req, res) {
 
         await db.send_sql(`DELETE FROM online WHERE user_id = ${userId};`);
 
-        res.status(200).json({ message: "You were successfully logged out." });
+        return res.status(200).json({ message: "You were successfully logged out." });
     }
 };
 
@@ -194,7 +235,8 @@ var registration_routes = {
     signup: signup,
     get_top_10_hashtags: getTop10Hashtags,
     login: login,
-    logout: logout
+    logout: logout,
+    dummy_s3_upload: dummyS3Upload
 }
 
 module.exports = registration_routes;

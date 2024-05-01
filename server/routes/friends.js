@@ -14,31 +14,37 @@ var sendFriendRequest = async function (req, res) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
+    if (req.session.user_id == receiverId) {
+        return res.status(400).json({error: 'Cannot request yourself.'});
+    }
+
     const senderId = req.session.user_id;
 
     try {
         // Check if a pending request already exists 
-        const query1 = `SELECT * FROM friend_requests
+        const query1 = `SELECT COUNT(*) FROM friend_requests
         WHERE sender_id = ${senderId} AND receiver_id = ${receiverId} AND status = 'pending';`;
         const requests = await db.send_sql(query1);
-        if (requests.length > 0) {
-            res.status(409).json({ error: "A friend request has already been sent to that user." })
+
+        if (requests[0]["COUNT(*)"] != 0) {
+            return res.status(409).json({ error: "A friend request has already been sent to that user." })
         }
 
         // Check if they are friends  
-        const query2 = `SELECT * FROM friends WHERE followed = ${senderId} AND follower = ${receiverId};`
+        const query2 = `SELECT COUNT(*) FROM friends WHERE followed = ${senderId} AND follower = ${receiverId};`
         const results = await db.send_sql(query2);
-        if (results.length > 0) {
-            res.status(409).json({ error: "You two are already friends." })
+
+        if (results[0]["COUNT(*)"] != 0) {
+            return res.status(409).json({ error: "You two are already friends." })
         }
 
         const query3 = `INSERT INTO friend_requests (sender_id, receiver_id, status) 
             VALUES (${senderId}, ${receiverId}, 'pending');`;
         await db.send_sql(query3);
-        res.status(200).json({ message: 'Friend request sent.' });
 
+        return res.status(200).json({ message: 'Friend request sent.' });
     } catch (error) {
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 }
 
@@ -48,49 +54,63 @@ var getFriendRequests = async function (req, res) {
     if (!helper.isLoggedIn(req, req.session.user_id)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
+
     const receiverId = req.session.user_id;
+
     try {
         const query = `SELECT f.request_id, f.sender_id, u.username 
         FROM friend_requests f JOIN users u ON f.sender_id = u.user_id
-        WHERE f.receiver_id = ${receiverId} AND fr.status = 'pending';`;
+        WHERE f.receiver_id = ${receiverId} AND f.status = 'pending';`;
         const results = await db.send_sql(query);
-        res.status(200).json({
-            results: results.map(x => ({
+
+        return res.status(200).json({
+            friendRequests: results.map(x => ({
                 requestId: x.request_id,
                 senderId: x.sender_id,
                 senderName: x.username
             }))
         })
     } catch (error) {
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 }
 
 
 // POST /accept friend request
 var acceptFriendRequest = async function (req, res) {
-    const { requestId } = req.body;
+    const { senderId } = req.body;
+
+    if (!helper.isOK(senderId)) {
+        return res.status(400).json({ error: 'Invalid input.' });
+    }
 
     if (!helper.isLoggedIn(req, req.session.user_id)) {
-        return res.status(403).send({ error: 'Not logged in.' });
+        return res.status(403).json({ error: 'Not logged in.' });
     }
     
     try {
         const receiverId = req.session.user_id;
+
+        const requestCheck = db.send_sql(`
+            SELECT COUNT(*) FROM friend_requests
+            WHERE sender_id = ${senderId} AND receiver_id = ${receiverId}
+        `);
+
+        if (requestCheck[0]["COUNT(*)"] == 0) {
+            return req.status(400).json({error: 'Request does not exist.'});
+        }
+
         const query1 = `UPDATE friend_requests SET status = 'accepted'
-            WHERE request_id = ${requestId} AND receiver_id = ${receiverId} AND status = 'pending'
-            RETURNING sender_id;`;
+            WHERE sender_id = ${senderId} AND receiver_id = ${receiverId} AND status = 'pending'`;
         const results = await db.send_sql(query1);
-        const senderId = results[0].sender_id;
 
         const query2 = `INSERT INTO friends (followed, follower)
             VALUES (${senderId}, ${receiverId}), (${receiverId}, ${senderId})`;
         const rowsAffected = await db.insert_items(query2);
-        if (rowsAffected === 1) {
-            res.status(200).json({ message: "Friend request accepted successfully." });
-        }
+
+        return res.status(200).json({ message: "Friend request accepted successfully." });
     } catch (error) {
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 }
 

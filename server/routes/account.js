@@ -116,7 +116,7 @@ var suggestHashtags = async function (req, res) {
             SELECT hashtags.tag FROM hashtags 
             JOIN hashtags_rank ON hashtags_rank.hashtag_id = hashtags.hashtag_id
             WHERE hashtags.hashtag_id NOT IN (SELECT hashtag_id FROM user_hashtags WHERE user_id = ${user_id}) 
-            ORDER BY hashtags_rank.hashtag_rank ASC LIMIT 10
+            ORDER BY hashtags_rank.hashtag_rank DESC LIMIT 10
         `;
         const results = await db.send_sql(query);
 
