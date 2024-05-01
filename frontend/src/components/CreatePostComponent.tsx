@@ -3,12 +3,12 @@ import axios from 'axios';
 import config from '../../config.json';
 import { useParams } from 'react-router-dom';
 
-function CreatePostComponent({ updatePosts }) {
+function CreatePostComponent({ updatePosts }: { updatePosts: () => void }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const { username } = useParams();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     try {
       const response = await axios.post(`${config.serverRootURL}/${username}/createPost`, {
