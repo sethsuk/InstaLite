@@ -2,6 +2,8 @@ var db = require('../models/database.js');
 const bcrypt = require('bcrypt');
 const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
+const s3 = require('../models/s3.js');
+const fs = require('fs');
 
 // POST /createPost
 var createPost = async function (req, res) {
@@ -9,12 +11,15 @@ var createPost = async function (req, res) {
         return res.status(403).json({ error: 'Not logged in.' });
     }
 
-    const title = req.body["title"];
-    var content = req.body["content"];
-    const media = req.body["media"];
-    var hashtags = req.body["hashtags"]
+    var { title, content, media, hashtags } = JSON.parse(req.body.json_data)
 
-    if (!title || !media) {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded.' });
+    }
+        
+    const image = fs.readFileSync(req.file.path);
+
+    if (!title) {
         return res.status(400).json({ error: "One or more of the fields you entered was empty, please try again." });
     }
 
@@ -27,17 +32,22 @@ var createPost = async function (req, res) {
         
         if (!content) {
             results = await db.send_sql(`
-                INSERT INTO posts (title, media, user_id)
-                VALUES ('${title}', '${media}', ${req.session.user_id});
+                INSERT INTO posts (title, user_id)
+                VALUES ('${title}', ${req.session.user_id});
             `);
         } else {
             results = await db.send_sql(`
-                INSERT INTO posts (title, media, content, user_id)
-                VALUES ('${title}', '${media}', '${content}', ${req.session.user_id});
+                INSERT INTO posts (title, content, user_id)
+                VALUES ('${title}', '${content}', ${req.session.user_id});
             `);
         }
 
         var post_id = results.insertId;
+
+        // upload to s3 (keyed on post_id)
+        await s3.uploadFileToS3(image, `posts/${post_id}`); 
+
+        await db.send_sql(`UPDATE posts SET media = '${await s3.getUrlFromS3(`posts/${post_id}`)}' WHERE post_id = ${post_id}`);
 
         // link hashtags to posts
         for (const tag of hashtags) {

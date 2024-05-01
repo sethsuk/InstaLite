@@ -79,7 +79,7 @@ async function create_tables(db) {
     var q8 = db.create_tables('CREATE TABLE IF NOT EXISTS posts ( \
         post_id INT NOT NULL AUTO_INCREMENT, \
         title VARCHAR(255), \
-        media VARCHAR(255) UNIQUE, \
+        media VARCHAR(255), \
         content VARCHAR(255), \
         user_id INT NOT NULL, \
         likes INT DEFAULT 0, \

@@ -59,11 +59,6 @@ var addHashtags = async function (req, res) {
 // POST /signup
 // hashtags are array of interests 
 var signup = async function (req, res) {
-    
-
-    console.log(req.file);
-    console.log(JSON.parse(req.body.json_data));
-    
     const { username, password, first_name, last_name, email, affiliation, birthday, interests } = JSON.parse(req.body.json_data)
 
     if (!req.file) {
@@ -124,7 +119,7 @@ var signup = async function (req, res) {
                 return res.status(500).json({ error: 'Error hashing password.' });
             }
 
-            // // upload to s3 (keyed on username)
+            // upload to s3 (keyed on username)
             await s3.uploadFileToS3(image, `profile_pictures/${username}`); 
 
             var url = await s3.getUrlFromS3(`profile_pictures/${username}`);
