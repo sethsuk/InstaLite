@@ -53,9 +53,9 @@ const run = async () => {
 
     await consumer.run({
         eachMessage: async ({ topic, partition, message }) => {
-            console.log(
-                JSON.parse(message.value.toString())
-            );
+            let post = JSON.parse(message.value.toString());
+            console.log(post);
+            results = await db.send_sql(`INSERT INTO posts (title, content, user_id) VALUES ('Kafka Test', '${post.tex}', 5);`);
         },
     });
 };
