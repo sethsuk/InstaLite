@@ -26,7 +26,7 @@ function register_routes(app) {
     app.post('/addHashtags', registration.add_hashtags);
     app.post('/signup', registration.signup); // with s3 it should be app.post('/signup', upload.single('image'), registration.signup); // verified
     app.post('/login', registration.login); // verified
-    app.get('/getTop10Hashtags', registration.get_top_10_hashtags);
+    app.get('/getTop10Hashtags', registration.get_top_10_hashtags); // verified
     app.post('/:username/logout', registration.logout); // verified
 
     app.get('/:username/getTop5Actors', pfp.get_top_5_actors);
@@ -34,8 +34,8 @@ function register_routes(app) {
     app.get('/:username/getActorInfo', pfp.get_actor_info);
     app.get('/:username/getPfp', pfp.get_pfp);
 
-    app.post('/:username/sendFriendRequest', friends.send_friend_request);
-    app.get('/:username/getFriendRequests', friends.get_friend_requests);
+    app.post('/:username/sendFriendRequest', friends.send_friend_request); // verified
+    app.get('/:username/getFriendRequests', friends.get_friend_requests); // verified
     app.post('/:username/acceptFriendRequest', friends.accept_friend_request);
     app.post('/:username/rejectFriendRequest', friends.reject_friend_request);
     app.get('/:username/getFriends', friends.get_friends);

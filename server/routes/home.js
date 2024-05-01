@@ -16,7 +16,7 @@ var getPosts = async function (req, res) {
             JOIN posts p ON pr.post_id = p.post_id
             LEFT JOIN friends f ON p.user_id = f.followed
             WHERE f.follower = ${req.session.user_id} OR p.user_id = ${req.session.user_id}
-            ORDER BY pr.post_rank ASC
+            ORDER BY pr.post_rank DESC
             LIMIT 10;
         `);
 
