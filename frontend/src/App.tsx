@@ -15,13 +15,13 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path='/signup' element={<Signup />} />
-        <Route path='/signupactor' element={<SignupActor />} />
-        <Route path='/' element={<Home />} />
+        <Route path='/:username/signupactor' element={<SignupActor />} />
+        <Route path='/:username/' element={<Home />} />
         <Route path='/post' element={<Post />} />
-        <Route path='/profile' element={<Profile />} />
-        <Route path='/profileactor' element={<ProfileActor />} />
-        <Route path='/friends' element={<Friends />} />
-        <Route path="/chat" element={<ChatInterface />} />
+        <Route path='/:username/profile' element={<Profile />} />
+        <Route path='/:username/profileactor' element={<ProfileActor />} />
+        <Route path='/:username/friends' element={<Friends />} />
+        <Route path="/:username/chat" element={<ChatInterface />} />
       </Routes>
     </BrowserRouter>
   )
