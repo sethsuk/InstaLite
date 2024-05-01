@@ -5,7 +5,7 @@ const helper = require('./route_helper.js');
 
 // GET /getPosts
 var getPosts = async function (req, res) {
-    if (!helper.isLoggedIn(req, req.session.user_id)) {
+    if (!helper.isLoggedIn(req, req.params.username)) {
         return res.status(403).json({ error: 'Not logged in.' });
     }
 

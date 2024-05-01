@@ -14,6 +14,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   const [posts, setPosts] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   const postsData = [
     {
@@ -34,7 +35,7 @@ export default function Home() {
     }
   ]
 
-  const notifications = [
+  const notifications_test = [
     {
       type: 'friendRequest',
       users: ['friend-1'],
@@ -54,8 +55,9 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${rootURL}/feed/${username}`);
-      setPosts(response.data.results || []); // Ensure fallback to empty array if no results
+      const response = await axios.get(`${rootURL}/${username}/getPosts`);
+      console.log(response.data);
+      setPosts(response.data); // Ensure fallback to empty array if no results
     } catch (error) {
       console.error('Error fetching data:', error);
       // Optionally handle navigation or display error message
@@ -71,7 +73,7 @@ export default function Home() {
       <Navbar />
       <div className='w-full max-w-[1800px] flex flex-col justify-center items-center space-y-8 p-8'>
         <div className='space-y-3'>
-          {notifications.map((notification, index) => (
+          {notifications_test.map((notification, index) => (
             <NotificationComponent
               key={index}
               type={notification.type}
@@ -83,15 +85,15 @@ export default function Home() {
         </div>
 
         <div className='space-y-3 w-full'>
-          {postsData.map((post, index) => (
+          {posts.map((post, index) => (
             <PostComponent
               key={index}
-              user={post.user}
-              userProfileImage={post.userProfileImage}
-              postImage={post.postImage}
-              imageDescription={post.imageDescription}
-              hashtags={post.hashtags}
-              caption={post.caption}
+              user={post.user_id}
+              userProfileImage={'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg'}
+              postImage={'https://www.svgrepo.com/show/382100/female-avatar-girl-face-woman-user-7.svg'}
+              imageDescription={"wow"}
+              hashtags={"#wow"}
+              caption={post.content}
             />
           ))}
         </div>

@@ -15,6 +15,7 @@ export default function Login() {
   const handleLogin = async () => {
     // TODO: check username and password using /login route 
     try {
+      axios.defaults.withCredentials = true;
       const response = await axios.post(`${rootURL}/login`, {
         username: username,
         password: password

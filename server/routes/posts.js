@@ -65,7 +65,7 @@ var createPost = async function (req, res) {
 
 
 var likePost = async function (req, res) {
-    if (!helper.isLoggedIn(req, req.session.user_id)) {
+    if (!helper.isLoggedIn(req, req.session.username)) {
         return res.status(403).json({ error: 'Not logged in.' });
     }
 
