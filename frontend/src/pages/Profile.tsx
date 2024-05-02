@@ -70,18 +70,37 @@ export default function Profile() {
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log("triggered handleFileChange");
         if (e.target.files && e.target.files.length > 0) {
-            setFile(e.target.files[0]);
+            console.log('file found');
+            const selectedFile = e.target.files[0];
+            setFile(selectedFile);
             const fileLabel = document.getElementById('file-label');
+
             if (fileLabel) {
                 fileLabel.innerText = e.target.files[0].name;
             }
 
             const formData = new FormData();
-            if (file) {
-                formData.append('image', file);
+
+            if (!selectedFile) {
+                console.log("null file select photo");
+                alert('Please select a profile photo.')
+                return;
             }
-            const response = await axios.post(`${rootURL}/${username}/updatePfp`, formData);
+
+            console.log(file);
+            console.log("added file");
+            formData.append('file', selectedFile);
+
+            
+            console.log("sending to Axios");
+            const response = await axios.post(`${rootURL}/${username}/updatePfp`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
             if (response.status === 200) {
                 profileActor();
             } else {
@@ -89,9 +108,12 @@ export default function Profile() {
                 alert("Failed to upload photo.");
             }
         } else {
+            console.log("in the else clause")
+
             setFile(null);
             const fileLabel = document.getElementById('file-label');
             if (fileLabel) {
+                console.log("no file chosen");
                 fileLabel.innerText = 'No file chosen';
             }
         }
@@ -197,7 +219,7 @@ export default function Profile() {
 
     return (
         <div className='w-screen h-screen space-y-8'>
-            <Navbar></Navbar>
+            <Navbar username={username}></Navbar>
             <div className='flex flex-col justify-center items-center space-y-8'>
                 <div className='rounded-md bg-slate-200 p-12 space-y-12 w-[800px]'>
                     <div className='font-bold flex w-full justify-center text-2xl mb-4'>

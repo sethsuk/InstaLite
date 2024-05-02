@@ -23,7 +23,7 @@ var createComment = async function (req, res) {
         return res.status(400).json({ error: "One or more of the fields you entered was empty, please try again." });
     }
 
-    if (!helper.isOK(content) || !helper.isOK(content)) {
+    if (!helper.isOK(content)) {
         return res.status(400).json({ error: "Invalid Input" });
     }
 
@@ -50,12 +50,12 @@ var createComment = async function (req, res) {
         if (!parent_id) {
             results = await db.send_sql(`
                 INSERT INTO comments (post_id, user_id, content)
-                VALUES (${post_id}, ${req.session.user_id}, '${content}');
+                VALUES (${post_id}, ${req.session.user_id}, "${content}");
             `);
         } else {
             results = await db.send_sql(`
                 INSERT INTO comments (post_id, user_id, content, parent_id)
-                VALUES (${post_id}, ${req.session.user_id}, '${content}', ${parent_id});
+                VALUES (${post_id}, ${req.session.user_id}, "${content}", ${parent_id});
             `);
         }
 
@@ -68,6 +68,10 @@ var createComment = async function (req, res) {
             if (existingHashtag[0]["COUNT(*)"] == 0) {
                 await db.send_sql(`INSERT INTO hashtags(tag) VALUE ("${tag}")`);
             }
+
+            await db.send_sql(`
+                UPDATE hashtags SET count = count + 1 WHERE tag = "${tag}"
+            `);
 
             let hashtag = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
 

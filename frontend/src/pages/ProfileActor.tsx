@@ -65,7 +65,7 @@ export default function SignupActor() {
 
     return (
         <div className='w-screen h-screen'>
-            <Navbar></Navbar>
+            <Navbar username={username}></Navbar>
             <form onSubmit={handleSubmit} className='flex justify-center items-center py-8'>
                 <div className='rounded-md bg-slate-200 p-12 space-y-12 w-fit'>
                     <div className='font-bold flex w-full justify-center text-2xl mb-4'>

@@ -170,7 +170,7 @@ export default function Friends() {
 
     return (
         <div>
-            <Navbar></Navbar>
+            <Navbar username={username}></Navbar>
             <div className='py-16'>
                 <div className='flex space-x-4 justify-center'>
                     <div className="">

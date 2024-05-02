@@ -21,6 +21,8 @@ interface PostProps {
 
 
 export default function Post() {
+  const {username} = useParams();
+
   const post: PostProps =
   {
     user: 'username',
@@ -41,7 +43,7 @@ export default function Post() {
 
   return (
     <div className="w-screen h-screen flex flex-col items-center space-y-8 justify-start">
-      <Navbar />
+      <Navbar username={username}></Navbar>
       <div className="max-w-[1000px] flex bg-slate-100 rounded-lg overflow-hidden">
         <div className="w-3/5">
           <img src={post.postImage} alt={post.imageDescription} className=" object-cover" />

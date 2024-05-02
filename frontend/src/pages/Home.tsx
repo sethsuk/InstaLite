@@ -70,7 +70,7 @@ export default function Home() {
 
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-start'>
-      <Navbar />
+      <Navbar username={username}></Navbar>
       <div className='w-full max-w-[1800px] flex flex-col justify-center items-center space-y-8 p-8'>
         <div className='space-y-3'>
           {notifications_test.map((notification, index) => (

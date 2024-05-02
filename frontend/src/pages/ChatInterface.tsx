@@ -51,7 +51,7 @@ export default function ChatInterface() {
 
     return (
         <div className='w-screen h-screen flex flex-col items-center'>
-        <Navbar></Navbar>
+        <Navbar username={username}></Navbar>
             <div className='font-bold text-3xl'>Internet Movie DB Chat</div>
             <div className='h-[40rem] w-[30rem] bg-slate-100 p-3'>
                 <div className='h-[90%] overflow-scroll'>

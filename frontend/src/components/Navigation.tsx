@@ -7,7 +7,11 @@ import Button from '@mui/material/Button';
 import { styled, alpha } from '@mui/material/styles';
 import InputBase from '@mui/material/InputBase';
 
-export default function Navigation() {
+interface props {
+  username?: string
+}
+
+export default function Navigation({username} : props) {
   const Search = styled('div')(({ theme }) => ({
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
@@ -47,11 +51,11 @@ export default function Navigation() {
         <Box sx={{ flexGrow: 1 }}>
           <AppBar position="static">
             <Toolbar className='bg-slate-700'>
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }} onClick={() => navigate(`/`)}>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }} onClick={() => navigate(`/${username}/`)}>
                 Instalite
               </Typography>
                 {pages.map((page) => (
-                  <Button color="inherit" onClick={() => navigate(`/${page.toLowerCase()}`)}>{page}</Button>
+                  <Button color="inherit" onClick={() => navigate(`/${username}/${page.toLowerCase()}`)}>{page}</Button>
                 ))}
                 <Search>
                   <StyledInputBase

@@ -68,13 +68,13 @@ let kafka_config = {
 
 // run().catch(console.error);
 
-// chromadb.initializeCollection()
-//     .then(() => {
-//         console.log('Collection initialized and ready to use.');
-//     })
-//     .catch(error => {
-//         console.error('Error during collection initialization:', error);
-//     });
+chromadb.initializeCollection()
+    .then(() => {
+        console.log('Collection initialized and ready to use.');
+    })
+    .catch(error => {
+        console.error('Error during collection initialization:', error);
+    });
 
 
 app.listen(port, () => {

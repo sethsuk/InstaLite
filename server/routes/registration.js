@@ -169,7 +169,7 @@ var getTop10Hashtags = async function (req, res) {
     try {
         const query = `
         SELECT tag FROM hashtags
-        JOIN hashtags_rank ON hashtags.hashtag_id = hashtags_rank.hashtag_id
+        LEFT JOIN hashtags_rank ON hashtags.hashtag_id = hashtags_rank.hashtag_id
         ORDER BY hashtags_rank.hashtag_rank DESC LIMIT 10`;
         const results = await db.send_sql(query);
 

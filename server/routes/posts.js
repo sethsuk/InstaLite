@@ -67,6 +67,10 @@ var createPost = async function (req, res) {
                 await db.send_sql(`INSERT INTO hashtags(tag) VALUE ("${tag}")`);
             }
 
+            await db.send_sql(`
+                UPDATE hashtags SET count = count + 1 WHERE tag = ${tag}
+            `);
+
             let hashtag = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
 
             await db.insert_items(`INSERT INTO hashtags_to_posts (post_id, hashtag_id) VALUES (${post_id}, ${hashtag[0].hashtag_id});`);

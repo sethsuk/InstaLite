@@ -2,6 +2,7 @@ var db = require('../models/database.js');
 const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 const bcrypt = require('bcrypt');
+const s3 = require('../models/s3.js');
 const fs = require('fs');
 
 // GET /test hello world.
@@ -118,7 +119,7 @@ var suggestHashtags = async function (req, res) {
     try {
         const query = `
             SELECT hashtags.tag FROM hashtags 
-            JOIN hashtags_rank ON hashtags_rank.hashtag_id = hashtags.hashtag_id
+            LEFT JOIN hashtags_rank ON hashtags_rank.hashtag_id = hashtags.hashtag_id
             WHERE hashtags.hashtag_id NOT IN (SELECT hashtag_id FROM user_hashtags WHERE user_id = ${user_id}) 
             ORDER BY hashtags_rank.hashtag_rank DESC LIMIT 10
         `;
@@ -277,22 +278,28 @@ var removeHashtags = async function (req, res) {
 
 // POST /updatePfp
 var updatePfp = async function (req, res) {
-    const { file } = req.body;
+    console.log("calling updatePfp");
 
     const user_id = req.session.user_id;
 
     const username = req.params.username;
+
     if (!helper.isLoggedIn(req, username)) {
+        console.log("not logged in");
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
-    if (!file) {
+    if (!req.file) {
+        console.log("no image");
         return res.status(400).json({ error: 'No file uploaded.' });
     }
 
     try {
         const image = fs.readFileSync(req.file.path);
-        const url = await s3.uploadFileToS3(image, username);
+        const url = await s3.uploadFileToS3(image, `profile_pictures/${username}`);
+
+        console.log(url);
+
         await db.send_sql(`UPDATE users SET pfp_url = "${url}" WHERE user_id = ${user_id}`);
         return res.status(200).json({ message: 'Pfp updated successfully.' });
     } catch (error) {
