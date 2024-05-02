@@ -23,7 +23,7 @@ export default function SignupActor() {
     useEffect(() => {
         const fetchActors = async () => {
             try {
-                const response = await axios.get(`${rootURL}/${username}/getTop10Actors`);
+                const response = await axios.get(`${rootURL}/${username}/getTop5Actors`);
                 setActors(response.data.actors);
             } catch (error) {
                 console.error("Error fetching actors:", error);

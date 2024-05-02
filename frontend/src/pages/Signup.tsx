@@ -98,15 +98,6 @@ export default function Signup() {
         const formData = new FormData();
         formData.append('file', file);
 
-        // formData.append('username', username);
-        // formData.append('password', password);
-        // formData.append('first_name', firstName);
-        // formData.append('last_name', lastName);
-        // formData.append('email', email);
-        // formData.append('birthday', birthday);
-        // formData.append('affiliation', affiliation);
-        // formData.append('interests', '[]');
-
 
         const userData = {
             username: username,

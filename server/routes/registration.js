@@ -63,7 +63,6 @@ var signup = async function (req, res) {
     console.log(JSON.parse(req.body.json_data));
 
     const { username, password, first_name, last_name, email, affiliation, birthday, interests } = JSON.parse(req.body.json_data);
-    // const { username, password, first_name, last_name, email, affiliation, birthday, interests } = req.body.json_data;
 
     if (!req.file) {
         console.log("file error");
