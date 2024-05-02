@@ -5,8 +5,9 @@ const helper = require('./route_helper.js');
 
 // POST /createComments
 var createComment = async function (req, res) {
-    if (!helper.isLoggedIn(req, req.session.user_id)) {
-        return res.status(403).json({ error: 'Not logged in.' });
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
     }
 
     const post_id = parseInt(req.body["post_id"]);
@@ -33,7 +34,7 @@ var createComment = async function (req, res) {
         `);
 
         if (postResults[0]["COUNT(*)"] == 0) {
-            return res.status(400).json({error: "Post does not exist."})
+            return res.status(400).json({ error: "Post does not exist." })
         }
 
         var results;

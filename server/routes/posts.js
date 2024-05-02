@@ -7,8 +7,9 @@ const fs = require('fs');
 
 // POST /createPost
 var createPost = async function (req, res) {
-    if (!helper.isLoggedIn(req, req.session.user_id)) {
-        return res.status(403).json({ error: 'Not logged in.' });
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
     }
 
     var { title, content, media, hashtags } = JSON.parse(req.body.json_data)
@@ -16,7 +17,7 @@ var createPost = async function (req, res) {
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
     }
-        
+
     const image = fs.readFileSync(req.file.path);
 
     if (!title) {
@@ -29,7 +30,7 @@ var createPost = async function (req, res) {
 
     try {
         var results;
-        
+
         if (!content) {
             results = await db.send_sql(`
                 INSERT INTO posts (title, user_id)
@@ -45,7 +46,7 @@ var createPost = async function (req, res) {
         var post_id = results.insertId;
 
         // upload to s3 (keyed on post_id)
-        await s3.uploadFileToS3(image, `posts/${post_id}`); 
+        await s3.uploadFileToS3(image, `posts/${post_id}`);
 
         await db.send_sql(`UPDATE posts SET media = '${await s3.getUrlFromS3(`posts/${post_id}`)}' WHERE post_id = ${post_id}`);
 
@@ -65,8 +66,9 @@ var createPost = async function (req, res) {
 
 
 var likePost = async function (req, res) {
-    if (!helper.isLoggedIn(req, req.session.username)) {
-        return res.status(403).json({ error: 'Not logged in.' });
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
     }
 
     const post_id = parseInt(req.body["post_id"]);
@@ -79,7 +81,7 @@ var likePost = async function (req, res) {
         var existingLikeQuery = await db.send_sql(`SELECT user_id FROM post_likes WHERE post_id = ${post_id} AND user_id = ${req.session.user_id}`);
 
         if (existingLikeQuery.length != 0) {
-            return res.status(400).json({error: "Already liked post."});
+            return res.status(400).json({ error: "Already liked post." });
         }
 
 
@@ -88,7 +90,7 @@ var likePost = async function (req, res) {
 
         await db.send_sql(`UPDATE posts SET likes = ${numOfLikes} WHERE post_id = ${post_id};`);
         await db.send_sql(`INSERT INTO post_likes (post_id, user_id) VALUES (${post_id}, ${req.session.user_id});`);
-    
+
         return res.status(201).json({ message: "Post liked." });
     } catch (err) {
         console.log(err);

@@ -24,7 +24,9 @@ export default function SignupActor() {
         const fetchActors = async () => {
             try {
                 const response = await axios.get(`${rootURL}/${username}/getTop5Actors`);
+                console.log('Axios call went through.');
                 setActors(response.data.actors);
+                console.log(response.data.actors);
             } catch (error) {
                 console.error("Error fetching actors:", error);
             }
@@ -40,7 +42,8 @@ export default function SignupActor() {
         setSelectedActor(newActorNconst);
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
         try {
             console.log(selectedActor);
             const response = await axios.post(`${rootURL}/${username}/associateActor`, {

@@ -20,7 +20,7 @@ var dummyS3Upload = async function (req, res) {
 
     try {
         // upload to s3 (keyed on username)
-        const url = await s3.uploadFileToS3(image, "test/dummy.jpeg"); 
+        const url = await s3.uploadFileToS3(image, "test/dummy.jpeg");
 
         var location = await s3.getUrlFromS3("test/dummy.jpeg")
 
@@ -69,7 +69,7 @@ var signup = async function (req, res) {
 
         return res.status(400).json({ error: 'No file uploaded.' });
     }
-    
+
     const image = fs.readFileSync(req.file.path);
 
     if (!username || !password || !first_name || !last_name || !email || !affiliation || !birthday || !interests) {
@@ -129,7 +129,7 @@ var signup = async function (req, res) {
             }
 
             // upload to s3 (keyed on username)
-            await s3.uploadFileToS3(image, `profile_pictures/${username}`); 
+            await s3.uploadFileToS3(image, `profile_pictures/${username}`);
 
             var url = await s3.getUrlFromS3(`profile_pictures/${username}`);
 
@@ -152,6 +152,9 @@ var signup = async function (req, res) {
                 `);
             }
 
+            req.session.username = username;
+            req.session.user_id = userId;
+
             return res.status(200).json({ username: username });
         })
     } catch (error) {
@@ -170,7 +173,7 @@ var getTop10Hashtags = async function (req, res) {
         ORDER BY hashtags_rank.hashtag_rank DESC LIMIT 10`;
         const results = await db.send_sql(query);
 
-        return res.status(200).json({hashtags: results.map(row => row.tag)});
+        return res.status(200).json({ hashtags: results.map(row => row.tag) });
     } catch (error) {
         console.log(error);
         return res.status(500).json({ error: 'Error querying database.' });

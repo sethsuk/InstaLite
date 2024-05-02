@@ -51,6 +51,7 @@ async function getEmbeddings(imageFile, isBuffer) {
     if (!isBuffer) {
         image = fs.readFileSync(imageFile);
     } else {
+        console.log('Is a buffer');
         image = imageFile; // In case it's already a buffer, use it directly
     }
     const tensor = tf.node.decodeImage(image, 3);

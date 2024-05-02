@@ -29,7 +29,7 @@ db.send_sql('TRUNCATE TABLE online');
 registry.register_routes(app);
 
 const { Kafka } = require('kafkajs');
-const {  CompressionTypes, CompressionCodecs } = require('kafkajs')
+const { CompressionTypes, CompressionCodecs } = require('kafkajs')
 
 const SnappyCodec = require('kafkajs-snappy')
 
@@ -45,9 +45,10 @@ const kafka = new Kafka({
     brokers: kafka_config.bootstrapServers
 });
 
-const consumer = kafka.consumer({ 
-    groupId: kafka_config.groupId, 
-    bootstrapServers: kafka_config.bootstrapServers}
+const consumer = kafka.consumer({
+    groupId: kafka_config.groupId,
+    bootstrapServers: kafka_config.bootstrapServers
+}
 );
 
 const run = async () => {
@@ -68,12 +69,12 @@ const run = async () => {
 run().catch(console.error);
 
 chromadb.initializeCollection()
-   .then(() => {
-       console.log('Collection initialized and ready to use.');
-   })
-  .catch(error => {
-       console.error('Error during collection initialization:', error);
-   });
+    .then(() => {
+        console.log('Collection initialized and ready to use.');
+    })
+    .catch(error => {
+        console.error('Error during collection initialization:', error);
+    });
 
 
 app.listen(port, () => {

@@ -52,7 +52,7 @@ export default function Profile() {
 
     const fetchSuggestedInterests = async () => {
         try {
-            const response = await axios.get(`${rootURL}/${username}/suggestHashtags`);
+            const response = await axios.post(`${rootURL}/${username}/suggestHashtags`);
             setSuggestedInterests(response.data.tags);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -60,7 +60,7 @@ export default function Profile() {
     };
 
     useEffect(() => {
-        fetchCurrInterests();
+        //fetchCurrInterests();
         fetchSuggestedInterests();
     }, []);
 
