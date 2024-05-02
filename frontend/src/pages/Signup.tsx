@@ -78,7 +78,10 @@ export default function Signup() {
         }
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+
         if (password !== confirmPassword) {
             alert('Passwords do not match.');
             return;
@@ -89,23 +92,45 @@ export default function Signup() {
             return;
         }
 
+        console.log("sending to back end");
+        console.log("BEFORE FORMDATA");
+
         const formData = new FormData();
         formData.append('file', file);
-        const jsonData = {
+
+        // formData.append('username', username);
+        // formData.append('password', password);
+        // formData.append('first_name', firstName);
+        // formData.append('last_name', lastName);
+        // formData.append('email', email);
+        // formData.append('birthday', birthday);
+        // formData.append('affiliation', affiliation);
+        // formData.append('interests', '[]');
+
+
+        const userData = {
             username: username,
             password: password,
             first_name: firstName,
             last_name: lastName,
             email: email,
-            birthday: birthday,
             affiliation: affiliation,
+            birthday: birthday,
             interests: Array.from(new Set([...hashtags, ...selectedItems]))
         };
-        // Append the JSON data as a string under the key 'json_data'
-        formData.append('json_data', JSON.stringify(jsonData));
+
+        // // Append the JSON data as a string under the key 'json_data'
+        formData.append('json_data', JSON.stringify(userData));
+
+        console.log("sending to back end");
+        console.log(formData);
 
         try {
-            const response = await axios.post(`${rootURL}/signup`, formData);
+            const response = await axios.post(`${rootURL}/signup`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
 
             console.log('Response: ' + response);
 
@@ -118,6 +143,7 @@ export default function Signup() {
             }
         } catch (error) {
             console.error(error);
+            console.log(error);
             alert("v2 Registration failed.");
         }
     };

@@ -59,20 +59,30 @@ var addHashtags = async function (req, res) {
 // POST /signup
 // hashtags are array of interests 
 var signup = async function (req, res) {
-    const { username, password, first_name, last_name, email, affiliation, birthday, interests } = JSON.parse(req.body.json_data)
+    console.log("calling signup");
+    console.log(JSON.parse(req.body.json_data));
+
+    const { username, password, first_name, last_name, email, affiliation, birthday, interests } = JSON.parse(req.body.json_data);
+    // const { username, password, first_name, last_name, email, affiliation, birthday, interests } = req.body.json_data;
 
     if (!req.file) {
+        console.log("file error");
+
         return res.status(400).json({ error: 'No file uploaded.' });
     }
     
     const image = fs.readFileSync(req.file.path);
 
     if (!username || !password || !first_name || !last_name || !email || !affiliation || !birthday || !interests) {
+        console.log("input error");
+
         return res.status(400).json({ error: 'One or more of the fields you entered was empty, please try again.' });
     }
 
     if (!helper.isOK(username) || !helper.isOK(first_name) || !helper.isOK(last_name) ||
         !helper.isOK(email) || !helper.isOK(affiliation) || !interests.every(helper.isOK)) {
+        console.log("illegal input error");
+
         return res.status(401).json({ error: 'Illegal input.' });
     }
 
