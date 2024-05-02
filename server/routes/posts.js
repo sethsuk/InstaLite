@@ -12,7 +12,7 @@ var createPost = async function (req, res) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
-    var { title, content, media, hashtags } = JSON.parse(req.body.json_data)
+    var { title, content } = JSON.parse(req.body.json_data)
 
     if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded.' });
@@ -29,6 +29,15 @@ var createPost = async function (req, res) {
     }
 
     try {
+        var hashtags = [];
+        const hashtagRegex = /#(\w+)/g;
+
+        let match;
+
+        while ((match = hashtagRegex.exec(content)) !== null) {
+            hashtags.push(match[1]); // Capture group 1 contains the alphanumeric characters following the "#"
+        }
+
         var results;
 
         if (!content) {
@@ -52,6 +61,12 @@ var createPost = async function (req, res) {
 
         // link hashtags to posts
         for (const tag of hashtags) {
+            let existingHashtag = await db.send_sql(`SELECT COUNT(*) FROM hashtags WHERE tag = "${tag}"`);
+
+            if (existingHashtag[0]["COUNT(*)"] == 0) {
+                await db.send_sql(`INSERT INTO hashtags(tag) VALUE ("${tag}")`);
+            }
+
             let hashtag = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
 
             await db.insert_items(`INSERT INTO hashtags_to_posts (post_id, hashtag_id) VALUES (${post_id}, ${hashtag[0].hashtag_id});`);

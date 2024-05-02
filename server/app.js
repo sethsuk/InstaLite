@@ -40,41 +40,41 @@ let kafka_config = {
     topic: "Twitter-Kafka"
 };
 
-const kafka = new Kafka({
-    clientId: 'my-app',
-    brokers: kafka_config.bootstrapServers
-});
+// const kafka = new Kafka({
+//     clientId: 'my-app',
+//     brokers: kafka_config.bootstrapServers
+// });
 
-const consumer = kafka.consumer({
-    groupId: kafka_config.groupId,
-    bootstrapServers: kafka_config.bootstrapServers
-}
-);
+// const consumer = kafka.consumer({
+//     groupId: kafka_config.groupId,
+//     bootstrapServers: kafka_config.bootstrapServers
+// }
+// );
 
-const run = async () => {
-    // Consuming
-    await consumer.connect();
-    console.log(`Following topic ${kafka_config.topic}`);
-    await consumer.subscribe({ topic: kafka_config.topic, fromBeginning: true });
+// const run = async () => {
+//     // Consuming
+//     await consumer.connect();
+//     console.log(`Following topic ${kafka_config.topic}`);
+//     await consumer.subscribe({ topic: kafka_config.topic, fromBeginning: true });
 
-    await consumer.run({
-        eachMessage: async ({ topic, partition, message }) => {
-            let post = JSON.parse(message.value.toString());
-            console.log(post);
-            results = await db.send_sql(`INSERT INTO posts (title, media, content, user_id) VALUES ('Kafka Test', 'https://variety.com/wp-content/uploads/2023/07/Twitter-rebrands-X.jpg', '${post.text}', 5);`);
-        },
-    });
-};
+//     await consumer.run({
+//         eachMessage: async ({ topic, partition, message }) => {
+//             let post = JSON.parse(message.value.toString());
+//             console.log(post);
+//             results = await db.send_sql(`INSERT INTO posts (title, media, content, user_id) VALUES ('Kafka Test', 'https://variety.com/wp-content/uploads/2023/07/Twitter-rebrands-X.jpg', '${post.text}', 5);`);
+//         },
+//     });
+// };
 
-run().catch(console.error);
+// run().catch(console.error);
 
-chromadb.initializeCollection()
-    .then(() => {
-        console.log('Collection initialized and ready to use.');
-    })
-    .catch(error => {
-        console.error('Error during collection initialization:', error);
-    });
+// chromadb.initializeCollection()
+//     .then(() => {
+//         console.log('Collection initialized and ready to use.');
+//     })
+//     .catch(error => {
+//         console.error('Error during collection initialization:', error);
+//     });
 
 
 app.listen(port, () => {

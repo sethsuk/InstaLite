@@ -12,8 +12,7 @@ var createComment = async function (req, res) {
 
     const post_id = parseInt(req.body["post_id"]);
     var content = req.body["content"];
-    var hashtags = req.body["hashtags"];
-
+    
     if (!post_id || !content) {
         return res.status(400).json({ error: "One or more of the fields you entered was empty, please try again." });
     }
@@ -29,6 +28,15 @@ var createComment = async function (req, res) {
     }
 
     try {
+        var hashtags = [];
+        const hashtagRegex = /#(\w+)/g;
+
+        let match;
+
+        while ((match = hashtagRegex.exec(content)) !== null) {
+            hashtags.push(match[1]); // Capture group 1 contains the alphanumeric characters following the "#"
+        }
+
         var postResults = await db.send_sql(`
             SELECT COUNT(*) FROM posts WHERE post_id = ${post_id}
         `);
@@ -55,6 +63,12 @@ var createComment = async function (req, res) {
 
         // link hashtags to comment
         for (const tag of hashtags) {
+            let existingHashtag = await db.send_sql(`SELECT COUNT(*) FROM hashtags WHERE tag = "${tag}"`);
+
+            if (existingHashtag[0]["COUNT(*)"] == 0) {
+                await db.send_sql(`INSERT INTO hashtags(tag) VALUE ("${tag}")`);
+            }
+
             let hashtag = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
 
             await db.insert_items(`INSERT INTO hashtags_to_comments (comment_id, hashtag_id) VALUES (${comment_id}, ${hashtag[0].hashtag_id});`);
