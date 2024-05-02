@@ -15,7 +15,7 @@ const getTop5Actors = async function (req, res) {
         if (!helper.isOK(username)) {
             return res.status(400).json({ error: 'Illegal input.' });
         }
-        const image = await s3.getImageFromS3(username);
+        const image = await s3.getImageFromS3(`profile_pictures/${username}`);
 
         const collection = chromadb.getCollection();
         const matches = await chromodb.findTopKMatches(collection, image, 5);
