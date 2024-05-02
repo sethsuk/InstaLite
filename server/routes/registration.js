@@ -45,10 +45,11 @@ var addHashtags = async function (req, res) {
 
     try {
         for (const interest of interests) {
-            await db.send_sql(`INSERT INTO hashtags (tag) VALUES ("${interest}")
-            ON DUPLICATE KEY UPDATE count = count + 1;`);
+            const response = await db.send_sql(`SELECT tag FROM hashtags WHERE tag = "${interest}"`);
+            if (response.length === 0) {
+                await db.send_sql(`INSERT INTO hashtags (tag) VALUES ("${interest}")`);
+            }
         }
-
         return res.status(200).json({ message: "Hashtags added successfully." });
     } catch (error) {
         return res.status(500).json({ error: 'Error querying database.' });

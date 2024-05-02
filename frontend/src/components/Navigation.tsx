@@ -43,7 +43,7 @@ export default function Navigation({username} : props) {
       },
     },
   })); 
-  const pages = ['Friends', 'Chat', 'Profile'];
+  const pages = ['Friends', 'Chat', 'Profile', 'Logout'];
   const navigate = useNavigate(); 
 
   return (
@@ -57,12 +57,6 @@ export default function Navigation({username} : props) {
                 {pages.map((page) => (
                   <Button color="inherit" onClick={() => navigate(`/${username}/${page.toLowerCase()}`)}>{page}</Button>
                 ))}
-                <Search>
-                  <StyledInputBase
-                    placeholder="Search…"
-                    inputProps={{ 'aria-label': 'search' }}
-                  />
-                </Search>
             </Toolbar>
           </AppBar>
         </Box>

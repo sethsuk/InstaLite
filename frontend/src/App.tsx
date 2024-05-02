@@ -21,7 +21,7 @@ function App() {
         <Route path='/:username/profile' element={<Profile />} />
         <Route path='/:username/profileactor' element={<ProfileActor />} />
         <Route path='/:username/friends' element={<Friends />} />
-        <Route path="/:username/chat" element={<ChatInterface />} />
+        <Route path="/chat" element={<ChatInterface />} />
       </Routes>
     </BrowserRouter>
   )

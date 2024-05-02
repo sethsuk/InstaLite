@@ -65,6 +65,7 @@ export default function Signup() {
             });
             if (response.status === 200) {
                 console.log("Hashtags added successfully:", response.data);
+                alert("Hashtags added successfully.");
             }
         } catch (error) {
             console.error("Failed to add hashtags:", error);
