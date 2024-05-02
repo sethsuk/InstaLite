@@ -18,27 +18,37 @@ const getTop5Actors = async function (req, res) {
         const image = await s3.getImageFromS3(`profile_pictures/${username}`);
 
         const collection = chromadb.getCollection();
+        console.log('Collection retrived.');
+
         const matches = await chromodb.findTopKMatches(collection, image, 5);
+        console.log('Found top 5 matches:', matches);
 
         let actors = [];
 
         // Process matches to get actor details
-        for (var item of matches) {
-            for (var i = 0; i < item.ids[0].length; i++) {
-                let actorNconst = item.documents[0][i].replace('.jpg', '');
-                const info = await getInfoHelper(actorNconst);
+        if (matches.length > 0) {
+            const match = matches[0];
+            const documentIds = match.documents[0]; // Assuming first set of documents
 
+            for (let actorDocument of documentIds) {
+                let actorNconst = actorDocument.replace('.jpg', '');
+                console.log('Processing actor:', actorNconst); // Verify the actor constant
+
+                const info = await getInfoHelper(actorNconst);
                 if (info) {
                     actors.push({
                         nconst: actorNconst,
                         name: info.name,
                         imageUrl: info.imageUrl
                     });
+                } else {
+                    console.log('No info found for:', actorNconst);
                 }
             }
         }
         res.status(200).json({ actors });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Error querying database.' });
     }
 };
@@ -47,8 +57,9 @@ const getTop5Actors = async function (req, res) {
 // POST 
 const associateActor = async function (req, res) {
     const { actorNconst } = req.body;
+    console.log(actorNconst);
 
-    const username = req.session.username;
+    const username = req.params.username;
     if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
@@ -56,12 +67,11 @@ const associateActor = async function (req, res) {
     if (!helper.isOK(actorNconst)) {
         return res.status(400).send({ error: 'Invalid input.' });
     }
-    
+
     try {
         const query = `UPDATE users SET actor_nconst = "${actorNconst}" WHERE username = "${username}";`;
         await db.send_sql(query);
-
-        // TODO RETURN SUCCESS
+        res.status(200).json({ message: 'Actor associated successfully.' })
     } catch (error) {
         return res.status(500).json({ error: 'Error querying database.' });
     }
@@ -86,23 +96,28 @@ const getActorInfo = async function (req, res) {
 
 async function getInfoHelper(nconst) {
     return new Promise((resolve, reject) => {
-        // Define the path to the CSV file
         const csvFilePath = path.join(__dirname, '..', 'desired.csv');
-        const results = [];
+        console.log('File path:', csvFilePath);
+        let found = null;
 
         fs.createReadStream(csvFilePath)
-            .pipe(csv(['nconst', 'name', 'image', 'url']))
+            .pipe(csv(['id', 'nconst', 'name', 'image', 'url']))
             .on('data', (data) => {
                 if (data.nconst === nconst) {
-                    results.push({
+                    found = {
                         nconst: data.nconst,
-                        name: data.name.replace('_', ' '),
+                        name: data.name.replace(/_/g, ' '), // Replace underscores in names
                         imageUrl: data.url
-                    });
+                    };
                 }
             })
             .on('end', () => {
-                resolve(results.length > 0 ? results[0] : null);
+                // Only resolve the promise after finishing reading the CSV
+                if (found) {
+                    resolve(found);
+                } else {
+                    resolve(null); // Resolve with null if no actor found
+                }
             })
             .on('error', (err) => {
                 reject(err);

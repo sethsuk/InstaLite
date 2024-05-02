@@ -20,12 +20,12 @@ export default function SignupActor() {
     const [selectedActor, setSelectedActor] = useState<string | null>(null);
     const [actors, setActors] = useState<ActorInfo[]>([]);
 
-    // Fetch top5 similar actors 
     useEffect(() => {
         const fetchActors = async () => {
             try {
-                const response = await axios.get(`${rootURL}/${username}/getTop10Actors`);
+                const response = await axios.get(`${rootURL}/${username}/getTop5Actors`);
                 setActors(response.data.actors);
+                console.log(response.data.actors);
             } catch (error) {
                 console.error("Error fetching actors:", error);
             }
@@ -41,7 +41,8 @@ export default function SignupActor() {
         setSelectedActor(newActorNconst);
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
         try {
             console.log(selectedActor);
             const response = await axios.post(`${rootURL}/${username}/associateActor`, {

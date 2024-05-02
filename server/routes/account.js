@@ -15,10 +15,10 @@ var changeEmail = async function (req, res) {
     const { newEmail } = req.body;
     const user_id = req.session.user_id;
 
-    if (!helper.isLoggedIn(req, user_id)) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
-
 
     if (!helper.isOK(newEmail)) {
         return res.status(400).json({ error: 'Invalid input.' });
@@ -41,7 +41,8 @@ var changePassword = async function (req, res) {
     const { currentPassword, newPassword } = req.body;
     const user_id = req.session.user_id;
 
-    if (!helper.isLoggedIn(req, user_id)) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
@@ -82,7 +83,8 @@ var changeAffiliation = async function (req, res) {
     const { newAffiliation } = req.body;
     const user_id = req.session.user_id;
 
-    if (!helper.isLoggedIn(req, user_id)) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
@@ -105,11 +107,13 @@ var changeAffiliation = async function (req, res) {
 // GET /suggest additional hashtags 
 var suggestHashtags = async function (req, res) {
     const user_id = req.session.user_id;
+    console.log(user_id);
 
-    if (!helper.isLoggedIn(req, user_id)) {
+    const username = req.params.username;
+    console.log(username);
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
-
 
     try {
         const query = `
@@ -136,7 +140,8 @@ var suggestHashtags = async function (req, res) {
 var getHashtags = async function (req, res) {
     const user_id = req.session.user_id;
 
-    if (!helper.isLoggedIn(req, user_id)) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
@@ -167,7 +172,8 @@ var updateHashtags = async function (req, res) {
     const { hashtags } = req.body;
     const user_id = req.session.user_id;
 
-    if (!helper.isLoggedIn(req, user_id)) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
@@ -219,7 +225,8 @@ var removeHashtags = async function (req, res) {
     const { hashtags } = req.body;
     const user_id = req.session.user_id;
 
-    if (!helper.isLoggedIn(req, user_id)) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
@@ -274,10 +281,10 @@ var updatePfp = async function (req, res) {
 
     const user_id = req.session.user_id;
 
-    if (!helper.isLoggedIn(req, user_id)) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
-
 
     if (!file) {
         return res.status(400).json({ error: 'No file uploaded.' });

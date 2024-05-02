@@ -117,6 +117,7 @@ export default function Signup() {
         console.log(formData);
 
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/signup`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -126,7 +127,6 @@ export default function Signup() {
             console.log('Response: ' + response);
 
             if (response.status === 200) {
-                alert("Sign up successful!");
                 navigate(`/${username}/signupactor`);
             } else {
                 console.log('Response Status: ' + response.status);

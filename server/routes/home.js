@@ -31,8 +31,9 @@ var getPosts = async function (req, res) {
 
 // GET /getNotifications
 var getNotifications = async function (req, res) {
-    if (!helper.isLoggedIn(req, req.session.user_id)) {
-        return res.status(403).json({ error: 'Not logged in.' });
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
     }
 
     try {
