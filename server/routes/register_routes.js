@@ -33,7 +33,7 @@ function register_routes(app) {
     app.get('/:username/getTop5Actors', pfp.get_top_5_actors); // verified
     app.post('/:username/associateActor', pfp.associate_actor); // verified
     app.get('/:username/getActorInfo', pfp.get_actor_info); // verified
-    app.get('/:username/getPfp', pfp.get_pfp);
+    app.get('/:username/getPfp', pfp.get_pfp); // verified
 
     app.post('/:username/sendFriendRequest', friends.send_friend_request); // verified
     app.get('/:username/getFriendRequests', friends.get_friend_requests); // verified
