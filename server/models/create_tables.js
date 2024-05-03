@@ -211,6 +211,7 @@ async function create_tables(db) {
         sender_id INT NOT NULL,
         reciever_id INT NOT NULL,
         chat_id INT NOT NULL,
+        status ENUM("pending", "accepted", "rejected") DEFAULT "pending",
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (sender_id) REFERENCES users(user_id),
         FOREIGN KEY (reciever_id) REFERENCES users(user_id),
@@ -218,8 +219,18 @@ async function create_tables(db) {
         PRIMARY KEY (sender_id, reciever_id)
     );`);
 
-    // await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16, q17, q18, q19, q20]);
-    await Promise.all([q1, q2, q3, q4, q5, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16, q17, q18, q19, q20]);
+    // create actor_notifications table
+    var q21 = db.create_tables(`
+    CREATE TABLE IF NOT EXISTS actor_notifications
+    (
+        user_id INT NOT NULL,
+        actor_nconst VARCHAR(10) NOT NULL,
+        PRIMARY KEY (user_id),
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+    );`);
+
+    // await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16, q17, q18, q19, q20, q21]);
+    await Promise.all([q1, q2, q3, q4, q5, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16, q17, q18, q19, q20, q21]);
  
     dbaccess.close_db()
 
