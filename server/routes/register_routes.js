@@ -47,6 +47,7 @@ function register_routes(app) {
     app.get('/:username/getPostMedia', posts.get_post_media); // verified
 
     app.post('/:username/createComment', comments.create_comment); // verified
+    app.get('/:username/getComments', comments.get_comments); // verified
 
     app.get('/:username/getPosts', home.get_posts); // verified
     app.get('/:username/getNotifications', home.get_notifications); // verified

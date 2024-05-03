@@ -5,7 +5,6 @@ var path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
 const helper = require('./route_helper.js');
-const chromadb = require('../models/chroma.js');
 
 
 // GET /return a list of actor names and corresponding image urls 
@@ -71,7 +70,11 @@ const associateActor = async function (req, res) {
     try {
         const query = `UPDATE users SET actor_nconst = "${actorNconst}" WHERE username = "${username}";`;
         await db.send_sql(query);
-        res.status(200).json({ message: 'Actor associated successfully.' })
+        
+        await db.send_sql(`DELETE FROM actor_notifications WHERE user_id = ${req.session.user_id}`);
+        await db.send_sql(`INSERT INTO actor_notifications(user_id, actor_nconst) VALUES (${req.session.user_id}, "${actorNconst}")`);
+
+        return res.status(200).json({ message: 'Actor associated successfully.' })
     } catch (error) {
         return res.status(500).json({ error: 'Error querying database.' });
     }

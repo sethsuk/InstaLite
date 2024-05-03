@@ -1,7 +1,7 @@
 var db = require('../models/database.js');
-const bcrypt = require('bcrypt');
 const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
+const chromadb = require('../models/chroma.js');
 
 // GET /getPosts
 var getPosts = async function (req, res) {
@@ -47,9 +47,26 @@ var getNotifications = async function (req, res) {
         var chatInvitesResults = await db.send_sql(`
             SELECT *
             FROM chat_invites
-            WHERE reciever_id = ${req.session.user_id}
+            WHERE reciever_id = ${req.session.user_id} AND status = 'pending'
             LIMIT 5
         `);
+
+        var actorNotificationsResultsSelf = await db.send_sql(`
+            SELECT *
+            FROM actor_notifications
+            WHERE user_id = ${req.session.user_id}
+        `);
+
+        var actorNotificationsResultsFriends = await db.send_sql(`
+            SELECT *
+            FROM actor_notifications
+            JOIN friends ON actor_notifications.user_id = friends.followed
+            WHERE friends.follower = ${req.session.user_id}
+            LIMIT 4
+        `);
+
+        console.log(actorNotificationsResultsSelf);
+        console.log(actorNotificationsResultsFriends);
 
         var response = {
             friendRequests: friendRequestsResults.map((request) => (
@@ -68,7 +85,18 @@ var getNotifications = async function (req, res) {
                     chat_id: invite.chat_id,
                     timestamp: invite.timestamp
                 }
-            ))
+            )),
+            actorNotifications: [...actorNotificationsResultsSelf.map((notification) => (
+                {
+                    user_id: notification.user_id,
+                    nconst: notification.actor_nconst
+                }
+            )), ...actorNotificationsResultsFriends.map((notification) => (
+                {
+                    user_id: notification.user_id,
+                    nconst: notification.actor_nconst
+                }
+            ))]
         };
 
         console.log(response);
