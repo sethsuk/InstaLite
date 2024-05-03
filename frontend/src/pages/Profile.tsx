@@ -44,8 +44,8 @@ export default function Profile() {
     // TODO
     const fetchCurrInterests = async () => {
         try {
-            const response = await axios.get(`${rootURL}/${username}/`);
-            setCurrInterests(response.data.results);
+            const response = await axios.get(`${rootURL}/${username}/getHashtags`);
+            setCurrInterests(response.data.tags);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
@@ -71,7 +71,7 @@ export default function Profile() {
 
     useEffect(() => {
         fetchPfp();
-        //fetchCurrInterests();
+        fetchCurrInterests();
         fetchSuggestedInterests();
     }, [username, rootURL]);
 
@@ -224,6 +224,8 @@ export default function Profile() {
             });
             if (response.status === 200) {
                 console.log("Interests removed successfully.");
+                alert("Interests removed successfully!");
+                fetchCurrInterests();
             }
         } catch (error) {
             console.error("Failed to remove interests:", error);
