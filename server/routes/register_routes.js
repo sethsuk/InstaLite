@@ -22,7 +22,7 @@ function register_routes(app) {
     app.post('/:username/updateHashtags', account.update_hashtags);
     app.post('/:username/removeHashtags', account.remove_hashtags); // verified
     app.post('/:username/updatePfp', upload.single('file'), account.update_pfp); // with image it should be app.post('...', upload.single('image'), ...);
-    app.get('/:username/getHashtags', account.get_hashtags);
+    app.get('/:username/getHashtags', account.get_hashtags); // verified
 
     app.post('/addHashtags', registration.add_hashtags);
     app.post('/signup', upload.single('file'), registration.signup); // verified
