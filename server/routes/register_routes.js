@@ -21,26 +21,26 @@ function register_routes(app) {
     app.post('/:username/suggestHashtags', account.suggest_hashtags); // verified
     app.post('/:username/updateHashtags', account.update_hashtags);
     app.post('/:username/removeHashtags', account.remove_hashtags); // verified
-    app.post('/:username/updatePfp', upload.single('file'), account.update_pfp); // with image it should be app.post('...', upload.single('image'), ...);
+    app.post('/:username/updatePfp', upload.single('file'), account.update_pfp); // verified
     app.get('/:username/getHashtags', account.get_hashtags); // verified
 
-    app.post('/addHashtags', registration.add_hashtags);
+    app.post('/addHashtags', registration.add_hashtags); // verified
     app.post('/signup', upload.single('file'), registration.signup); // verified
     app.post('/login', registration.login); // verified
     app.get('/getTop10Hashtags', registration.get_top_10_hashtags); // verified
     app.post('/:username/logout', registration.logout); // verified
 
-    app.get('/:username/getTop5Actors', pfp.get_top_5_actors);
-    app.post('/:username/associateActor', pfp.associate_actor);
-    app.get('/:username/getActorInfo', pfp.get_actor_info);
+    app.get('/:username/getTop5Actors', pfp.get_top_5_actors); // verified
+    app.post('/:username/associateActor', pfp.associate_actor); // verified
+    app.get('/:username/getActorInfo', pfp.get_actor_info); // verified
     app.get('/:username/getPfp', pfp.get_pfp);
 
     app.post('/:username/sendFriendRequest', friends.send_friend_request); // verified
     app.get('/:username/getFriendRequests', friends.get_friend_requests); // verified
-    app.post('/:username/acceptFriendRequest', friends.accept_friend_request);
-    app.post('/:username/rejectFriendRequest', friends.reject_friend_request);
-    app.get('/:username/getFriends', friends.get_friends);
-    app.post('/:username/removeFriend', friends.remove_friend);
+    app.post('/:username/acceptFriendRequest', friends.accept_friend_request); // verified
+    app.post('/:username/rejectFriendRequest', friends.reject_friend_request); // verified
+    app.get('/:username/getFriends', friends.get_friends); // verified
+    app.post('/:username/removeFriend', friends.remove_friend); // verified
 
     app.post('/:username/createPost', upload.single('file'), posts.create_post); // verified
     app.post('/:username/likePost', posts.like_post); // verified

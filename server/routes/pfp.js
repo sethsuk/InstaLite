@@ -134,7 +134,7 @@ const getPfp = async function (req, res) {
         if (!helper.isOK(username)) {
             return res.status(400).json({ error: 'Illegal input.' });
         }
-        const url = await s3.getFileFromS3(username);
+        const url = await s3.getUrlFromS3(`profile_pictures/${username}`);
         res.status(200).json({ pfp_url: url });
     } catch (error) {
         res.status(500).json({ error: 'Error querying database.' });

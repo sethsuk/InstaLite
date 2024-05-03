@@ -57,13 +57,13 @@ var getFriendRequests = async function (req, res) {
     }
 
     const receiverId = req.session.user_id;
+    console.log(receiverId);
 
     try {
         const query = `SELECT f.request_id, f.sender_id, u.username 
         FROM friend_requests f JOIN users u ON f.sender_id = u.user_id
         WHERE f.receiver_id = ${receiverId} AND f.status = 'pending';`;
         const results = await db.send_sql(query);
-
         return res.status(200).json({
             friendRequests: results.map(x => ({
                 requestId: x.request_id,
@@ -93,22 +93,13 @@ var acceptFriendRequest = async function (req, res) {
     try {
         const receiverId = req.session.user_id;
 
-        const requestCheck = db.send_sql(`
-            SELECT COUNT(*) FROM friend_requests
-            WHERE sender_id = ${senderId} AND receiver_id = ${receiverId}
-        `);
-
-        if (requestCheck[0]["COUNT(*)"] == 0) {
-            return req.status(400).json({ error: 'Request does not exist.' });
-        }
-
         const query1 = `UPDATE friend_requests SET status = 'accepted'
             WHERE sender_id = ${senderId} AND receiver_id = ${receiverId} AND status = 'pending'`;
-        const results = await db.send_sql(query1);
+        await db.send_sql(query1);
 
         const query2 = `INSERT INTO friends (followed, follower)
             VALUES (${senderId}, ${receiverId}), (${receiverId}, ${senderId})`;
-        const rowsAffected = await db.insert_items(query2);
+        await db.insert_items(query2);
 
         return res.status(200).json({ message: "Friend request accepted successfully." });
     } catch (error) {
@@ -128,7 +119,7 @@ var rejectFriendRequest = async function (req, res) {
 
     try {
         const receiverId = req.session.user_id;
-        const query = `UPDATE friend_requests SET status = 'accepted'
+        const query = `UPDATE friend_requests SET status = 'rejected'
             WHERE request_id = ${requestId} AND receiver_id = ${receiverId} AND status = 'pending';`;
         await db.send_sql(query);
         res.status(200).json({ message: "Friend request rejected successfully." })
@@ -148,7 +139,7 @@ var getFriends = async function (req, res) {
 
     const userId = req.session.user_id;
     try {
-        const query = `SELECT u.user_id, u.username, (o.session_id IS NOT NULL) as online
+        const query = `SELECT DISTINCT u.user_id, u.username, (o.session_id IS NOT NULL) as online
         FROM friends f JOIN users u ON u.user_id = f.followed
         LEFT JOIN online o ON f.followed = o.user_id
         WHERE f.follower = ${userId};`;
@@ -176,14 +167,14 @@ var removeFriend = async function (req, res) {
     }
     try {
         const userId = req.session.user_id;
+        console.log(userId);
         const query = `DELETE FROM friends
-            WHERE (follower = ${userId} AND followed = ${friendId}) AND (follower = ${friendId} AND followed = ${userId});`;
+            WHERE (follower = ${userId} AND followed = ${friendId}) OR (follower = ${friendId} AND followed = ${userId});`;
         await db.send_sql(query);
         res.status(200).json({ message: "Friend request rejected successfully." })
     } catch (error) {
         res.status(500).json({ error: 'Error querying database.' });
     }
-
 }
 
 

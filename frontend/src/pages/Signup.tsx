@@ -173,7 +173,7 @@ export default function Signup() {
                                     accept="image/*"
                                 />
                                 <label htmlFor="profile-photo" className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white cursor-pointer'>
-                                    Select Photo
+                                    Select photo
                                 </label>
                                 <span id="file-label">No file chosen</span>
                             </div>
