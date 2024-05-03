@@ -137,34 +137,6 @@ var suggestHashtags = async function (req, res) {
 }
 
 
-// GET /get current hashtags 
-var getHashtags = async function (req, res) {
-    const user_id = req.session.user_id;
-
-    const username = req.params.username;
-    if (!helper.isLoggedIn(req, username)) {
-        return res.status(403).send({ error: 'Not logged in.' });
-    }
-
-    try {
-        const query = `
-            SELECT tag FROM user_hashtags 
-            
-        `;
-        const results = await db.send_sql(query);
-
-        const toOutput = {
-            tags: results.map((hashtag) => hashtag.tag)
-        };
-
-        return res.status(200).json(toOutput);
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ error: 'Error querying database.' });
-    }
-}
-
-
 // add hashtag (use the one in registration.js) 
 
 
@@ -248,11 +220,11 @@ var removeHashtags = async function (req, res) {
             const hashtagId = hashtagRow.hashtag_id;
 
             const checkHashtagResults = await db.send_sql(`
-                SELECT COUNT(*) FROM user_hashtags
+                SELECT COUNT(*) AS count FROM user_hashtags
                 WHERE user_id = ${user_id} AND hashtag_id = ${hashtagId}
             `);
 
-            if (checkHashtagResults[0]["COUNT(*)"] == 0) {
+            if (checkHashtagResults[0].count === 0) {
                 return res.status(404).json({ error: 'Hashtag not found for user' });
             }
 
@@ -323,12 +295,16 @@ var getHashtags = async function (req, res) {
 
     try {
         var results = await db.send_sql(`
-            SELECT * FROM user_hashtags 
+            SELECT hashtags.tag FROM user_hashtags 
             JOIN hashtags ON user_hashtags.hashtag_id = hashtags.hashtag_id
             WHERE user_hashtags.user_id = ${user_id}
         `);
 
-        return res.status(200).json({ results });
+        const toOutput = {
+            tags: results.map((hashtag) => hashtag.tag)
+        };
+
+        return res.status(200).json(toOutput);
     } catch (error) {
         console.log(error);
         return res.status(500).json({ error: 'Error querying database.' });
