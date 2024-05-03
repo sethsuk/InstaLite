@@ -84,6 +84,7 @@ var createPost = async function (req, res) {
 };
 
 
+// POST
 var likePost = async function (req, res) {
     const username = req.params.username;
     if (!helper.isLoggedIn(req, username)) {
@@ -117,9 +118,41 @@ var likePost = async function (req, res) {
     }
 };
 
+
+// GET
+var getPostMedia = async function (req, res) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+
+    const post_id = parseInt(req.body["post_id"]);
+
+    if (!Number.isInteger(post_id)) {
+        return res.status(400).json({ error: "One or more of the fields you entered was empty, please try again." });
+    }
+
+    try {
+        var existingPostQuery = await db.send_sql(`SELECT COUNT(*) FROM posts WHERE post_id = ${post_id}`);
+
+        if (existingPostQuery[0]["COUNT(*)"] == 0) {
+            return res.status(400).json({ error: "Post does not exist." });
+        }
+
+        var results = await db.send_sql(`SELECT media FROM posts WHERE post_id = ${post_id};`);
+
+        return res.status(201).json({media: results[0]["media"]});
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: 'Error querying database.' });
+    }
+};
+
+
 const routes = {
     create_post: createPost,
-    like_post: likePost
+    like_post: likePost,
+    get_post_media: getPostMedia
 };
 
 module.exports = routes;

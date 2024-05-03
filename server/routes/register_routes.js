@@ -19,7 +19,7 @@ function register_routes(app) {
     app.post('/:username/changePassword', account.change_password); // verified
     app.post('/:username/changeAffiliation', account.change_affiliation); // verified
     app.post('/:username/suggestHashtags', account.suggest_hashtags); // verified
-    app.post('/:username/updateHashtags', account.update_hashtags);
+    app.post('/:username/updateHashtags', account.update_hashtags); // verified
     app.post('/:username/removeHashtags', account.remove_hashtags); // verified
     app.post('/:username/updatePfp', upload.single('file'), account.update_pfp); // verified
     app.get('/:username/getHashtags', account.get_hashtags); // verified
@@ -44,6 +44,7 @@ function register_routes(app) {
 
     app.post('/:username/createPost', upload.single('file'), posts.create_post); // verified
     app.post('/:username/likePost', posts.like_post); // verified
+    app.get('/:username/getPostMedia', posts.get_post_media); // verified
 
     app.post('/:username/createComment', comments.create_comment); // verified
 
