@@ -154,8 +154,22 @@ export default function Friends() {
     // TODO!
     const handleSendFriendRequest = async () => {
         try {
-            alert("Unimplemented");
-
+            const response = await axios.post(`${rootURL}/${username}/sendFriendRequest`, {
+                receiverUsername: newFriendUsername
+            });
+            if (response.status === 400) {
+                alert("Invalid username.");
+                return;
+            }
+            if (response.status === 409) {
+                alert("Invalid request.");
+                return;
+            }
+            if (response.status === 200) {
+                console.log("Friend request sent successfully.");
+                alert("Your friend request to " + newFriendUsername + " was sent successfully!");
+                setNewFriendUsername('');
+            }
         } catch (error) {
             console.error("Failed to send request:", error);
             alert("Fail to send request.");
