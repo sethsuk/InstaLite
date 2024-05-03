@@ -208,7 +208,7 @@ var updateHashtags = async function (req, res) {
 
                 // Increment hashtag count
                 await db.send_sql(`
-                    UPDATE hashtags SET count = count + 1 WHERE hashtag_id = ${hashtag.hashtag_id}
+                    UPDATE hashtags SET count = count + 1 WHERE hashtag_id = ${hashtagId}
                 `);
             }
         }
