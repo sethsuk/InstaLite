@@ -202,8 +202,6 @@ var updateHashtags = async function (req, res) {
             const query3 = `SELECT COUNT(*) FROM user_hashtags WHERE user_id = ${user_id} AND hashtag_id = ${hashtagId};`;
             const userHashtag = await db.send_sql(query3);
 
-            // TODO DEPENDING ON INTENDED FUNCTIONALITY
-
             if (userHashtag[0]["COUNT(*)"] == 0) {
                 const query4 = `INSERT INTO user_hashtags (user_id, hashtag_id) VALUES (${user_id}, ${hashtagId});`;
                 await db.insert_items(query4);
@@ -214,8 +212,10 @@ var updateHashtags = async function (req, res) {
                 `);
             }
         }
+
         return res.status(200).json({ message: 'Hashtags updated sucessfully.' });
     } catch (error) {
+        console.log(error);
         res.status(500).json({ error: 'Error querying database.' });
     }
 }
@@ -308,6 +308,33 @@ var updatePfp = async function (req, res) {
     }
 }
 
+// GET /getHashtags
+var getHashtags = async function (req, res) {
+    console.log("calling getHashtags");
+
+    const user_id = req.session.user_id;
+
+    const username = req.params.username;
+
+    if (!helper.isLoggedIn(req, username)) {
+        console.log("not logged in");
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+
+    try {
+        var results = await db.send_sql(`
+            SELECT * FROM user_hashtags 
+            JOIN hashtags ON user_hashtags.hashtag_id = hashtags.hashtag_id
+            WHERE user_hashtags.user_id = ${user_id}
+        `);
+
+        return res.status(200).json({ results });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Error querying database.' });
+    }
+}
+
 
 var account_routes = {
     get_helloworld: getHelloWorld,
@@ -317,7 +344,8 @@ var account_routes = {
     suggest_hashtags: suggestHashtags,
     update_hashtags: updateHashtags,
     remove_hashtags: removeHashtags,
-    update_pfp: updatePfp
+    update_pfp: updatePfp,
+    get_hashtags: getHashtags
 }
 
 module.exports = account_routes 
