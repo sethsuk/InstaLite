@@ -33,7 +33,7 @@ export default function SignupActor() {
         };
 
         fetchActors();
-    }, []);
+    }, [username, rootURL]);
 
     const handleActorSelect = (
         event: React.MouseEvent<HTMLElement>,
