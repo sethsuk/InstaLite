@@ -33,6 +33,7 @@ async function create_tables(db) {
         request_id INT AUTO_INCREMENT PRIMARY KEY, \
         sender_id INT NOT NULL, \
         receiver_id INT NOT NULL, \
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
         status ENUM("pending", "accepted", "rejected") DEFAULT "pending", \
         FOREIGN KEY (sender_id) REFERENCES users(user_id), \
         FOREIGN KEY (receiver_id) REFERENCES users(user_id) \
@@ -52,19 +53,19 @@ async function create_tables(db) {
         count INT DEFAULT 0 \
     );');
 
-    // initial hashtags 
-    var q6 = db.send_sql(`INSERT IGNORE INTO hashtags (tag) VALUES 
-    ('sports'), 
-    ('fashion'), 
-    ('sci-fi'), 
-    ('comedy'), 
-    ('food'), 
-    ('outdoor'), 
-    ('family'), 
-    ('penn'), 
-    ('queer'), 
-    ('romance');
-    `);
+    // // initial hashtags 
+    // var q6 = db.send_sql(`INSERT IGNORE INTO hashtags (tag) VALUES 
+    //     ('sports'), 
+    //     ('fashion'), 
+    //     ('sci-fi'), 
+    //     ('comedy'), 
+    //     ('food'), 
+    //     ('outdoor'), 
+    //     ('family'), 
+    //     ('penn'), 
+    //     ('queer'), 
+    //     ('romance');
+    // `);
 
     // create user to hashtags table 
     var q7 = db.create_tables('CREATE TABLE IF NOT EXISTS user_hashtags ( \
@@ -78,7 +79,7 @@ async function create_tables(db) {
     var q8 = db.create_tables('CREATE TABLE IF NOT EXISTS posts ( \
         post_id INT NOT NULL AUTO_INCREMENT, \
         title VARCHAR(255), \
-        media VARCHAR(255) UNIQUE, \
+        media VARCHAR(255), \
         content VARCHAR(255), \
         user_id INT NOT NULL, \
         likes INT DEFAULT 0, \
@@ -168,8 +169,69 @@ async function create_tables(db) {
         FOREIGN KEY (hashtag_id) REFERENCES hashtags(hashtag_id)
     );`);
 
-    await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16]);
-  
+    // create chat_rooms table
+    var q17 = db.create_tables(`
+    CREATE TABLE IF NOT EXISTS chat_rooms
+    (
+        chat_id INT NOT NULL AUTO_INCREMENT,
+        member_count INT NOT NULL,
+        PRIMARY KEY (chat_id)
+    );`);
+
+    // create users_to_chat table
+    var q18 = db.create_tables(`
+    CREATE TABLE IF NOT EXISTS users_to_chat
+    (
+        chat_id INT NOT NULL,
+        user_id INT NOT NULL,
+        FOREIGN KEY (chat_id) REFERENCES chat_rooms(chat_id),
+        FOREIGN KEY (user_id) REFERENCES users(user_id),
+        PRIMARY KEY (chat_id, user_id)
+    );`);
+
+    // create chat_messages table
+    var q19 = db.create_tables(`
+    CREATE TABLE IF NOT EXISTS chat_messages
+    (
+        message_id INT NOT NULL AUTO_INCREMENT,
+        chat_id INT NOT NULL,
+        user_id INT NOT NULL,
+        content VARCHAR(255) NOT NULL,
+        client_offset VARCHAR(255),
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (chat_id) REFERENCES chat_rooms(chat_id),
+        FOREIGN KEY (user_id) REFERENCES users(user_id),
+        PRIMARY KEY (message_id)
+    );`);
+
+    // create chat_invites table
+    var q20 = db.create_tables(`
+    CREATE TABLE IF NOT EXISTS chat_invites
+    (
+        sender_id INT NOT NULL,
+        reciever_id INT NOT NULL,
+        chat_id INT NOT NULL,
+        status ENUM("pending", "accepted", "rejected") DEFAULT "pending",
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (sender_id) REFERENCES users(user_id),
+        FOREIGN KEY (reciever_id) REFERENCES users(user_id),
+        FOREIGN KEY (chat_id) REFERENCES chat_rooms(chat_id),
+        PRIMARY KEY (sender_id, reciever_id)
+    );`);
+
+    // create actor_notifications table
+    var q21 = db.create_tables(`
+    CREATE TABLE IF NOT EXISTS actor_notifications
+    (
+        user_id INT NOT NULL,
+        actor_nconst VARCHAR(10) NOT NULL,
+        PRIMARY KEY (user_id),
+        FOREIGN KEY (user_id) REFERENCES users(user_id)
+    );`);
+
+    // await Promise.all([q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16, q17, q18, q19, q20, q21]);
+    await Promise.all([q1, q2, q3, q4, q5, q7, q8, q9, q10, q11, q12, q13, q14, q15, q16, q17, q18, q19, q20, q21]);
+ 
     dbaccess.close_db()
 
     return;

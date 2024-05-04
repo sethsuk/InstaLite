@@ -4,40 +4,49 @@ const helper = require('./route_helper.js');
 
 // POST /send friend request
 var sendFriendRequest = async function (req, res) {
-    const { receiverId } = req.body;
+    const { receiverUsername } = req.body;
 
-    if (!helper.isOK(receiverId)) {
+    if (!helper.isOK(receiverUsername)) {
         return res.status(400).json({ error: 'Invalid input.' });
     }
-    if (!helper.isLoggedIn(req, req.params.username)) {
+
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
     const senderId = req.session.user_id;
 
     try {
-        // Check if a pending request already exists 
-        const query1 = `SELECT * FROM friend_requests
-        WHERE sender_id = ${senderId} AND receiver_id = ${receiverId} AND status = 'pending';`;
-        const requests = await db.send_sql(query1);
-        if (requests.length > 0) {
-            res.status(409).json({ error: "A friend request has already been sent to that user." })
+        // get receiverId
+        const query = `SELECT user_id FROM users WHERE username = "${receiverUsername}"`;
+        const users = await db.send_sql(query);
+        if (users.length === 0) {
+            return res.status(400).json({ error: 'Invalid username.' });
+        }
+        const receiverId = users[0].user_id;
+        console.log("request receiver is " + receiverId);
+
+        if (senderId === receiverId) {
+            return res.status(409).json({ error: 'Cannot request yourself.' });
         }
 
-        // Check if they are friends  
-        const query2 = `SELECT * FROM friends WHERE followed = ${senderId} AND follower = ${receiverId};`
-        const results = await db.send_sql(query2);
-        if (results.length > 0) {
-            res.status(409).json({ error: "You two are already friends." })
+        const query1 = `SELECT COUNT(*) AS count FROM friend_requests
+        WHERE ((sender_id = ${senderId} AND receiver_id = ${receiverId}) OR (sender_id = ${receiverId} AND receiver_id = ${senderId}))
+        AND status = 'pending' OR EXISTS (SELECT 1 FROM friends WHERE followed = ${senderId} AND follower = ${receiverId});`
+        const results = await db.send_sql(query1);
+
+        if (results[0].count > 0) {
+            return res.status(409).json({ error: "A friend request already exists or you are already friends." })
         }
 
-        const query3 = `INSERT INTO friend_requests (sender_id, receiver_id, status) 
+        const query2 = `INSERT INTO friend_requests (sender_id, receiver_id, status) 
             VALUES (${senderId}, ${receiverId}, 'pending');`;
-        await db.send_sql(query3);
-        res.status(200).json({ message: 'Friend request sent.' });
+        await db.send_sql(query2);
 
+        return res.status(200).json({ message: 'Friend request sent.' });
     } catch (error) {
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 }
 
@@ -47,48 +56,55 @@ var getFriendRequests = async function (req, res) {
     if (!helper.isLoggedIn(req, req.params.username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
+
     const receiverId = req.session.user_id;
+    console.log(receiverId);
+
     try {
         const query = `SELECT f.request_id, f.sender_id, u.username 
         FROM friend_requests f JOIN users u ON f.sender_id = u.user_id
-        WHERE f.receiver_id = ${receiverId} AND fr.status = 'pending';`;
+        WHERE f.receiver_id = ${receiverId} AND f.status = 'pending';`;
         const results = await db.send_sql(query);
-        res.status(200).json({
-            results: results.map(x => ({
+        return res.status(200).json({
+            friendRequests: results.map(x => ({
                 requestId: x.request_id,
                 senderId: x.sender_id,
                 senderName: x.username
             }))
         })
     } catch (error) {
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 }
 
 
 // POST /accept friend request
 var acceptFriendRequest = async function (req, res) {
-    const { requestId } = req.body;
+    const { senderId } = req.body;
 
-    if (!helper.isLoggedIn(req, req.params.username)) {
+    if (!helper.isOK(senderId)) {
+        return res.status(400).json({ error: 'Invalid input.' });
+    }
+
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
+
     try {
         const receiverId = req.session.user_id;
+
         const query1 = `UPDATE friend_requests SET status = 'accepted'
-            WHERE request_id = ${requestId} AND receiver_id = ${receiverId} AND status = 'pending'
-            RETURNING sender_id;`;
-        const results = await db.send_sql(query1);
-        const senderId = results[0].sender_id;
+            WHERE sender_id = ${senderId} AND receiver_id = ${receiverId} AND status = 'pending'`;
+        await db.send_sql(query1);
 
         const query2 = `INSERT INTO friends (followed, follower)
             VALUES (${senderId}, ${receiverId}), (${receiverId}, ${senderId})`;
-        const rowsAffected = await db.insert_items(query2);
-        if (rowsAffected === 1) {
-            res.status(200).json({ message: "Friend request accepted successfully." });
-        }
+        await db.insert_items(query2);
+
+        return res.status(200).json({ message: "Friend request accepted successfully." });
     } catch (error) {
-        res.status(500).json({ error: 'Error querying database.' });
+        return res.status(500).json({ error: 'Error querying database.' });
     }
 }
 
@@ -97,12 +113,14 @@ var acceptFriendRequest = async function (req, res) {
 var rejectFriendRequest = async function (req, res) {
     const { requestId } = req.body;
 
-    if (!helper.isLoggedIn(req, req.params.username)) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
+
     try {
         const receiverId = req.session.user_id;
-        const query = `UPDATE friend_requests SET status = 'accepted'
+        const query = `UPDATE friend_requests SET status = 'rejected'
             WHERE request_id = ${requestId} AND receiver_id = ${receiverId} AND status = 'pending';`;
         await db.send_sql(query);
         res.status(200).json({ message: "Friend request rejected successfully." })
@@ -115,13 +133,14 @@ var rejectFriendRequest = async function (req, res) {
 
 // GET /get friends (indicate which friends are currently logged in!!)
 var getFriends = async function (req, res) {
-    if (!helper.isLoggedIn(req, req.params.username)) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
     const userId = req.session.user_id;
     try {
-        const query = `SELECT u.user_id, u.username, (o.session_id IS NOT NULL) as online
+        const query = `SELECT DISTINCT u.user_id, u.username, (o.session_id IS NOT NULL) as online
         FROM friends f JOIN users u ON u.user_id = f.followed
         LEFT JOIN online o ON f.followed = o.user_id
         WHERE f.follower = ${userId};`;
@@ -143,19 +162,20 @@ var getFriends = async function (req, res) {
 var removeFriend = async function (req, res) {
     const { friendId } = req.body;
 
-    if (!helper.isLoggedIn(req, req.params.username)) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
     try {
         const userId = req.session.user_id;
+        console.log(userId);
         const query = `DELETE FROM friends
-            WHERE (follower = ${userId} AND followed = ${friendId}) AND (follower = ${friendId} AND followed = ${userId});`;
+            WHERE (follower = ${userId} AND followed = ${friendId}) OR (follower = ${friendId} AND followed = ${userId});`;
         await db.send_sql(query);
         res.status(200).json({ message: "Friend request rejected successfully." })
     } catch (error) {
         res.status(500).json({ error: 'Error querying database.' });
     }
-
 }
 
 
