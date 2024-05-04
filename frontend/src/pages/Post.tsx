@@ -21,7 +21,7 @@ interface PostProps {
 
 
 export default function Post() {
-  const {username} = useParams();
+  const { username } = useParams();
 
   const post: PostProps =
   {
@@ -93,3 +93,4 @@ export default function Post() {
     </div>
   );
 }
+

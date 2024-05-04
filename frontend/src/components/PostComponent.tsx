@@ -3,15 +3,13 @@ import { FaHeart, FaComment } from 'react-icons/fa';
 export default function PostComponent({
   user = 'username',
   userProfileImage = '../assets/avatar.svg',
-  postImage = 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=0.752xw:1.00xh;0.175xw,0&resize=1200:*',
-  imageDescription = 'Image description here',
+  postImage,
   hashtags = '#hashtag',
   caption = 'Caption here'
-} : {
+}: {
   user: string,
   userProfileImage: string,
-  postImage: string,
-  imageDescription: string,
+  postImage?: string,
   hashtags: string,
   caption: string
 }) {
@@ -24,7 +22,9 @@ export default function PostComponent({
       </div>
 
       {/* Image for the post */}
-      <img src={postImage} alt={imageDescription} className='mt-2 mb-2  w-[450px] h-[350px] object-cover' /> {/* Main post image */}
+      {postImage && (
+        <img src={postImage} className='mt-2 mb-2 w-[450px] h-[350px] object-cover' /> // Main post image
+      )}
 
       <div>
         {/* Like and comment icons */}
