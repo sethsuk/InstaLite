@@ -1,7 +1,9 @@
 import Navbar from '../components/Navigation';
 import { FaHeart, FaComment } from 'react-icons/fa';
 import { useParams, useNavigate } from 'react-router-dom';
-
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import config from '../../config.json';
 
 interface CommentProps {
   username: string;
@@ -21,9 +23,14 @@ interface PostProps {
 
 
 export default function Post() {
-  const { username } = useParams();
+  const {username} = useParams();
+  const rootURL = config.serverRootURL;
 
-  const post: PostProps =
+  const [post, setPost] = useState({});
+
+  // axios here?
+
+  const postData: PostProps =
   {
     user: 'username',
     userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg',
@@ -40,6 +47,21 @@ export default function Post() {
 
   const navigate = useNavigate();
   const handleBack = () => navigate(-1);
+
+  const fetchData = async () => {
+    try {
+      const response = await axios.get(`${rootURL}/${username}/getPosts`);
+      console.log(response.data);
+      setPost(response.data); // Ensure fallback to empty array if no results
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Optionally handle navigation or display error message
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [username]); // Rerun when username changes
 
   return (
     <div className="w-screen h-screen flex flex-col items-center space-y-8 justify-start">
