@@ -16,7 +16,9 @@ export default function PostComponent({
   onClick: () => void;
 }) {
   return (
-    <div className='bg-slate-100 w-full space-y-6 max-w-[500px] mx-auto p-6 rounded-md'>
+    <div className='bg-slate-100 w-full space-y-6 max-w-[500px] mx-auto p-6 rounded-md'
+      onClick={onClick}
+    >
       {/* User display at the top */}
       <div className='flex items-center space-x-2'>
         <img src={userProfileImage} alt="Profile" className='w-8 h-8 rounded-full' /> {/* User profile image */}
