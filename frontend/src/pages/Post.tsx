@@ -48,12 +48,29 @@ export default function Post() {
     }
   };
 
+  const fetchComments = async () => {
+    try {
+      console.log("fetching comments");
+
+      const response = await axios.post(`${rootURL}/${username}/getComments`, {
+        post_id: postId
+      });
+
+      console.log(response.data[0]);
+
+      setComments(response.data[0]);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
 
   useEffect(() => {
     fetchPost();
+    fetchComments();
   }, [username]); // Rerun when username changes
 
-  if (!post) { // Check if post is not defined
+  if (!post || !comments) { // Check if post is not defined
     return <div>Loading...</div>; // Or any other placeholder
   }
 

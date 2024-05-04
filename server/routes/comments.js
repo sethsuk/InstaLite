@@ -122,7 +122,11 @@ var getComments = async function (req, res) {
 // Function to fetch top-level comments
 const fetchComments = async (post_id, parent_id) => {
     const sql = `
-        SELECT * FROM comments
+        SELECT comments.content, u.username, u.pfp_url, comments.timestamp, comments.parent_id, GROUP_CONCAT(DISTINCT CONCAT('#', h.tag) ORDER BY h.tag ASC SEPARATOR ', ') AS hashtags
+        FROM comments
+        LEFT JOIN hashtags_to_comments htc ON comments.comment_id = htc.comment_id
+        LEFT JOIN hashtags ON htc.hashtag_id = hashtags.hashtag_id
+        LEFT JOIN users u ON u.user_id = comments.user_id
         WHERE post_id = ${post_id} AND parent_id ${parent_id ? `= ${parent_id}` : 'IS NULL'}
         ORDER BY timestamp DESC
         LIMIT 10;
@@ -134,7 +138,11 @@ const fetchComments = async (post_id, parent_id) => {
 // Recursive function to fetch replies for a comment
 const fetchReplies = async (parent_id) => {
     const sql = `
-        SELECT * FROM comments
+        SELECT comments.content, u.username, u.pfp_url, comments.timestamp, comments.parent_id, GROUP_CONCAT(DISTINCT CONCAT('#', h.tag) ORDER BY h.tag ASC SEPARATOR ', ') AS hashtags
+        FROM comments
+        LEFT JOIN hashtags_to_comments htc ON comments.comment_id = htc.comment_id
+        LEFT JOIN hashtags ON htc.hashtag_id = hashtags.hashtag_id
+        LEFT JOIN users u ON u.user_id = comments.user_id
         WHERE parent_id = ${parent_id}
         ORDER BY timestamp DESC;
     `;

@@ -44,6 +44,7 @@ function register_routes(app) {
 
     app.post('/:username/createPost', upload.single('file'), posts.create_post); // verified
     app.post('/:username/likePost', posts.like_post); // verified
+    app.post('/:username/unlikePost', posts.unlike_post) // verified
     app.post('/:username/getPostMedia', posts.get_post_media); // verified
     app.post('/:username/getSinglePost', posts.get_single_post); // verified
 
