@@ -4,10 +4,10 @@ interface NotificationProps {
   type: string;
   users: string[];
   date: string;
-  profileImages: string[];
+  profileImage: string;
 }
 
-const NotificationComponent: React.FC<NotificationProps> = ({ type, users, date, profileImages }) => {
+const NotificationComponent: React.FC<NotificationProps> = ({ type, users, date, profileImage }) => {
   const renderContent = (): JSX.Element => {
     switch (type) {
       case 'friendRequest':
@@ -15,11 +15,11 @@ const NotificationComponent: React.FC<NotificationProps> = ({ type, users, date,
           <>
             <div className='space-x-6 flex justify-center items-center'>
               <div className='flex flex-row justify-center items-center space-x-2'>
-                <img src={profileImages[0]} alt="Profile" className='w-10 h-10 rounded-full' />
+                <img src={profileImage} alt="Profile" className='w-10 h-10 rounded-full' />
                 <span className='font-semibold'>{`${users[0]}`}</span>
               </div>
               <div>
-                <span>sent you a friend request</span>
+                <span>sent you a friend request.</span>
               </div>
             </div>
           </>
@@ -29,21 +29,34 @@ const NotificationComponent: React.FC<NotificationProps> = ({ type, users, date,
           <>
             <div className='space-x-5 flex justify-center items-center'>
               <div className='flex flex-row justify-center items-center space-x-2'>
-                <img src={profileImages[0]} alt="Profile 1" className='w-10 h-10 rounded-full' />
+                <img src={profileImage} alt="Profile 1" className='w-10 h-10 rounded-full' />
                 <span className='font-semibold'>{`${users[0]}`}</span>
               </div>
               <div>
                 <span>is now linked to</span>
               </div>
               <div className='flex flex-row justify-center items-center space-x-2'>
-                <img src={profileImages[1]} alt="Profile 2" className='w-10 h-10 rounded-full' />
                 <span className='font-semibold'>{`${users[1]}`}</span>
               </div>
             </div>
           </>
         );
+      case 'chatInvite':
+        return (
+          <>
+            <div className='space-x-6 flex justify-center items-center'>
+              <div className='flex flex-row justify-center items-center space-x-2'>
+                <img src={profileImage} alt="Profile" className='w-10 h-10 rounded-full' />
+                <span className='font-semibold'>{`${users[0]}`}</span>
+              </div>
+              <div>
+                <span>sent you a chat invite</span>
+              </div>
+            </div>
+          </>
+        );
       default:
-        return <span>You have a new notification.</span>;
+        return <span>You have a new notification</span>;
     }
   };
 

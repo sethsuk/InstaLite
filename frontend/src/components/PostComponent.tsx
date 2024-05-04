@@ -5,13 +5,15 @@ export default function PostComponent({
   userProfileImage = '../assets/avatar.svg',
   postImage,
   hashtags = '#hashtag',
-  caption = 'Caption here'
+  caption = 'Caption here',
+  onClick
 }: {
-  user: string,
-  userProfileImage: string,
-  postImage?: string,
-  hashtags: string,
-  caption: string
+  user: string;
+  userProfileImage: string;
+  postImage?: string;
+  hashtags: string;
+  caption: string;
+  onClick: () => void;
 }) {
   return (
     <div className='bg-slate-100 w-full space-y-6 max-w-[500px] mx-auto p-6 rounded-md'>
