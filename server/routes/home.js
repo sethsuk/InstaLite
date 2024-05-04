@@ -21,7 +21,7 @@ var getPosts = async function (req, res) {
             JOIN users u ON p.user_id = u.user_id
             LEFT JOIN hashtags_to_posts hp ON p.post_id = hp.post_id
             LEFT JOIN hashtags h ON hp.hashtag_id = h.hashtag_id
-            LEFT JOIN friends f ON p.user_id = f.followed,
+            LEFT JOIN friends f ON p.user_id = f.followed
             LEFT JOIN post_likes pl ON p.post_id = pl.post_id AND pl.user_id = ${req.session.user_id}
             WHERE f.follower = ${req.session.user_id} OR p.user_id = ${req.session.user_id}
             GROUP BY p.post_id
