@@ -8,32 +8,26 @@ import CreatePostComponent from '../components/CreatePostComponent';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navigation';
 
+type PostProps = {
+  post_id: number;
+  title: string;
+  media: string | undefined;
+  content: string;
+  likes: number;
+  timestamp: Date;
+  user_id: number;
+  username: string;
+  pfp_url: string | null;
+  hashtags: string
+};
+
 export default function Home() {
   const { username } = useParams();
   const rootURL = config.serverRootURL;
   const navigate = useNavigate();
 
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<PostProps[]>([]);
   const [notifications, setNotifications] = useState([]);
-
-  const postsData = [
-    {
-      user: 'username',
-      userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg',
-      postImage: 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=0.752xw:1.00xh;0.175xw,0&resize=1200:*',
-      imageDescription: 'Image description here',
-      hashtags: '#hashtag #hashtag #hashtag',
-      caption: 'Caption here'
-    },
-    {
-      user: 'username2',
-      userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg',
-      postImage: 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=0.752xw:1.00xh;0.175xw,0&resize=1200:*',
-      imageDescription: 'Image description here',
-      hashtags: '#hashtag #hashtag #hashtag',
-      caption: 'Caption here'
-    }
-  ]
 
   const notifications_test = [
     {
@@ -53,7 +47,7 @@ export default function Home() {
     }
   ]
 
-  const fetchData = async () => {
+  const fetchPost = async () => {
     try {
       const response = await axios.get(`${rootURL}/${username}/getPosts`);
       console.log(response.data);
@@ -65,8 +59,12 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchPost();
   }, [username]); // Rerun when username changes
+
+  const handleClick = () => {
+    navigate(`/posts/${postId}`);
+  };
 
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-start'>
@@ -88,11 +86,10 @@ export default function Home() {
           {posts.map((post, index) => (
             <PostComponent
               key={index}
-              user={post.user_id}
-              userProfileImage={'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg'}
-              postImage={'https://www.svgrepo.com/show/382100/female-avatar-girl-face-woman-user-7.svg'}
-              imageDescription={"wow"}
-              hashtags={"#wow"}
+              user={post.username}
+              userProfileImage={post.pfp_url || 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg'}
+              postImage={post.media}
+              hashtags={post.hashtags}
               caption={post.content}
             />
           ))}

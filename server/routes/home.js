@@ -11,18 +11,28 @@ var getPosts = async function (req, res) {
 
     try {
         var results = await db.send_sql(`
-            SELECT p.* 
-            FROM posts_rank pr
-            JOIN posts p ON pr.post_id = p.post_id
+            SELECT DISTINCT p.post_id, p.title, p.media, p.content, p.likes, p.timestamp,
+                            u.user_id, u.username, u.pfp_url, 
+                            GROUP_CONCAT(DISTINCT CONCAT('#', h.tag) ORDER BY h.tag ASC SEPARATOR ', ') AS hashtags
+            FROM posts p
+            JOIN users u ON p.user_id = u.user_id
+            LEFT JOIN hashtags_to_posts hp ON p.post_id = hp.post_id
+            LEFT JOIN hashtags h ON hp.hashtag_id = h.hashtag_id
             LEFT JOIN friends f ON p.user_id = f.followed
             WHERE f.follower = ${req.session.user_id} OR p.user_id = ${req.session.user_id}
-            ORDER BY pr.post_rank DESC
+            GROUP BY p.post_id
+            ORDER BY p.timestamp DESC
             LIMIT 10;
         `);
 
-        console.log(results);
+        console.log("getPosts results:", results);
 
-        return res.status(200).json(results);
+        const processedResults = results.map(post => ({
+            ...post,
+            hashtags: post.hashtags ? post.hashtags.split(',') : []
+        }));
+
+        return res.status(200).json(processedResults);
     } catch (err) {
         console.log(err);
         return res.status(500).json({ error: 'Error querying database.' });
