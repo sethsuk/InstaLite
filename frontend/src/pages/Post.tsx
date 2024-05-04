@@ -11,7 +11,8 @@ interface CommentProps {
   comment: string;
 }
 
-interface PostProps { // maybe user_id and TIMESTAMP
+interface PostProps {
+  user_id: number;
   user: string;
   userProfileImage: string;
   postImage: string;
@@ -22,8 +23,7 @@ interface PostProps { // maybe user_id and TIMESTAMP
 
 
 export default function Post() {
-  const {username} = useParams();
-  const {postId} = useParams();
+  const { username, postId } = useParams();
   const rootURL = config.serverRootURL;
 
   const [post, setPost] = useState<PostProps>();
@@ -42,27 +42,27 @@ export default function Post() {
 
       console.log(response.data[0]);
 
-      setPost(response.data[0]); // Ensure fallback to empty array if no results
+      setPost(response.data[0]);
     } catch (error) {
       console.error('Error fetching data:', error);
-      // Optionally handle navigation or display error message
     }
   };
 
 
   useEffect(() => {
     fetchPost();
-    console.log(post);
-    console.log("GETTING SINGLE POST");
   }, [username]); // Rerun when username changes
 
+  if (!post) { // Check if post is not defined
+    return <div>Loading...</div>; // Or any other placeholder
+  }
 
   return (
     <div className="w-screen h-screen flex flex-col items-center space-y-8 justify-start">
       <Navbar username={username}></Navbar>
       <div className="max-w-[1000px] flex bg-slate-100 rounded-lg overflow-hidden">
         <div className="w-3/5">
-          <img src={post.postImage} alt={post.imageDescription} className=" object-cover" />
+          <img src={post.postImage} className=" object-cover" />
         </div>
         <div className="p-8 space-y-8">
           <div >
