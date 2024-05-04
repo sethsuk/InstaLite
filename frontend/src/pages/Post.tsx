@@ -17,38 +17,39 @@ interface PostProps { // maybe user_id and TIMESTAMP
   postImage: string;
   hashtags: string;
   caption: string;
+  timestamp: string
 }
 
 
 export default function Post() {
   const {username} = useParams();
+  const {postId} = useParams();
   const rootURL = config.serverRootURL;
 
   const [post, setPost] = useState<PostProps>();
   const [comments, setComments] = useState<CommentProps[]>([]);
 
-  // axios here?
-
-  const postData: PostProps =
-  {
-    user: 'username',
-    userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg',
-    postImage: 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=0.752xw:1.00xh;0.175xw,0&resize=1200:*',
-    imageDescription: 'Image description here',
-    hashtags: '#hashtag #hashtag #hashtag',
-    caption: 'Caption here'
-  }
+  // const postData: PostProps =
+  // {
+  //   user: 'username',
+  //   userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg',
+  //   postImage: 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=0.752xw:1.00xh;0.175xw,0&resize=1200:*',
+  //   hashtags: '#hashtag #hashtag #hashtag',
+  //   caption: 'Caption here',
+  //   timestamp: 'random time'
+  // }
 
   const navigate = useNavigate();
   const handleBack = () => navigate(-1);
 
-  const fetchData = async () => {
+  const fetchPost = async () => {
     try {
-      const response = await axios.post(`${rootURL}/${username}/getPosts`, {
-        newEmail: "sdfsdfa"
+      const response = await axios.post(`${rootURL}/${username}/getSinglePost`, {
+        post_id: postId
       });
 
       console.log(response.data);
+
       setPost(response.data); // Ensure fallback to empty array if no results
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -56,10 +57,12 @@ export default function Post() {
     }
   };
 
+
   useEffect(() => {
-    fetchData();
+    fetchPost();
   }, [username]); // Rerun when username changes
 
+  
   return (
     <div className="w-screen h-screen flex flex-col items-center space-y-8 justify-start">
       <Navbar username={username}></Navbar>
