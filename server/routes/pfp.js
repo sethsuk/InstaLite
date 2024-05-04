@@ -1,4 +1,4 @@
-const chromodb = require('../models/chroma.js');
+const chromadb = require('../models/chroma.js');
 const s3 = require('../models/s3.js');
 var db = require('../models/database.js');
 var path = require('path');
@@ -19,7 +19,7 @@ const getTop5Actors = async function (req, res) {
         const collection = chromadb.getCollection();
         console.log('Collection retrived.');
 
-        const matches = await chromodb.findTopKMatches(collection, image, 5);
+        const matches = await chromadb.findTopKMatches(collection, image, 5);
         console.log('Found top 5 matches:', matches);
 
         let actors = [];
@@ -70,7 +70,7 @@ const associateActor = async function (req, res) {
     try {
         const query = `UPDATE users SET actor_nconst = "${actorNconst}" WHERE username = "${username}";`;
         await db.send_sql(query);
-        
+
         await db.send_sql(`DELETE FROM actor_notifications WHERE user_id = ${req.session.user_id}`);
         await db.send_sql(`INSERT INTO actor_notifications(user_id, actor_nconst) VALUES (${req.session.user_id}, "${actorNconst}")`);
 
