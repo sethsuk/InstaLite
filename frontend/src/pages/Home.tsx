@@ -14,12 +14,20 @@ type PostProps = {
   media: string | undefined;
   content: string;
   likes: number;
-  timestamp: Date;
+  timestamp: string;
   user_id: number;
   username: string;
   pfp_url: string | null;
   hashtags: string
 };
+
+type NotificationProps = {
+  type: string;
+  users: string[];
+  date: string;
+  profileImage: string;
+};
+
 
 export default function Home() {
   const { username } = useParams();
@@ -27,43 +35,36 @@ export default function Home() {
   const navigate = useNavigate();
 
   const [posts, setPosts] = useState<PostProps[]>([]);
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<NotificationProps[]>([]);
 
-  const notifications_test = [
-    {
-      type: 'friendRequest',
-      users: ['friend-1'],
-      date: 'April 24, 2024',
-      profileImages: ['https://www.svgrepo.com/show/382100/female-avatar-girl-face-woman-user-7.svg']
-    },
-    {
-      type: 'association',
-      users: ['Alice', 'Rebecca Ferguson'],
-      date: 'April 22, 2024',
-      profileImages: [
-        'https://www.svgrepo.com/show/382100/female-avatar-girl-face-woman-user-7.svg',
-        'https://www.wbw.org/wp-content/uploads/2016/03/Female-Avatar.png'
-      ]
-    }
-  ]
-
-  const fetchPost = async () => {
+  const fetchPosts = async () => {
     try {
       const response = await axios.get(`${rootURL}/${username}/getPosts`);
       console.log(response.data);
-      setPosts(response.data); // Ensure fallback to empty array if no results
+      setPosts(response.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      // Optionally handle navigation or display error message
+      console.error('Error fetching posts:', error);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(`${rootURL}/${username}/getNotifications`);
+      console.log(response.data.results);
+      setNotifications(response.data.results);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
     }
   };
 
   useEffect(() => {
-    fetchPost();
+    fetchPosts();
+    fetchNotifications();
   }, [username]); // Rerun when username changes
 
-  const handleClick = () => {
-    navigate(`/posts/${postId}`);
+
+  const handleClick = (postId: number) => {
+    navigate(`/${username}/post/${postId}`);
   };
 
   return (
@@ -71,13 +72,13 @@ export default function Home() {
       <Navbar username={username}></Navbar>
       <div className='w-full max-w-[1800px] flex flex-col justify-center items-center space-y-8 p-8'>
         <div className='space-y-3'>
-          {notifications_test.map((notification, index) => (
+          {notifications.map((notification, index) => (
             <NotificationComponent
               key={index}
               type={notification.type}
               users={notification.users}
               date={notification.date}
-              profileImages={notification.profileImages}
+              profileImage={notification.profileImage}
             />
           ))}
         </div>
@@ -91,6 +92,7 @@ export default function Home() {
               postImage={post.media}
               hashtags={post.hashtags}
               caption={post.content}
+              onClick={() => handleClick(post.post_id)}
             />
           ))}
         </div>
