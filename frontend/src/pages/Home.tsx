@@ -36,6 +36,7 @@ export default function Home() {
 
   const [posts, setPosts] = useState<PostProps[]>([]);
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
+  const [isLiked, setIsLiked] = useState(false);
 
   const fetchPosts = async () => {
     try {
@@ -67,6 +68,20 @@ export default function Home() {
     navigate(`/${username}/post/${postId}`);
   };
 
+  const handleLike = async (postId: number) => {
+    try {
+      await axios.post(`${rootURL}/${username}/likePost`, {
+        post_id: postId
+      });
+
+      setPosts(prevPosts => prevPosts.map(post =>
+        post.post_id === postId ? { ...post, likes: post.likes + 1 } : post
+      ));
+    } catch (error) {
+      console.error('Error liking the post:', error);
+    }
+  };
+
   return (
     <div className='w-screen h-screen flex flex-col items-center justify-start'>
       <Navbar username={username}></Navbar>
@@ -93,6 +108,9 @@ export default function Home() {
               hashtags={post.hashtags}
               caption={post.content}
               onClick={() => handleClick(post.post_id)}
+              handleLike={() => handleLike(post.post_id)}
+              likes={post.likes}
+              isLiked={isLiked}
             />
           ))}
         </div>

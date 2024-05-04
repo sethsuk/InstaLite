@@ -142,7 +142,7 @@ var getPostMedia = async function (req, res) {
 
         var results = await db.send_sql(`SELECT media FROM posts WHERE post_id = ${post_id};`);
 
-        return res.status(201).json({media: results[0]["media"]});
+        return res.status(201).json({ media: results[0]["media"] });
     } catch (err) {
         console.log(err);
         return res.status(500).json({ error: 'Error querying database.' });
