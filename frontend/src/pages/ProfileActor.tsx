@@ -62,6 +62,9 @@ export default function SignupActor() {
         }
     };
 
+    if (!actors) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div className='w-screen h-screen'>
