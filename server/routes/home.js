@@ -79,30 +79,32 @@ var getNotifications = async function (req, res) {
         console.log(actorNotificationsResultsFriends);
 
         var response = {
-            friendRequests: friendRequestsResults.map((request) => (
+            results: [...friendRequestsResults.map((request) => (
                 {
+                    type: "friendRequest",
                     request_id: request.request_id,
                     sender_id: request.sender_id,
                     receiver_id: request.receiver_id,
                     timestamp: request.timestamp,
                     status: request.status
                 }
-            )),
-            chatInvites: chatInvitesResults.map((invite) => (
+            )), ...chatInvitesResults.map((invite) => (
                 {
+                    type: "chatInvite",
                     sender_id: invite.sender_id,
                     receiver_id: invite.receiver_id,
                     chat_id: invite.chat_id,
                     timestamp: invite.timestamp
                 }
-            )),
-            actorNotifications: [...actorNotificationsResultsSelf.map((notification) => (
+            )), ...actorNotificationsResultsSelf.map((notification) => (
                 {
+                    type: "association",
                     user_id: notification.user_id,
                     nconst: notification.actor_nconst
                 }
             )), ...actorNotificationsResultsFriends.map((notification) => (
                 {
+                    type: "association",
                     user_id: notification.user_id,
                     nconst: notification.actor_nconst
                 }
