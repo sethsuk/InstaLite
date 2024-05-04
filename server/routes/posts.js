@@ -4,6 +4,7 @@ const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 const s3 = require('../models/s3.js');
 const fs = require('fs');
+const { timeStamp } = require('console');
 
 // POST /createPost
 var createPost = async function (req, res) {
@@ -119,7 +120,7 @@ var likePost = async function (req, res) {
 };
 
 
-// GET
+// POST
 var getPostMedia = async function (req, res) {
     const username = req.params.username;
     if (!helper.isLoggedIn(req, username)) {
@@ -149,10 +150,60 @@ var getPostMedia = async function (req, res) {
 };
 
 
+// POST
+var getSinglePost = async function (req, res) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+
+    const post_id = parseInt(req.body["post_id"]);
+
+    if (!Number.isInteger(post_id)) {
+        return res.status(400).json({ error: "One or more of the fields you entered was empty, please try again." });
+    }
+
+    try {
+        var existingPostQuery = await db.send_sql(`SELECT COUNT(*) FROM posts WHERE post_id = ${post_id}`);
+
+        if (existingPostQuery[0]["COUNT(*)"] == 0) {
+            return res.status(400).json({ error: "Post does not exist." });
+        }
+
+        var results = await db.send_sql(`
+            SELECT p.post_id, p.title, p.media, p.content, p.likes, p.timestamp,
+                u.user_id, u.username, u.pfp_url, 
+                GROUP_CONCAT(DISTINCT CONCAT('#', h.tag) ORDER BY h.tag ASC SEPARATOR ', ') AS hashtags
+            FROM posts p
+            LEFT JOIN users u ON p.user_id = u.user_id
+            LEFT JOIN hashtags_to_posts ON hashtags_to_posts.post_id = p.post_id
+            LEFT JOIN hashtags h ON hashtags_to_posts.hashtag_id = h.hashtag_id
+            WHERE p.post_id = ${post_id}
+        `);
+
+        console.log(results);
+
+        return res.status(201).json(results.map((result) => ({
+            user_id: result.user_id,
+            user: result.username,
+            userProfileImage: result.pfp_url,
+            postImage: result.media,
+            hashtags: result.hashtags,
+            caption: result.media,
+            timeStamp: result.timestamp
+        })));
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: 'Error querying database.' });
+    }
+};
+
+
 const routes = {
     create_post: createPost,
     like_post: likePost,
-    get_post_media: getPostMedia
+    get_post_media: getPostMedia,
+    get_single_post: getSinglePost
 };
 
 module.exports = routes;
