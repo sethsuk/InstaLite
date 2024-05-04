@@ -48,68 +48,75 @@ var getNotifications = async function (req, res) {
 
     try {
         var friendRequestsResults = await db.send_sql(`
-            SELECT *
-            FROM friend_requests
-            WHERE receiver_id = ${req.session.user_id} AND status = 'pending'
+            SELECT fr.request_id, fr.sender_id, fr.receiver_id, fr.timestamp, fr.status, 
+                   u.username as sender_username, u.pfp_url as sender_pfp
+            FROM friend_requests fr
+            JOIN users u ON fr.sender_id = u.user_id
+            WHERE fr.receiver_id = ${req.session.user_id} AND fr.status = 'pending'
             LIMIT 5
         `);
 
         var chatInvitesResults = await db.send_sql(`
-            SELECT *
-            FROM chat_invites
-            WHERE reciever_id = ${req.session.user_id} AND status = 'pending'
+            SELECT ci.chat_id, ci.sender_id, ci.reciever_id, ci.timestamp, ci.status,
+                u.username as sender_username, u.pfp_url as sender_pfp
+            FROM chat_invites ci
+            JOIN users u ON ci.sender_id = u.user_id
+            WHERE ci.reciever_id = ${req.session.user_id} AND ci.status = 'pending'
             LIMIT 5
         `);
 
         var actorNotificationsResultsSelf = await db.send_sql(`
-            SELECT *
-            FROM actor_notifications
-            WHERE user_id = ${req.session.user_id}
+            SELECT an.user_id, an.actor_nconst, an.timestamp,
+            u.username, u.pfp_url
+            FROM actor_notifications an
+            JOIN users u ON an.user_id = u.user_id
+            WHERE an.user_id = ${req.session.user_id}
         `);
 
+        // Fetching actor notifications involving friends
         var actorNotificationsResultsFriends = await db.send_sql(`
-            SELECT *
-            FROM actor_notifications
-            JOIN friends ON actor_notifications.user_id = friends.followed
-            WHERE friends.follower = ${req.session.user_id}
+            SELECT an.user_id, an.actor_nconst, an.timestamp,
+                u.username, u.pfp_url
+            FROM actor_notifications an
+            JOIN friends f ON an.user_id = f.followed
+            JOIN users u ON f.followed = u.user_id
+            WHERE f.follower = ${req.session.user_id}
             LIMIT 4
         `);
 
-        console.log(actorNotificationsResultsSelf);
-        console.log(actorNotificationsResultsFriends);
-
         var response = {
-            friendRequests: friendRequestsResults.map((request) => (
+            results: [...friendRequestsResults.map((request) => (
                 {
-                    request_id: request.request_id,
-                    sender_id: request.sender_id,
-                    receiver_id: request.receiver_id,
-                    timestamp: request.timestamp,
-                    status: request.status
+                    type: 'friendRequest',
+                    users: [request.sender_username],
+                    date: request.timestamp,
+                    profileImage: request.sender_pfp
                 }
-            )),
-            chatInvites: chatInvitesResults.map((invite) => (
+            )), ...chatInvitesResults.map((invite) => (
                 {
-                    sender_id: invite.sender_id,
-                    receiver_id: invite.receiver_id,
-                    chat_id: invite.chat_id,
-                    timestamp: invite.timestamp
+                    type: 'chatInvite',
+                    users: [invite.sender_username],
+                    date: invite.timestamp,
+                    profileImage: invite.sender_pfp
                 }
-            )),
-            actorNotifications: [...actorNotificationsResultsSelf.map((notification) => (
+            )), ...actorNotificationsResultsSelf.map((notification) => (
                 {
-                    user_id: notification.user_id,
-                    nconst: notification.actor_nconst
+                    type: 'association',
+                    users: [notification.username],
+                    date: notification.timestamp,
+                    profileImage: notification.pfp_url
                 }
             )), ...actorNotificationsResultsFriends.map((notification) => (
                 {
-                    user_id: notification.user_id,
-                    nconst: notification.actor_nconst
+                    type: 'association',
+                    users: [notification.username],
+                    date: notification.timestamp,
+                    profileImage: notification.pfp_url
                 }
             ))]
         };
 
-        console.log(response);
+        console.log(response.results);
 
         return res.status(200).json(response);
     } catch (err) {
