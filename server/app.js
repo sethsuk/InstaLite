@@ -24,17 +24,17 @@ app.use(session({
     secret: 'nets2120_insecure', saveUninitialized: true, cookie: { httpOnly: false }, resave: true
 }));
 
-await db.send_sql('TRUNCATE TABLE online');
+db.send_sql('TRUNCATE TABLE online');
 
-await db.send_sql(`
+db.send_sql(`
     DELETE FROM friend_requests WHERE timestamp < NOW() - INTERVAL 3 DAY;
 `);
 
-await db.send_sql(`
+db.send_sql(`
     DELETE FROM actor_notifications WHERE timestamp < NOW() - INTERVAL 3 DAY;
 `);
 
-await db.send_sql(`
+db.send_sql(`
     DELETE FROM chat_invites WHERE timestamp < NOW() - INTERVAL 3 DAY;
 `);
 
