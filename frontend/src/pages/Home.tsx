@@ -18,7 +18,8 @@ type PostProps = {
   user_id: number;
   username: string;
   pfp_url: string | null;
-  hashtags: string
+  hashtags: string;
+  isLiked: boolean
 };
 
 type NotificationProps = {
@@ -36,13 +37,12 @@ export default function Home() {
 
   const [posts, setPosts] = useState<PostProps[]>([]);
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
-  const [isLiked, setIsLiked] = useState(false);
 
   const fetchPosts = async () => {
     try {
       const response = await axios.get(`${rootURL}/${username}/getPosts`);
       console.log(response.data);
-      setPosts(response.data);
+      setPosts(response.data.map((post: PostProps) => ({ ...post, isLiked: false })));
     } catch (error) {
       console.error('Error fetching posts:', error);
     }
@@ -68,17 +68,27 @@ export default function Home() {
     navigate(`/${username}/post/${postId}`);
   };
 
-  const handleLike = async (postId: number) => {
+  const handleLike = async (postId: number, isLiked: boolean) => {
     try {
-      await axios.post(`${rootURL}/${username}/likePost`, {
-        post_id: postId
-      });
+      let response;
+      if (isLiked) {
+        response = await axios.post(`${rootURL}/${username}/unlikePost`, {
+          post_id: postId
+        });
+      } else {
+        response = await axios.post(`${rootURL}/${username}/likePost`, {
+          post_id: postId
+        });
+      }
+      // Assume the backend returns the new likes count
+      const newLikes = response.data.likes;
 
+      // Update the posts state with the new like status and count
       setPosts(prevPosts => prevPosts.map(post =>
-        post.post_id === postId ? { ...post, likes: post.likes + 1 } : post
+        post.post_id === postId ? { ...post, isLiked: !isLiked, likes: newLikes } : post
       ));
     } catch (error) {
-      console.error('Error liking the post:', error);
+      console.error('Error (un)liking the post:', error);
     }
   };
 
@@ -108,9 +118,9 @@ export default function Home() {
               hashtags={post.hashtags}
               caption={post.content}
               onClick={() => handleClick(post.post_id)}
-              handleLike={() => handleLike(post.post_id)}
+              handleLike={() => handleLike(post.post_id, post.isLiked)}
               likes={post.likes}
-              isLiked={isLiked}
+              isLiked={post.isLiked}
             />
           ))}
         </div>
