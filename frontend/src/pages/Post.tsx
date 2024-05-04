@@ -11,14 +11,12 @@ interface CommentProps {
   comment: string;
 }
 
-interface PostProps {
+interface PostProps { // maybe user_id and TIMESTAMP
   user: string;
   userProfileImage: string;
   postImage: string;
-  imageDescription: string;
   hashtags: string;
   caption: string;
-  comments: CommentProps[];
 }
 
 
@@ -26,7 +24,8 @@ export default function Post() {
   const {username} = useParams();
   const rootURL = config.serverRootURL;
 
-  const [post, setPost] = useState({});
+  const [post, setPost] = useState<PostProps>();
+  const [comments, setComments] = useState<CommentProps[]>([]);
 
   // axios here?
 
@@ -37,12 +36,7 @@ export default function Post() {
     postImage: 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=0.752xw:1.00xh;0.175xw,0&resize=1200:*',
     imageDescription: 'Image description here',
     hashtags: '#hashtag #hashtag #hashtag',
-    caption: 'Caption here',
-    comments: [
-      { username: 'friend1', userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg', comment: 'comment1' },
-      { username: 'friend2', userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg', comment: 'comment2' },
-      { username: 'friend3', userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg', comment: 'comment3' },
-    ]
+    caption: 'Caption here'
   }
 
   const navigate = useNavigate();
@@ -50,7 +44,10 @@ export default function Post() {
 
   const fetchData = async () => {
     try {
-      const response = await axios.get(`${rootURL}/${username}/getPosts`);
+      const response = await axios.post(`${rootURL}/${username}/getPosts`, {
+        newEmail: "sdfsdfa"
+      });
+
       console.log(response.data);
       setPost(response.data); // Ensure fallback to empty array if no results
     } catch (error) {
@@ -89,7 +86,7 @@ export default function Post() {
           <div className='space-y-4'>
             <div>
               <strong>Comments</strong>
-              {post.comments.map((comment, index) => (
+              {comments.map((comment, index) => (
                 <div key={index} className="flex items-center space-x-3 py-2">
                   <div className="flex items-center space-x-2">
                     <img src={comment.userProfileImage} alt="user profile" className="w-7 h-7 rounded-full" />
