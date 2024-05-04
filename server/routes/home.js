@@ -3,6 +3,7 @@ const helper = require('./route_helper.js');
 var path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
+const { request } = require('http');
 
 // GET /getPosts
 var getPosts = async function (req, res) {
@@ -57,12 +58,48 @@ var getNotifications = async function (req, res) {
             LIMIT 5
         `);
 
+        var friendRequestsResultsAcc = await db.send_sql(`
+            SELECT fr.request_id, fr.sender_id, fr.receiver_id, fr.timestamp, fr.status, 
+                   u.username as receiver_username, u.pfp_url as receiver_pfp
+            FROM friend_requests fr
+            JOIN users u ON fr.receiver_id = u.user_id
+            WHERE fr.sender_id = ${req.session.user_id} AND fr.status = 'accepted'
+            LIMIT 5
+        `);
+
+        var friendRequestsResultsRej = await db.send_sql(`
+            SELECT fr.request_id, fr.sender_id, fr.receiver_id, fr.timestamp, fr.status, 
+                u.username as receiver_username, u.pfp_url as receiver_pfp
+            FROM friend_requests fr
+            JOIN users u ON fr.receiver_id = u.user_id
+            WHERE fr.sender_id = ${req.session.user_id} AND fr.status = 'rejected'
+            LIMIT 5
+        `);
+
         var chatInvitesResults = await db.send_sql(`
             SELECT ci.chat_id, ci.sender_id, ci.reciever_id, ci.timestamp, ci.status,
                 u.username as sender_username, u.pfp_url as sender_pfp
             FROM chat_invites ci
             JOIN users u ON ci.sender_id = u.user_id
             WHERE ci.reciever_id = ${req.session.user_id} AND ci.status = 'pending'
+            LIMIT 5
+        `);
+
+        var chatInvitesResultsAcc = await db.send_sql(`
+            SELECT ci.chat_id, ci.sender_id, ci.reciever_id, ci.timestamp, ci.status,
+                u.username as receiver_username, u.pfp_url as receiver_pfp
+            FROM chat_invites ci
+            JOIN users u ON ci.reciever_id = u.user_id
+            WHERE ci.sender_id = ${req.session.user_id} AND ci.status = 'accepted'
+            LIMIT 5
+        `);
+
+        var chatInvitesResultsRej = await db.send_sql(`
+            SELECT ci.chat_id, ci.sender_id, ci.reciever_id, ci.timestamp, ci.status,
+                u.username as receiver_username, u.pfp_url as receiver_pfp
+            FROM chat_invites ci
+            JOIN users u ON ci.reciever_id = u.user_id
+            WHERE ci.sender_id = ${req.session.user_id} AND ci.status = 'rejected'
             LIMIT 5
         `);
 
@@ -113,12 +150,40 @@ var getNotifications = async function (req, res) {
                     date: request.timestamp,
                     profileImages: [request.sender_pfp]
                 }
+            )), ...friendRequestsResultsAcc.map((result) => (
+                {
+                    type: 'friendRequestAccepted',
+                    users: [result.receiver_username],
+                    date: result.timestamp,
+                    profileImages: [result.receiver_pfp]
+                }
+            )), ...friendRequestsResultsRej.map((result) => (
+                {
+                    type: 'friendRequestRejected',
+                    users: [result.receiver_username],
+                    date: result.timestamp,
+                    profileImages: [result.receiver_pfp]
+                }
             )), ...chatInvitesResults.map((invite) => (
                 {
                     type: 'chatInvite',
                     users: [invite.sender_username],
                     date: invite.timestamp,
                     profileImages: [invite.sender_pfp]
+                }
+            )), ...chatInvitesResultsAcc.map((invite) => (
+                {
+                    type: 'chatInviteAccepted',
+                    users: [invite.receiver_username],
+                    date: invite.timestamp,
+                    profileImages: [invite.receiver_pfp]
+                }
+            )), ...chatInvitesResultsRej.map((invite) => (
+                {
+                    type: 'chatInviteRejected',
+                    users: [invite.receiver_username],
+                    date: invite.timestamp,
+                    profileImages: [invite.receiver_pfp]
                 }
             )), ...actorNotificationsResultsSelf, ...actorNotificationsResultsFriends]
         };

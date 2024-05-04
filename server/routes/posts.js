@@ -189,7 +189,7 @@ var getSinglePost = async function (req, res) {
             userProfileImage: result.pfp_url,
             postImage: result.media,
             hashtags: result.hashtags,
-            caption: result.media,
+            caption: result.content,
             timeStamp: result.timestamp
         })));
     } catch (err) {
