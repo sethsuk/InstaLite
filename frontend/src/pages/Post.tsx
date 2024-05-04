@@ -26,7 +26,9 @@ export default function Post() {
   const {username} = useParams();
   const rootURL = config.serverRootURL;
 
-  const [post, setPost] = useState({});
+  const [post, setPost] = useState<PostProps>();
+
+  const [comments, setComments] = useState<CommentProps[]>([]);
 
   // axios here?
 
