@@ -1,7 +1,8 @@
 var db = require('../models/database.js');
-const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
-const chromadb = require('../models/chroma.js');
+var path = require('path');
+const fs = require('fs');
+const csv = require('csv-parser');
 
 // GET /getPosts
 var getPosts = async function (req, res) {
@@ -84,36 +85,42 @@ var getNotifications = async function (req, res) {
             LIMIT 4
         `);
 
+        var actorNotificationsResultsSelf = await Promise.all(actorNotificationsResultsSelf.map(async (notification) => {
+            const actorInfo = await getInfoHelper(notification.actor_nconst);
+            return {
+                type: 'association',
+                users: [notification.username, actorInfo ? actorInfo.name : 'Unknown Actor'],
+                date: notification.timestamp,
+                profileImages: [notification.pfp_url, actorInfo ? actorInfo.imageUrl : '']
+            };
+        }));
+
+        var actorNotificationsResultsFriends = await Promise.all(actorNotificationsResultsFriends.map(async (notification) => {
+            const actorInfo = await getInfoHelper(notification.actor_nconst);
+            return {
+                type: 'association',
+                users: [notification.username, actorInfo ? actorInfo.name : 'Unknown Actor'],
+                date: notification.timestamp,
+                profileImages: [notification.pfp_url, actorInfo ? actorInfo.imageUrl : '']
+            };
+        }));
+
         var response = {
             results: [...friendRequestsResults.map((request) => (
                 {
                     type: 'friendRequest',
                     users: [request.sender_username],
                     date: request.timestamp,
-                    profileImage: request.sender_pfp
+                    profileImages: [request.sender_pfp]
                 }
             )), ...chatInvitesResults.map((invite) => (
                 {
                     type: 'chatInvite',
                     users: [invite.sender_username],
                     date: invite.timestamp,
-                    profileImage: invite.sender_pfp
+                    profileImages: [invite.sender_pfp]
                 }
-            )), ...actorNotificationsResultsSelf.map((notification) => (
-                {
-                    type: 'association',
-                    users: [notification.username],
-                    date: notification.timestamp,
-                    profileImage: notification.pfp_url
-                }
-            )), ...actorNotificationsResultsFriends.map((notification) => (
-                {
-                    type: 'association',
-                    users: [notification.username],
-                    date: notification.timestamp,
-                    profileImage: notification.pfp_url
-                }
-            ))]
+            )), ...actorNotificationsResultsSelf, ...actorNotificationsResultsFriends]
         };
 
         console.log(response.results);
@@ -124,6 +131,37 @@ var getNotifications = async function (req, res) {
         return res.status(500).json({ error: 'Error querying database.' });
     }
 };
+
+async function getInfoHelper(nconst) {
+    return new Promise((resolve, reject) => {
+        const csvFilePath = path.join(__dirname, '..', 'desired.csv');
+        console.log('File path:', csvFilePath);
+        let found = null;
+
+        fs.createReadStream(csvFilePath)
+            .pipe(csv(['id', 'nconst', 'name', 'image', 'url']))
+            .on('data', (data) => {
+                if (data.nconst === nconst) {
+                    found = {
+                        nconst: data.nconst,
+                        name: data.name.replace(/_/g, ' '), // Replace underscores in names
+                        imageUrl: data.url
+                    };
+                }
+            })
+            .on('end', () => {
+                // Only resolve the promise after finishing reading the CSV
+                if (found) {
+                    resolve(found);
+                } else {
+                    resolve(null); // Resolve with null if no actor found
+                }
+            })
+            .on('error', (err) => {
+                reject(err);
+            });
+    });
+}
 
 const routes = {
     get_posts: getPosts,

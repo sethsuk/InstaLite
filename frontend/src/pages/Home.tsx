@@ -25,7 +25,7 @@ type NotificationProps = {
   type: string;
   users: string[];
   date: string;
-  profileImage: string;
+  profileImages: string[];
 };
 
 
@@ -78,7 +78,7 @@ export default function Home() {
               type={notification.type}
               users={notification.users}
               date={notification.date}
-              profileImage={notification.profileImage}
+              profileImages={notification.profileImages}
             />
           ))}
         </div>
