@@ -26,6 +26,7 @@
     "process": "^0.11.10",
     "kafkajs": "2.2.4",
     "kafkajs-snappy": "1.1.0"
+    "socket.io": "latest"
   },
   "scripts": {
     "start": "node --experimental-vm-modules app.js",
