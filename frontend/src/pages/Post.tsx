@@ -29,28 +29,20 @@ export default function Post() {
   const [post, setPost] = useState<PostProps>();
   const [comments, setComments] = useState<CommentProps[]>([]);
 
-  // const postData: PostProps =
-  // {
-  //   user: 'username',
-  //   userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg',
-  //   postImage: 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=0.752xw:1.00xh;0.175xw,0&resize=1200:*',
-  //   hashtags: '#hashtag #hashtag #hashtag',
-  //   caption: 'Caption here',
-  //   timestamp: 'random time'
-  // }
-
   const navigate = useNavigate();
   const handleBack = () => navigate(-1);
 
   const fetchPost = async () => {
     try {
+      console.log("fetching post");
+
       const response = await axios.post(`${rootURL}/${username}/getSinglePost`, {
         post_id: postId
       });
 
-      console.log(response.data);
+      console.log(response.data[0]);
 
-      setPost(response.data); // Ensure fallback to empty array if no results
+      setPost(response.data[0]); // Ensure fallback to empty array if no results
     } catch (error) {
       console.error('Error fetching data:', error);
       // Optionally handle navigation or display error message
@@ -60,9 +52,11 @@ export default function Post() {
 
   useEffect(() => {
     fetchPost();
+    console.log(post);
+    console.log("GETTING SINGLE POST");
   }, [username]); // Rerun when username changes
 
-  
+
   return (
     <div className="w-screen h-screen flex flex-col items-center space-y-8 justify-start">
       <Navbar username={username}></Navbar>
