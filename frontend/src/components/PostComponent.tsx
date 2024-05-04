@@ -39,7 +39,7 @@ export default function PostComponent({
       <div>
         {/* Like and comment icons */}
         <div className='flex items-center space-x-4 text-lg'>
-          <FaHeart className={`cursor-pointer ${{ isLiked } ? 'text-gray-500' : 'text-red-500'}`}
+          <FaHeart className={`cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-500'}`}
             onClick={(e) => { e.stopPropagation(); handleLike(); }} />
           <span>{likes}</span>
           <FaComment className='cursor-pointer' />

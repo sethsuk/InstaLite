@@ -42,7 +42,7 @@ export default function Home() {
     try {
       const response = await axios.get(`${rootURL}/${username}/getPosts`);
       console.log(response.data);
-      setPosts(response.data.map((post: PostProps) => ({ ...post, isLiked: false })));
+      setPosts(response.data);
     } catch (error) {
       console.error('Error fetching posts:', error);
     }
