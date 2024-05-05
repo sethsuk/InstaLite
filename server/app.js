@@ -41,7 +41,7 @@ function formatMessage(username, text, time) {
     
 const users = [];
 
-async function userJoin(id, username, room) {
+async function userJoin(socket_id, username, room) {
   try {
     let result = await db.send_sql(`SELECT user_id FROM users WHERE username = '${username}' LIMIT 1`);
     console.log(result);
@@ -50,18 +50,18 @@ async function userJoin(id, username, room) {
     console.log(e);
     user_id = 1;
   };
-  const user = { id, username, room, user_id };
+  const user = { socket_id, username, room, user_id };
   users.push(user);
   console.log(user);
   return user;
 }
 
-function idToUser(id) {
-  return users.find((user) => user.id === id);
+function socketidToUser(socket_id) {
+  return users.find((user) => user.socket_id === socket_id);
 }
 
-function userLeaves(id) {
-  const index = users.findIndex((user) => user.id === id);
+function userLeaves(socket_id) {
+  const index = users.findIndex((user) => user.socket_id === socket_id);
   if (index !== -1) {
     return users.splice(index, 1)[0];
   }
@@ -72,12 +72,19 @@ function usersInRoom(room) {
 }
 
 const server = http.createServer(app);
-const io = socketio(server);
+const io = socketio(server,  {
+    cors: {
+      origin: "http://localhost:4567",
+      methods: ["GET", "POST"],
+      credentials: false
+    }
+});
 const date = new Date();
 
 io.on("connection", (socket) => {
-  socket.on("joinRoom", async ({ username, room }) => {
-    const user = await userJoin(socket.id, username, room);
+  socket.on("joinRoom", async ({ username, chatId }) => {
+    console.log(`Requested room: ${chatId}`);
+    const user = await userJoin(socket.id, username, chatId);
 
     socket.join(user.room);
 
@@ -99,9 +106,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("chatMessage", (msg) => {
-    const user = idToUser(socket.id);
-    io.to(user.room).emit("message", formatMessage(user.username, msg,  date.toLocaleString('en-US')));
-    db.send_sql(`INSERT INTO chat_messages (chat_id, user_id, content, client_offset) VALUES (${user.room}, ${user.user_id}, '${msg}', 'test');`);
+    const user = socketidToUser(socket.id);
+    if (user) {
+        io.to(user.room).emit("message", formatMessage(user.username, msg,  date.toLocaleString('en-US')));
+        db.send_sql(`INSERT INTO chat_messages (chat_id, user_id, content, client_offset) VALUES (${user.room}, ${user.user_id}, '${msg}', 'test');`);
+    }
+  
   });
 
   socket.on("disconnect", () => {
@@ -111,16 +121,17 @@ io.on("connection", (socket) => {
         "message",
         formatMessage("Info", `${user.username} has left in the chat!`, date.toLocaleString('en-US'))
       );
+
+      
+    io.to(user.room).emit("members", {
+        room: user.room,
+        users: usersInRoom(user.room),
+      });
+      
     }
 
-    io.to(user.room).emit("members", {
-      room: user.room,
-      users: usersInRoom(user.room),
-    });
   });
 });
-
-app.use(express.static(path.join(__dirname, "public")));
 
 const chat_port = 3000;
 server.listen(chat_port, () => console.log(`Chat server running at http://localhost:${chat_port}`));

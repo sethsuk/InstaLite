@@ -22,8 +22,8 @@ function App() {
         <Route path='/:username/profile' element={<Profile />} />
         <Route path='/:username/profileactor' element={<ProfileActor />} />
         <Route path='/:username/friends' element={<Friends />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/chatRoom" element={<ChatRoom />} />
+        <Route path="/:username/chat" element={<Chat />} />
+        <Route path="/:username/chatRoom/:chatId" element={<ChatRoom />} />
       </Routes>
     </BrowserRouter>
   )
