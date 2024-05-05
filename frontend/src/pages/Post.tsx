@@ -35,7 +35,7 @@ export default function Post() {
   const fetchPost = async () => {
     try {
       console.log("fetching post");
-
+      axios.defaults.withCredentials = true;
       const response = await axios.post(`${rootURL}/${username}/getSinglePost`, {
         post_id: postId
       });
@@ -51,7 +51,7 @@ export default function Post() {
   const fetchComments = async () => {
     try {
       console.log("fetching comments");
-
+      axios.defaults.withCredentials = true;
       const response = await axios.post(`${rootURL}/${username}/getComments`, {
         post_id: postId
       });
