@@ -11,6 +11,10 @@ var getPosts = async function (req, res) {
         return res.status(403).json({ error: 'Not logged in.' });
     }
 
+    const page = parseInt(req.query.page) || 1; // Get page number from query parameter or default to 1
+    const postsPerPage = 10;
+    const startIndex = (page - 1) * postsPerPage;
+
     try {
         var results = await db.send_sql(`
             SELECT DISTINCT p.post_id, p.title, p.media, p.content, p.likes, p.timestamp,
@@ -25,13 +29,12 @@ var getPosts = async function (req, res) {
             LEFT JOIN post_likes pl ON p.post_id = pl.post_id AND pl.user_id = ${req.session.user_id}
             WHERE f.follower = ${req.session.user_id} OR p.user_id = ${req.session.user_id}
             GROUP BY p.post_id
-            ORDER BY p.timestamp DESC
-            LIMIT 10;
+            ORDER BY p.timestamp DESC;
         `);
 
-        console.log("getPosts results:", results);
+        var limitedResults = results.slice(startIndex, startIndex + postsPerPage);
 
-        const processedResults = results.map(post => ({
+        const processedResults = limitedResults.map(post => ({
             ...post,
             hashtags: post.hashtags ? post.hashtags.split(',') : []
         }));
