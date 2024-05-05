@@ -78,6 +78,7 @@ export default function Friends() {
 
     const fetchData = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const friendsResponse = await axios.get(`${rootURL}/${username}/getFriends`);
             if (friendsResponse.data.results) {
                 console.log('Friends:', friendsResponse.data.results);
@@ -86,6 +87,7 @@ export default function Friends() {
                 console.log('null friends response');
                 setFriendsData([]);
             }
+            axios.defaults.withCredentials = true;
             const invitationsResponse = await axios.get(`${rootURL}/${username}/getFriendRequests`);
             console.log('axios for getFriendRequests sent');
             if (invitationsResponse.data.friendRequests) {
@@ -103,13 +105,12 @@ export default function Friends() {
 
     useEffect(() => {
         fetchData();
-        const intervalId = setInterval(fetchData, 30000); // Fetch every 30 seconds
-        return () => clearInterval(intervalId);
     }, [username, rootURL]);
 
 
     const handleAccept = async (senderId: number) => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/acceptFriendRequest`, {
                 senderId: senderId
             });
@@ -125,6 +126,7 @@ export default function Friends() {
 
     const handleReject = async (requestId: number) => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/rejectFriendRequest`, {
                 requestId: requestId
             });
@@ -139,6 +141,7 @@ export default function Friends() {
 
     const handleRemove = async (userId: number) => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/removeFriend`, {
                 friendId: userId
             });
@@ -154,6 +157,7 @@ export default function Friends() {
     // TODO!
     const handleSendFriendRequest = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/sendFriendRequest`, {
                 receiverUsername: newFriendUsername
             });

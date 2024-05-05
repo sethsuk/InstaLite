@@ -44,10 +44,12 @@ function register_routes(app) {
 
     app.post('/:username/createPost', upload.single('file'), posts.create_post); // verified
     app.post('/:username/likePost', posts.like_post); // verified
-    app.get('/:username/getPostMedia', posts.get_post_media); // verified
+    app.post('/:username/unlikePost', posts.unlike_post) // verified
+    app.post('/:username/getPostMedia', posts.get_post_media); // verified
+    app.post('/:username/getSinglePost', posts.get_single_post); // verified
 
     app.post('/:username/createComment', comments.create_comment); // verified
-    app.get('/:username/getComments', comments.get_comments); // verified
+    app.post('/:username/getComments', comments.get_comments); // verified
 
     app.get('/:username/getPosts', home.get_posts); // verified
     app.get('/:username/getNotifications', home.get_notifications); // verified

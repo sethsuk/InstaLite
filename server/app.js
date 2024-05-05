@@ -21,7 +21,8 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(session({
-    secret: 'nets2120_insecure', saveUninitialized: true, cookie: { httpOnly: false }, resave: true
+    secret: 'nets2120_insecure', saveUninitialized: true,
+    cookie: { secure: false, httpOnly: false, sameSite: 'lax', maxAge: 86400000 }, resave: true
 }));
 
 // db.send_sql('TRUNCATE TABLE online');
@@ -123,6 +124,18 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const chat_port = 3000;
 server.listen(chat_port, () => console.log(`Chat server running at http://localhost:${chat_port}`));
+
+db.send_sql(`
+    DELETE FROM friend_requests WHERE timestamp < NOW() - INTERVAL 3 DAY;
+`);
+
+db.send_sql(`
+    DELETE FROM actor_notifications WHERE timestamp < NOW() - INTERVAL 3 DAY;
+`);
+
+db.send_sql(`
+    DELETE FROM chat_invites WHERE timestamp < NOW() - INTERVAL 3 DAY;
+`);
 
 registry.register_routes(app);
 

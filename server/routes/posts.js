@@ -4,6 +4,7 @@ const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 const s3 = require('../models/s3.js');
 const fs = require('fs');
+const { timeStamp } = require('console');
 
 // POST /createPost
 var createPost = async function (req, res) {
@@ -111,7 +112,41 @@ var likePost = async function (req, res) {
         await db.send_sql(`UPDATE posts SET likes = ${numOfLikes} WHERE post_id = ${post_id};`);
         await db.send_sql(`INSERT INTO post_likes (post_id, user_id) VALUES (${post_id}, ${req.session.user_id});`);
 
-        return res.status(201).json({ message: "Post liked." });
+        return res.status(201).json({ likes: numOfLikes });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: 'Error querying database.' });
+    }
+};
+
+// POST
+var unlikePost = async function (req, res) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+
+    const post_id = parseInt(req.body["post_id"]);
+
+    if (!Number.isInteger(post_id)) {
+        return res.status(400).json({ error: "One or more of the fields you entered was empty, please try again." });
+    }
+
+    try {
+        var existingLikeQuery = await db.send_sql(`SELECT user_id FROM post_likes WHERE post_id = ${post_id} AND user_id = ${req.session.user_id}`);
+
+        if (existingLikeQuery.length == 0) {
+            return res.status(400).json({ error: "Haven't liked the post yet." });
+        }
+
+
+        var likesQuery = await db.send_sql(`SELECT likes FROM posts WHERE post_id = ${post_id}`);
+        var numOfLikes = likesQuery[0].likes - 1;
+
+        await db.send_sql(`UPDATE posts SET likes = ${numOfLikes} WHERE post_id = ${post_id};`);
+        await db.send_sql(`DELETE FROM post_likes WHERE post_id = ${post_id} AND user_id = ${req.session.user_id};`);
+
+        return res.status(201).json({ likes: numOfLikes });
     } catch (err) {
         console.log(err);
         return res.status(500).json({ error: 'Error querying database.' });
@@ -119,7 +154,7 @@ var likePost = async function (req, res) {
 };
 
 
-// GET
+// POST
 var getPostMedia = async function (req, res) {
     const username = req.params.username;
     if (!helper.isLoggedIn(req, username)) {
@@ -141,7 +176,56 @@ var getPostMedia = async function (req, res) {
 
         var results = await db.send_sql(`SELECT media FROM posts WHERE post_id = ${post_id};`);
 
-        return res.status(201).json({media: results[0]["media"]});
+        return res.status(201).json({ media: results[0]["media"] });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: 'Error querying database.' });
+    }
+};
+
+
+// POST
+var getSinglePost = async function (req, res) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+
+    const post_id = parseInt(req.body["post_id"]);
+
+    if (!Number.isInteger(post_id)) {
+        return res.status(400).json({ error: "One or more of the fields you entered was empty, please try again." });
+    }
+
+    try {
+        var existingPostQuery = await db.send_sql(`SELECT COUNT(*) FROM posts WHERE post_id = ${post_id}`);
+
+        if (existingPostQuery[0]["COUNT(*)"] == 0) {
+            return res.status(400).json({ error: "Post does not exist." });
+        }
+
+        var results = await db.send_sql(`
+            SELECT p.post_id, p.title, p.media, p.content, p.likes, p.timestamp,
+                u.user_id, u.username, u.pfp_url, 
+                GROUP_CONCAT(DISTINCT CONCAT('#', h.tag) ORDER BY h.tag ASC SEPARATOR ', ') AS hashtags
+            FROM posts p
+            LEFT JOIN users u ON p.user_id = u.user_id
+            LEFT JOIN hashtags_to_posts ON hashtags_to_posts.post_id = p.post_id
+            LEFT JOIN hashtags h ON hashtags_to_posts.hashtag_id = h.hashtag_id
+            WHERE p.post_id = ${post_id}
+        `);
+
+        console.log(results);
+
+        return res.status(201).json(results.map((result) => ({
+            user_id: result.user_id,
+            user: result.username,
+            userProfileImage: result.pfp_url,
+            postImage: result.media,
+            hashtags: result.hashtags,
+            caption: result.content,
+            timeStamp: result.timestamp
+        })));
     } catch (err) {
         console.log(err);
         return res.status(500).json({ error: 'Error querying database.' });
@@ -152,7 +236,9 @@ var getPostMedia = async function (req, res) {
 const routes = {
     create_post: createPost,
     like_post: likePost,
-    get_post_media: getPostMedia
+    unlike_post: unlikePost,
+    get_post_media: getPostMedia,
+    get_single_post: getSinglePost
 };
 
 module.exports = routes;

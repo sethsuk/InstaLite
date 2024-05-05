@@ -5,13 +5,21 @@ export default function PostComponent({
   userProfileImage = '../assets/avatar.svg',
   postImage,
   hashtags = '#hashtag',
-  caption = 'Caption here'
+  caption = 'Caption here',
+  onClick,
+  handleLike,
+  isLiked,
+  likes
 }: {
-  user: string,
-  userProfileImage: string,
-  postImage?: string,
-  hashtags: string,
-  caption: string
+  user: string;
+  userProfileImage: string;
+  postImage?: string;
+  hashtags: string;
+  caption: string;
+  onClick: () => void;
+  handleLike: () => void;
+  isLiked: boolean;
+  likes: number
 }) {
   return (
     <div className='bg-slate-100 w-full space-y-6 max-w-[500px] mx-auto p-6 rounded-md'>
@@ -28,9 +36,13 @@ export default function PostComponent({
 
       <div>
         {/* Like and comment icons */}
-        <div className='flex items-center space-x-4 text-lg'>
-          <FaHeart className='cursor-pointer' />
-          <FaComment className='cursor-pointer' />
+        <div className='flex items-center text-lg'>
+          <FaHeart className={`cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-500'}`}
+            onClick={(e) => { e.stopPropagation(); handleLike(); }} />
+          <span className='ml-2'>{likes}</span> {/* Margin left 2 for close spacing between like icon and count */}
+          <FaComment className='cursor-pointer ml-4' // Margin left 4 for more space between count and comment icon
+            onClick={onClick}
+          />
         </div>
         {/* Text and hashtags */}
         <div className='mt-2'>
