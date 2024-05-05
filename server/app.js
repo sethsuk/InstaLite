@@ -41,17 +41,17 @@ db.send_sql(`
 
 registry.register_routes(app);
 
-const { Kafka } = require('kafkajs');
-const { CompressionTypes, CompressionCodecs } = require('kafkajs')
+// const { Kafka } = require('kafkajs');
+// const { CompressionTypes, CompressionCodecs } = require('kafkajs')
 
-const SnappyCodec = require('kafkajs-snappy')
+// const SnappyCodec = require('kafkajs-snappy')
 
-CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec
-let kafka_config = {
-    groupId: "nets-2120-group-java-swingers",
-    bootstrapServers: ["localhost:9092"],
-    topic: "Twitter-Kafka"
-};
+// CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec
+// let kafka_config = {
+//     groupId: "nets-2120-group-java-swingers",
+//     bootstrapServers: ["localhost:9092"],
+//     topic: "Twitter-Kafka"
+// };
 
 // const kafka = new Kafka({
 //     clientId: 'my-app',
@@ -81,13 +81,13 @@ let kafka_config = {
 
 // run().catch(console.error);
 
-chromadb.initializeCollection()
-    .then(() => {
-        console.log('Collection initialized and ready to use.');
-    })
-    .catch(error => {
-        console.error('Error during collection initialization:', error);
-    });
+// chromadb.initializeCollection()
+//     .then(() => {
+//         console.log('Collection initialized and ready to use.');
+//     })
+//     .catch(error => {
+//         console.error('Error during collection initialization:', error);
+//     });
 
 
 app.listen(port, () => {

@@ -43,7 +43,7 @@ export default function CreatePost() {
                 }
             });
 
-            if (response.status === 200) {
+            if (response.status === 201) {
                 console.log('Post created successfully.');
                 alert('Post created successfully!');
                 setCaption('');
@@ -149,4 +149,4 @@ export default function CreatePost() {
             </div>
         </div>
     )
-}
+} 
