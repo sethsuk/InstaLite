@@ -79,7 +79,7 @@ const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId}: ChatHead
         console.log(friend);
         console.log(chatId);
         console.log(username);
-        let result = await axios.get(`${rootURL}/${username}/inviteToChat?inviteUsername=${friend}&chatId=${chatId}`);
+        let result = await axios.get(`${rootURL}/${username}/inviteToChat?friend=${friend}&chatId=${chatId}`);
         console.log(result.status);
     };
 
