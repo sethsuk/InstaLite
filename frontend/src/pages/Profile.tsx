@@ -218,6 +218,7 @@ export default function Profile() {
             });
             if (response.status === 200) {
                 console.log("Interests added successfully.");
+                alert('New interests added successfully!');
                 setHashtagsInput('');
                 fetchCurrInterests();
                 fetchSuggestedInterests();
