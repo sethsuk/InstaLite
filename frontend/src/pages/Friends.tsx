@@ -70,7 +70,7 @@ export default function Friends() {
 
     const handleMenuClick = (
         event: React.MouseEvent<HTMLElement>,
-        newMenu: MenuKey | null,) => {
+        newMenu: MenuKey | null) => {
         if (newMenu !== null) {
             setActiveMenu(newMenu);
         }
