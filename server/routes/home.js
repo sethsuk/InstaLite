@@ -36,6 +36,7 @@ var getPosts = async function (req, res) {
 
         const processedResults = limitedResults.map(post => ({
             ...post,
+            timestamp: post.timestamp.toDateString(),
             hashtags: post.hashtags ? post.hashtags.split(',') : []
         }));
 
