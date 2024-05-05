@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import config from '../../config.json';
+import { FaComment } from 'react-icons/fa';
 
 interface CommentProps {
   comment_id: number;
@@ -82,12 +83,18 @@ export default function Post() {
         <strong>{comment.username}</strong>
       </div>
       <div>{comment.content}</div>
-      <div className='text-blue-500'>{comment.hashtags}</div>
+      <div className='flex items-center space-x-3'>
+        <div className='text-blue-500'>{comment.hashtags}</div>
+        <button className='text-indigo-400 font-bold cursor-pointer' onClick = {(e) => console.log()}> 
+          Reply</button>
+      </div>
+
       <div className="pl-4">
         {comment.replies.map(renderComment)}
       </div>
     </div>
   );
+
 
 
   if (!post || !comments) { // Check if post is not defined

@@ -8,6 +8,7 @@ import CreatePostComponent from '../components/CreatePostComponent';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navigation';
 
+
 type PostProps = {
   post_id: number;
   title: string;
