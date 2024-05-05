@@ -43,7 +43,7 @@ export default function Navigation({username} : props) {
       },
     },
   })); 
-  const pages = ['Friends', 'Chat', 'Profile', 'Logout'];
+  const pages = ['Friends', 'Chat', 'Profile', 'Search', 'Logout'];
   const navigate = useNavigate(); 
 
   return (
