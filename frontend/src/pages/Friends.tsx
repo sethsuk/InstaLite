@@ -103,8 +103,6 @@ export default function Friends() {
 
     useEffect(() => {
         fetchData();
-        const intervalId = setInterval(fetchData, 30000); // Fetch every 30 seconds
-        return () => clearInterval(intervalId);
     }, [username, rootURL]);
 
 
