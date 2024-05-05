@@ -5,7 +5,7 @@ import config from '../../config.json';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';;
 import Navbar from '../components/Navigation';
 
-type MenuKey = 'invitations' | 'yourFriends'; // Add more keys as needed
+type MenuKey = 'invitations' | 'yourFriends';
 
 type FriendInfo = {
     userId: number;

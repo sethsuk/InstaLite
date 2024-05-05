@@ -1,0 +1,230 @@
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import config from '../../config.json';
+import { ToggleButton, ToggleButtonGroup } from '@mui/material';;
+import Navbar from '../components/Navigation';
+import PostComponent from '../components/PostComponent';
+
+type MenuKey = 'searchActors' | 'searchPosts';
+
+interface Actor {
+    name: string;
+    username: string;
+    interests: string[];
+    birthday: string;
+    affiliation: string;
+    imageUrl: string;
+}
+
+//ACTOR PROFILE COMPONENT
+const ActorProfile: React.FC<{ actor: Actor }> = ({ actor }) => {
+    return (
+        <div className="bg-white w-fit p-4 border border-gray-300 rounded-lg m-2 shadow-sm">
+            <div className="mb-4">
+                <img src={actor.imageUrl} alt={actor.name} className="w-[300px] rounded-md" />
+            </div>
+            <h2 className="text-lg font-semibold">{actor.name}</h2>
+            <p className="italic text-gray-600">{actor.username}</p>
+            <p className="max-w-[300px]"><strong>Interests: </strong>{actor.interests.join(' ')}</p>
+            <p className=""><strong>Birthday:</strong> {actor.birthday}</p>
+            <p className=""><strong>Affiliation:</strong> {actor.affiliation}</p>
+        </div>
+    );
+};
+
+
+//MAIN FUNCTION
+export default function Search() {
+
+    const { username } = useParams();
+    const rootURL = config.serverRootURL;
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [results, setResults] = useState<Actor[]>([]);
+    const [activeMenu, setActiveMenu] = useState<MenuKey>('searchActors');
+    const [actorResults, setActorResults] = useState<Actor[]>([]);
+    const [postResults, setPostResults] = useState<any[]>([]); 
+
+
+    const mockActors: Actor[] = [
+        {
+            name: 'Lady Gaga',
+            username: '@lady_gaga_123',
+            interests: ['#hashtag', '#hashtag', '#hashtag', '#hashtag', '#hashtag'],
+            birthday: 'May 4, 1999',
+            affiliation: 'Star Wars',
+            imageUrl: 'https://people.com/thmb/44MYbIoCwyb2qaBAK_S8_bS9dJc=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc():focal(599x0:601x2)/lady-gaga-5-545e96aeff0b4b08a6597b2af742adb2.jpg',
+        },
+        {
+            name: 'Lady Gaga',
+            username: '@lady_gaga_123',
+            interests: ['#hashtag', '#hashtag', '#hashtag', '#hashtag', '#hashtag'],
+            birthday: 'May 4, 1999',
+            affiliation: 'Star Wars',
+            imageUrl: 'https://people.com/thmb/44MYbIoCwyb2qaBAK_S8_bS9dJc=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc():focal(599x0:601x2)/lady-gaga-5-545e96aeff0b4b08a6597b2af742adb2.jpg',
+        },
+    ];
+
+    const mockPosts = [{
+        user: 'JohnDoe',
+        userProfileImage: 'https://cdn.vectorstock.com/i/1000v/06/18/male-avatar-profile-picture-vector-10210618.jpg',
+        postImage: 'https://i.natgeofe.com/n/c9107b46-78b1-4394-988d-53927646c72b/1095.jpg',
+        imageDescription: 'A scenic mountain',
+        hashtags: '#nature #travel',
+        caption: 'Exploring the great outdoors!'
+    },
+    {
+        user: 'JohnDoe',
+        userProfileImage: 'https://cdn.vectorstock.com/i/1000v/06/18/male-avatar-profile-picture-vector-10210618.jpg',
+        postImage: 'https://i.natgeofe.com/n/c9107b46-78b1-4394-988d-53927646c72b/1095.jpg',
+        imageDescription: 'A scenic mountain',
+        hashtags: '#nature #travel',
+        caption: 'Exploring the great outdoors!'
+    }];
+
+    const handleMenuClick = (
+        event: React.MouseEvent<HTMLElement>,
+        newMenu: MenuKey | null) => {
+        if (newMenu !== null) {
+            setActiveMenu(newMenu);
+            // Optionally clear out irrelevant data
+            if (newMenu === 'searchActors') {
+                setPostResults([]);
+                if (searchTerm) handleSearchActors(searchTerm);
+            } else {
+                setActorResults([]);
+                if (searchTerm) handleSearchPosts(searchTerm);
+            }
+        }
+    }
+    
+
+    const handleSearchActors = (term: string) => {
+        setSearchTerm(term);
+        //to do 
+        if (term.length > 2) {
+          setActorResults(mockActors);
+        } else {
+          setActorResults([]);
+        }
+    };
+
+    const handleSearchPosts = (term: string) => {
+        setSearchTerm(term);
+        // to do 
+        if (term.length > 2) {
+            setPostResults(mockPosts);
+          } else {
+            setPostResults([]);
+          }
+    };
+
+    const content: Record<MenuKey, JSX.Element> = {
+        searchActors: (
+            <div className='flex flex-col space-y-4'>
+                <div className='p6 space-y-4 flex flex-col'>
+                    <div className='flex flex-row items-center space-x-3'>
+                        <input
+                            type="text"
+                            placeholder={`Search for ${activeMenu === 'searchActors' ? 'actors' : 'posts'}...`}
+                            value={searchTerm}
+                            onChange={(e) => {
+                                if (activeMenu === 'searchActors') {
+                                  handleSearchActors(e.target.value);
+                                } else {
+                                  handleSearchPosts(e.target.value);
+                                }
+                              }}
+                            style={{ padding: '10px', margin: '10px', width: '300px' }}
+                        />
+                        <button
+                            type="button"
+                            className='h-fit px-4 py-2 rounded-md bg-indigo-500 outline-none font-bold text-white'
+                            onClick={() => handleSearchActors(searchTerm)}
+                        >
+                            Search
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 space-y-2">
+                        {mockActors.map((actor) => (
+                            <ActorProfile
+                                key={actor.username}
+                                actor={actor}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        ),
+        searchPosts: (
+            <div className='flex flex-col space-y-4'>
+                <div className='p6 space-y-4 flex flex-col'>
+                    <div className='flex flex-row items-center space-x-3'>
+                        <input
+                            type="text"
+                            placeholder={`Search for ${activeMenu === 'searchActors' ? 'actors' : 'posts'}...`}
+                            value={searchTerm}
+                            onChange={(e) => {
+                                if (activeMenu === 'searchActors') {
+                                  handleSearchActors(e.target.value);
+                                } else {
+                                  handleSearchPosts(e.target.value);
+                                }
+                              }}
+                            style={{ padding: '10px', margin: '10px', width: '300px' }}
+                        />
+                        <button
+                            type="button"
+                            className='h-fit px-4 py-2 rounded-md bg-indigo-500 outline-none font-bold text-white'
+                            onClick={() => handleSearchPosts(searchTerm)}
+                        >
+                            Search
+                        </button>
+                    </div>
+                    <div className="space-y-2">
+                        {mockPosts.map((post) => (
+                            <PostComponent
+                                key={post.user}
+                                user={post.user}
+                                userProfileImage={post.userProfileImage}
+                                postImage={post.postImage}
+                                imageDescription={post.imageDescription}
+                                hashtags={post.hashtags}
+                                caption={post.caption}
+                            />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div>
+            <Navbar username={username}></Navbar>
+            <div className='py-16'>
+                <div className='flex space-x-4 justify-center'>
+                    <div className="">
+                        <ToggleButtonGroup
+                            value={activeMenu}
+                            exclusive
+                            onChange={handleMenuClick}
+                            orientation="vertical"
+                            className="w-full"
+                        >
+                            <ToggleButton value="searchActors" className="text-left">
+                                Search Actors
+                            </ToggleButton>
+                            <ToggleButton value="searchPosts" className="text-left">
+                                Search Posts
+                            </ToggleButton>
+                        </ToggleButtonGroup>
+                    </div>
+                    <div className='bg-slate-200 w-3/4 p-4'>
+                        {content[activeMenu]}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
