@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Navigate, useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import config from '../../config.json';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';;
@@ -8,9 +8,13 @@ import Navbar from '../components/Navigation';
 type MenuKey = 'existingChats' | 'requestChats' | 'invitations';
 
 type FriendInfo = {
-    userId: number;
+    user_id: number;
+    username: string;
+};
+
+type ChatInfo = {
+    chat_id: number;
     name: string;
-    online: boolean;
 };
 
 type RequestInfo = {
@@ -26,7 +30,7 @@ type UserInvitationProps = {
 };
 
 type ChatItemProps = {
-    usernames: string[];
+    name: string;
     onNavigate: () => void;
 };
 
@@ -36,10 +40,10 @@ type FriendItemProps = {
     onInvite: () => void;
 };
 
-const ChatItem = ({ usernames, onNavigate }: ChatItemProps) => (
+const ChatItem = ({ name, onNavigate }: ChatItemProps) => (
     <div className="flex justify-between items-center p-4 bg-gray-100 rounded-md mb-2 ">
         <div className="flex items-center">
-            <span className="font-semibold">{usernames.join(', ')}</span>
+            <span className="font-semibold">{name}</span>
         </div>
         <div>
             <button onClick={onNavigate} className="text-blue-600 hover:text-blue-800">Go to chat</button>
@@ -71,6 +75,7 @@ const FriendItem = ({ username, status, onInvite }: FriendItemProps) => (
 );
 
 export default function Chat() {
+    const navigate = useNavigate(); 
 
     const { username } = useParams();
     const rootURL = config.serverRootURL;
@@ -81,7 +86,7 @@ export default function Chat() {
         { requestId: 2, senderId: 2, senderName: 'friend2' }
     ];
 
-    const chatData = [
+    const chatData1 = [
         { id: 1, usernames: ['username1'] },
         { id: 2, usernames: ['username2'] },
         { id: 3, usernames: ['username1', 'username3'] },
@@ -97,6 +102,7 @@ export default function Chat() {
     const [activeMenu, setActiveMenu] = useState<MenuKey>('invitations');
     const [invitationsData, setInvitationsData] = useState<RequestInfo[]>([]);
     const [friendsData, setFriendsData] = useState<FriendInfo[]>([]);
+    const [chatData, setChatData] = useState<ChatInfo[]>([]);
 
     const handleMenuClick = (
         event: React.MouseEvent<HTMLElement>,
@@ -112,7 +118,10 @@ export default function Chat() {
                 const friendsResponse = await axios.get(`${rootURL}/${username}/getFriends`);
                 setFriendsData(friendsResponse.data.results);
                 const invitationsResponse = await axios.get(`${rootURL}/${username}/getFriendRequests`);
-                setInvitationsData(invitationsResponse.data.results);
+                setInvitationsData(invitationsResponse.data.friendRequests);
+                const chatResponse = await axios.get(`${rootURL}/${username}/getChats`);
+                setChatData(chatResponse.data.chats);
+                console.log(chatResponse.data.chats);
             } catch (error) {
                 console.error('Failed to fetch data:', error);
             }
@@ -148,65 +157,71 @@ export default function Chat() {
         }
     };
 
-    const handleNavigate = async (userId: number) => {
+    const handleNavigate = async (chat_id: number) => {
         // to do
+        navigate(`/${username}/chatRoom/${chat_id}`);
     }
 
     const handleInvite = async (username: string) => {
         // to do
     }
+    let content: Record<MenuKey, JSX.Element>;
+    if (invitationsData && chatData && friendsData) {
 
-    const content: Record<MenuKey, JSX.Element> = {
-        invitations: (
-            <div className='flex flex-col space-y-4'>
-                <div className='p6 space-y-4 flex flex-col'>
-                    <h2 className='text-bold'>Invitations</h2>
-                    <div className="space-y-2">
-                        {invitationsData1.map((friend) => (
-                            <UserInvitation
-                                key={friend.senderId}
-                                username={friend.senderName}
-                                onAccept={() => handleAccept(friend.requestId)}
-                                onReject={() => handleReject(friend.requestId)}
-                            />
-                        ))}
+        content = {
+            invitations: (
+                <div className='flex flex-col space-y-4'>
+                    <div className='p6 space-y-4 flex flex-col'>
+                        <h2 className='text-bold'>Invitations</h2>
+                        <div className="space-y-2">
+                            {invitationsData.map((friend: any) => (
+                                <UserInvitation
+                                    key={friend.senderId}
+                                    username={friend.senderName}
+                                    onAccept={() => handleAccept(friend.requestId)}
+                                    onReject={() => handleReject(friend.requestId)}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
-        ),
-        existingChats: (
-            <div className='flex flex-col space-y-4'>
-                <div className='p6 space-y-4 flex flex-col'>
-                    <h2 className='text-bold'>Your Chats</h2>
-                    <div className="space-y-2">
-                        {chatData.map((chat) => (
-                            <ChatItem
-                                key={chat.id}
-                                usernames={chat.usernames}
-                                onNavigate={() => handleNavigate(chat.id)}
-                            />
-                        ))}
+            ),
+            existingChats: (
+                <div className='flex flex-col space-y-4'>
+                    <div className='p6 space-y-4 flex flex-col'>
+                        <h2 className='text-bold'>Your Chats</h2>
+                        <div className="space-y-2">
+                            {chatData.map((chat) => (
+                                <ChatItem
+                                    key={chat.chat_id}
+                                    name={chat.name}
+                                    onNavigate={() => handleNavigate(chat.chat_id)}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
-        ),
-        requestChats: (
-            <div className='flex flex-col space-y-4'>
-                <div className='p6 space-y-4 flex flex-col'>
-                    <h2 className='text-bold'>Currently online friends</h2>
-                    <div className="space-y-2">
-                        {requestData.map((friend, index) => (
-                            <FriendItem
-                                key={index}
-                                username={friend.username}
-                                status={friend.status}
-                                onInvite={() => handleInvite(friend.username)}
-                            />
-                        ))}
+            ),
+            requestChats: (
+                <div className='flex flex-col space-y-4'>
+                    <div className='p6 space-y-4 flex flex-col'>
+                        <h2 className='text-bold'>Currently online friends</h2>
+                        <div className="space-y-2">
+                            {friendsData.map((friend, index) => (
+                                <FriendItem
+                                    key={index}
+                                    username={friend.username}
+                                    status={false}
+                                    onInvite={() => handleInvite(friend.username)}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
-        )
+            )
+        }
+    } else {
+        content = {invitations: (<p>Loading...</p>), requestChats: (<p>f</p>), existingChats: (<p>t</p>)};
     }
 
     return (

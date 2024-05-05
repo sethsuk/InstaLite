@@ -75,12 +75,33 @@ var invite_to_chat = async function (req, res) {
     }
 }
 
+var get_chats = async function (req, res) {
+    const username = req.params.username;
+
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+    try {
+        const userId = req.session.user_id;
+        const query = `SELECT GROUP_CONCAT(username) as name, chat_id FROM users_to_chat uc LEFT JOIN users u on uc.user_id=u.user_id WHERE chat_id IN (SELECT chat_id FROM users_to_chat WHERE user_id=${userId}) GROUP BY chat_id;`;
+        let result = await db.send_sql(query);
+        return res.status(200).json({chats: result});
+       
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Error querying database.' });
+    }
+}
+
 
 
 var chat_routes = {
     authenticate_chat: authenticate_chat,
     get_online_friends: get_online_friends,
     invite_to_chat: invite_to_chat,
+    get_chats: get_chats,
+    // get_chat_invitations: get_chat_invitations
+
 }
 
 module.exports = chat_routes 
