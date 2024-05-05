@@ -113,8 +113,6 @@ export default function Post() {
             <div className="border-t border-gray-200 p-4 flex items-center space-x-3">
               {/* Like and comment icons */}
               <div className='flex items-center space-x-4'>
-                <FaHeart className='cursor-pointer' />
-                <FaComment className='cursor-pointer' />
               </div>
               <input className="flex-1 p-2 border rounded" placeholder="Add a comment..." />
               <button className="px-4 py-2 bg-indigo-400 text-white rounded hover:bg-indigo-600">Post</button>
