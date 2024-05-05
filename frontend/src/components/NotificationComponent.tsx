@@ -121,7 +121,7 @@ const NotificationComponent: React.FC<NotificationProps> = ({ type, users, date,
     <div className='bg-indigo-100 p-6 rounded-lg w-[500px]'>
       <div className='flex justify-between items-center'>
         <div className='flex flex-col items-start space-y-4'>
-          <div className='italic'>{date}</div>
+          <div className='italic text-slate-400 text-sm'>{date}</div>
           {renderContent()}
         </div>
       </div>
