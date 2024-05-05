@@ -3,9 +3,24 @@ import { useParams } from 'react-router-dom';
 import config from '../../config.json';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';;
 import Navbar from '../components/Navigation';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import PostComponent from '../components/PostComponent';
 
 type MenuKey = 'searchActors' | 'searchPosts';
+
+type PostProps = {
+    user: string;
+    userProfileImage: string;
+    postImage?: string;
+    hashtags: string;
+    caption: string;
+    onClick: () => void;
+    handleLike: () => void;
+    isLiked: boolean;
+    likes: number;
+    timestamp: string;
+};
 
 interface Actor {
     name: string;
@@ -38,12 +53,13 @@ export default function Search() {
 
     const { username } = useParams();
     const rootURL = config.serverRootURL;
+    const navigate = useNavigate();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [results, setResults] = useState<Actor[]>([]);
     const [activeMenu, setActiveMenu] = useState<MenuKey>('searchActors');
     const [actorResults, setActorResults] = useState<Actor[]>([]);
-    const [postResults, setPostResults] = useState<any[]>([]); 
+    const [postResults, setPostResults] = useState<PostProps[]>([]);
 
 
     const mockActors: Actor[] = [
@@ -69,7 +85,9 @@ export default function Search() {
         user: 'JohnDoe',
         userProfileImage: 'https://cdn.vectorstock.com/i/1000v/06/18/male-avatar-profile-picture-vector-10210618.jpg',
         postImage: 'https://i.natgeofe.com/n/c9107b46-78b1-4394-988d-53927646c72b/1095.jpg',
-        imageDescription: 'A scenic mountain',
+        isLiked: false,
+        likes: 3,
+        timestamp: 'May 4, 2024',
         hashtags: '#nature #travel',
         caption: 'Exploring the great outdoors!'
     },
@@ -77,7 +95,9 @@ export default function Search() {
         user: 'JohnDoe',
         userProfileImage: 'https://cdn.vectorstock.com/i/1000v/06/18/male-avatar-profile-picture-vector-10210618.jpg',
         postImage: 'https://i.natgeofe.com/n/c9107b46-78b1-4394-988d-53927646c72b/1095.jpg',
-        imageDescription: 'A scenic mountain',
+        isLiked: false,
+        likes: 3,
+        timestamp: 'May 4, 2024',
         hashtags: '#nature #travel',
         caption: 'Exploring the great outdoors!'
     }];
@@ -97,15 +117,44 @@ export default function Search() {
             }
         }
     }
-    
+
+    const handleClick = (postId: number) => {
+        navigate(`/${username}/post/${postId}`);
+    };
+
+    const handleLike = async (postId: number, isLiked: boolean) => {
+        try {
+            let response;
+            if (isLiked) {
+                axios.defaults.withCredentials = true;
+                response = await axios.post(`${rootURL}/${username}/unlikePost`, {
+                    post_id: postId
+                });
+            } else {
+                axios.defaults.withCredentials = true;
+                response = await axios.post(`${rootURL}/${username}/likePost`, {
+                    post_id: postId
+                });
+            }
+            // Assume the backend returns the new likes count
+            const newLikes = response.data.likes;
+
+            // Update the posts state with the new like status and count
+            setPostResults(prevPosts => prevPosts.map(post =>
+                post.post_id === postId ? { ...post, isLiked: !isLiked, likes: newLikes } : post
+            ));
+        } catch (error) {
+            console.error('Error (un)liking the post:', error);
+        }
+    };
 
     const handleSearchActors = (term: string) => {
         setSearchTerm(term);
         //to do 
         if (term.length > 2) {
-          setActorResults(mockActors);
+            setActorResults(mockActors);
         } else {
-          setActorResults([]);
+            setActorResults([]);
         }
     };
 
@@ -114,9 +163,9 @@ export default function Search() {
         // to do 
         if (term.length > 2) {
             setPostResults(mockPosts);
-          } else {
+        } else {
             setPostResults([]);
-          }
+        }
     };
 
     const content: Record<MenuKey, JSX.Element> = {
@@ -130,11 +179,11 @@ export default function Search() {
                             value={searchTerm}
                             onChange={(e) => {
                                 if (activeMenu === 'searchActors') {
-                                  handleSearchActors(e.target.value);
+                                    handleSearchActors(e.target.value);
                                 } else {
-                                  handleSearchPosts(e.target.value);
+                                    handleSearchPosts(e.target.value);
                                 }
-                              }}
+                            }}
                             style={{ padding: '10px', margin: '10px', width: '300px' }}
                         />
                         <button
@@ -166,11 +215,11 @@ export default function Search() {
                             value={searchTerm}
                             onChange={(e) => {
                                 if (activeMenu === 'searchActors') {
-                                  handleSearchActors(e.target.value);
+                                    handleSearchActors(e.target.value);
                                 } else {
-                                  handleSearchPosts(e.target.value);
+                                    handleSearchPosts(e.target.value);
                                 }
-                              }}
+                            }}
                             style={{ padding: '10px', margin: '10px', width: '300px' }}
                         />
                         <button
@@ -182,15 +231,19 @@ export default function Search() {
                         </button>
                     </div>
                     <div className="space-y-2">
-                        {mockPosts.map((post) => (
+                        {mockPosts.map((post, index) => (
                             <PostComponent
-                                key={post.user}
+                                key={index}
                                 user={post.user}
                                 userProfileImage={post.userProfileImage}
                                 postImage={post.postImage}
-                                imageDescription={post.imageDescription}
                                 hashtags={post.hashtags}
                                 caption={post.caption}
+                                onClick={() => handleClick(post.post_id)}
+                                handleLike={() => handleLike(post.post_id, post.isLiked)}
+                                likes={post.likes}
+                                isLiked={post.isLiked}
+                                timestamp={post.timestamp}
                             />
                         ))}
                     </div>
