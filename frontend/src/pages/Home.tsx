@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from "react";
 import axios from 'axios';
 import config from '../../config.json';
+import { useParams, useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navigation';
 import PostComponent from '../components/PostComponent';
 import NotificationComponent from '../components/NotificationComponent';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navigation';
-
+import InfiniteScroll from "react-infinite-scroll-component";
 
 type PostProps = {
   post_id: number;
@@ -32,20 +31,29 @@ type NotificationProps = {
 
 export default function Home() {
   const { username } = useParams();
-  const rootURL = config.serverRootURL;
   const navigate = useNavigate();
-
   const [posts, setPosts] = useState<PostProps[]>([]);
   const [notifications, setNotifications] = useState<NotificationProps[]>([]);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [postPage, setPostPage] = useState(1);
+  const rootURL = config.serverRootURL;
 
   const fetchPosts = async () => {
+    if (!hasMorePosts) return;
     try {
       axios.defaults.withCredentials = true;
-      const response = await axios.get(`${rootURL}/${username}/getPosts`);
-      console.log(response.data);
-      setPosts(response.data);
+      const response = await axios.get(`${rootURL}/${username}/getPosts`, {
+        params: { page: postPage }
+      });
+      if (response.data.length === 0) {
+        setHasMorePosts(false);
+      } else {
+        setPosts(prevPosts => [...prevPosts, ...response.data]);
+        setPostPage(prevPage => prevPage + 1);
+      }
     } catch (error) {
       console.error('Error fetching posts:', error);
+      setHasMorePosts(false); // Assume no more posts if there's an error
     }
   };
 
@@ -53,7 +61,6 @@ export default function Home() {
     try {
       axios.defaults.withCredentials = true;
       const response = await axios.get(`${rootURL}/${username}/getNotifications`);
-      console.log(response.data.results);
       setNotifications(response.data.results);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -61,14 +68,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchPosts();
-    fetchNotifications();
-  }, [username]); // Rerun when username changes
-
-
-  const handleClick = (postId: number) => {
-    navigate(`/${username}/post/${postId}`);
-  };
+    fetchPosts(); // Fetch initial posts
+    fetchNotifications(); // Fetch notifications
+  }, [username]); // Fetch data again when username changes
 
   const handleLike = async (postId: number, isLiked: boolean) => {
     try {
@@ -107,28 +109,39 @@ export default function Home() {
         >
           Create Post
         </button>
-        <div className='space-y-3'>
-          {notifications.map((notification, index) => (
-            <NotificationComponent
-              key={index}
-              type={notification.type}
-              users={notification.users}
-              date={notification.date}
-              profileImages={notification.profileImages}
-            />
-          ))}
-        </div>
-
-        <div className='space-y-3 w-full'>
+      </div>
+      <div className='space-y-3'>
+        {notifications.map((notification, index) => (
+          <NotificationComponent
+            key={index}
+            type={notification.type}
+            users={notification.users}
+            date={notification.date}
+            profileImages={notification.profileImages}
+          />
+        ))}
+      </div>
+      <InfiniteScroll
+        dataLength={posts.length}
+        next={fetchPosts}
+        hasMore={hasMorePosts}
+        loader={<h4>Loading...</h4>}
+        endMessage={
+          <p style={{ textAlign: 'center' }}>
+            <b>You have seen it all</b>
+          </p>
+        }
+      >
+        <div className='w-full max-w-[1800px] flex flex-col justify-center items-center space-y-8 p-8'>
           {posts.map((post, index) => (
             <PostComponent
               key={index}
               user={post.username}
-              userProfileImage={post.pfp_url || 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg'}
+              userProfileImage={post.pfp_url || 'default-avatar-url'}
               postImage={post.media}
               hashtags={post.hashtags}
               caption={post.content}
-              onClick={() => handleClick(post.post_id)}
+              onClick={() => navigate(`/${username}/post/${post.post_id}`)}
               handleLike={() => handleLike(post.post_id, post.isLiked)}
               likes={post.likes}
               isLiked={post.isLiked}
@@ -136,8 +149,7 @@ export default function Home() {
             />
           ))}
         </div>
-      </div>
+      </InfiniteScroll>
     </div>
-
   );
 }

@@ -33,6 +33,10 @@ export default function Post() {
   const [post, setPost] = useState<PostProps>();
   const [comments, setComments] = useState<CommentProps[]>([]);
 
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState<string>("");
+  const [replyContentParent, setReplyContentParent] = useState<string>("");
+
   const navigate = useNavigate();
   const handleBack = () => navigate(-1);
 
@@ -83,19 +87,57 @@ export default function Post() {
         <strong>{comment.username}</strong>
       </div>
       <div>{comment.content}</div>
-      <div className='flex items-center space-x-3'>
+      <div className='flex items-center space-x-1'>
         <div className='text-blue-500'>{comment.hashtags}</div>
-        <button className='text-indigo-400 font-bold cursor-pointer' onClick = {(e) => console.log()}> 
-          Reply</button>
+        <button className='text-indigo-400 font-bold cursor-pointer' onClick={() => setReplyingTo(comment.comment_id)}>Reply</button>
       </div>
-
+      {replyingTo === comment.comment_id && (
+        <div className="ml-8">
+          <textarea
+            value={replyContent}
+            onChange={(e) => setReplyContent(e.target.value)}
+            className="border border-gray-300 p-2 rounded"
+            placeholder="Type your reply..."
+          ></textarea>
+          <button onClick={() => postReply(replyingTo)} className="px-4 py-2 space-x-2 flex items-center bg-indigo-400 text-white rounded hover:bg-indigo-600">Post</button>
+        </div>
+      )}
       <div className="pl-4">
         {comment.replies.map(renderComment)}
       </div>
     </div>
   );
+  
 
+  const postReply = async (parent_id : number) => {
+    try {
+      if (parent_id == -1) {
+        await axios.post(`${rootURL}/${username}/createComment`, {
+          post_id: postId,
+          content: replyContentParent
+        });
 
+        // Clear reply content and close reply box
+        setReplyContentParent("");
+      } else {
+        await axios.post(`${rootURL}/${username}/createComment`, {
+          post_id: postId,
+          parent_id: parent_id,
+          content: replyContent
+        });
+
+        // Clear reply content and close reply box
+        setReplyContent("");
+      }
+
+      setReplyingTo(null);
+
+      // Fetch updated comments
+      fetchComments();
+    } catch (error) {
+      console.error('Error posting reply:', error);
+    }
+  };
 
   if (!post || !comments) { // Check if post is not defined
     return <div>Loading...</div>; // Or any other placeholder
@@ -104,7 +146,7 @@ export default function Post() {
   return (
     <div className="w-screen h-screen flex flex-col items-center space-y-8 justify-start">
       <Navbar username={username}></Navbar>
-      <div className="max-w-[1000px] flex bg-slate-100 rounded-lg overflow-hidden">
+      <div className="max-w-[1000px] flex bg-slate-100 rounded-lg">
         <div className="w-3/5">
           <img src={post.postImage} className=" object-cover" />
         </div>
@@ -133,8 +175,13 @@ export default function Post() {
               {/* Like and comment icons */}
               <div className='flex items-center space-x-4'>
               </div>
-              <input className="flex-1 p-2 border rounded" placeholder="Add a comment..." />
-              <button className="px-4 py-2 bg-indigo-400 text-white rounded hover:bg-indigo-600">Post</button>
+              <textarea
+                value={replyContentParent}
+                onChange={(e) => setReplyContentParent(e.target.value)}
+                className="flex-1 p-2 border rounded"
+                placeholder="Add a comment..."
+              ></textarea>
+              <button onClick={() => {setReplyingTo(null); postReply(-1);}} className="px-4 py-2 bg-indigo-400 text-white rounded hover:bg-indigo-600">Post</button>
             </div>
           </div>
         </div>
