@@ -10,7 +10,7 @@ var path = require('path');
 const fs = require('fs');
 const chromadb = require('./models/chroma.js');
 
-// var db = require('./models/database.js');
+var db = require('./models/database.js');
 
 const session = require('express-session');
 const cors = require('cors');
@@ -27,80 +27,102 @@ app.use(session({
 // db.send_sql('TRUNCATE TABLE online');
 
 // Imports for socket.io
-const socketIO = require('socket.io');
-const nodeHTTP = require('node:http');
+const socketio = require('socket.io');
+const http = require('node:http');
 
-
-const server = nodeHTTP.createServer(app);
-const io = new socketIO.Server(server, {
-    connectionStateRecovery: {},
-});
-
-app.get('/chat', (req, res) => {
-    if (req.query['room'] == "room2") {
-        res.sendFile(`/nets2120/project-java-swingers/server/room2.html`);
-    } else {
-        res.sendFile(`/nets2120/project-java-swingers/server/room1.html`);
+function formatMessage(username, text, time) {
+    return {
+      username,
+      text,
+      time
     }
+}  
     
-});
+const users = [];
 
-io.on('connection', async (socket) => {
-    socket.on('chat message', async (msg, params, callback) => {
-    let result;
-    let clientOffset = params['clientOffset'];
-    console.log(params);
-    // try {
-    //   result = await db.run('INSERT INTO messages (content, client_offset) VALUES (?, ?)', msg, clientOffset);
-    // } catch (e) {
-    //   if (e.errno === 19 /* SQLITE_CONSTRAINT */ ) {
-    //     callback();
-    //   } else {
-    //     // nothing to do, just let the client retry
-    //   }
-    //   return;
-    // }
+async function userJoin(id, username, room) {
+  try {
+    let result = await db.send_sql(`SELECT user_id FROM users WHERE username = '${username}' LIMIT 1`);
+    console.log(result);
+    user_id = result[0].user_id;
+  } catch (e) {
+    console.log(e);
+    user_id = 1;
+  };
+  const user = { id, username, room, user_id };
+  users.push(user);
+  console.log(user);
+  return user;
+}
 
-    result = {lastID: 5};
-    io.sockets.in(params.room).emit('chat message', msg, {serverOffset: result.lastID, user: clientOffset});
-    callback();
+function idToUser(id) {
+  return users.find((user) => user.id === id);
+}
+
+function userLeaves(id) {
+  const index = users.findIndex((user) => user.id === id);
+  if (index !== -1) {
+    return users.splice(index, 1)[0];
+  }
+}
+
+function usersInRoom(room) {
+  return users.filter((user) => user.room === room);
+}
+
+const server = http.createServer(app);
+const io = socketio(server);
+const date = new Date();
+
+io.on("connection", (socket) => {
+  socket.on("joinRoom", async ({ username, room }) => {
+    const user = await userJoin(socket.id, username, room);
+
+    socket.join(user.room);
+
+    let result = await db.send_sql(`SELECT username, message_id, content, timestamp FROM chat_messages cm LEFT JOIN users u ON cm.user_id = u.user_id WHERE cm.chat_id = ${user.room}`);
+    result.map((post) => {
+        console.log("sending a post");
+        socket.emit("message", formatMessage(post.username, post.content, new Date(Date.parse(post.timestamp)).toLocaleString('en-US')));
+    })
+    socket.broadcast.to(user.room)
+      .emit(
+        "message",
+        formatMessage("Info", `${user.username} has joined in the chat!`, date.toLocaleString('en-US'))
+      );
+
+    io.to(user.room).emit("members", {
+      room: user.room,
+      users: usersInRoom(user.room),
     });
+  });
 
-socket.on('subscribe', function(room) { 
-    console.log('joining room', room);
-    socket.join(room); 
-})
+  socket.on("chatMessage", (msg) => {
+    const user = idToUser(socket.id);
+    io.to(user.room).emit("message", formatMessage(user.username, msg,  date.toLocaleString('en-US')));
+    db.send_sql(`INSERT INTO chat_messages (chat_id, user_id, content, client_offset) VALUES (${user.room}, ${user.user_id}, '${msg}', 'test');`);
+  });
 
-socket.on('unsubscribe', function(room) {  
-    console.log('leaving room', room);
-    socket.leave(room); 
-})
+  socket.on("disconnect", () => {
+    const user = userLeaves(socket.id);
+    if (user) {
+      io.to(user.room).emit(
+        "message",
+        formatMessage("Info", `${user.username} has left in the chat!`, date.toLocaleString('en-US'))
+      );
+    }
 
-
-
-//   if (!socket.recovered) {
-//     try {
-//       await db.each('SELECT id, content FROM messages WHERE id > ?',
-//         [socket.handshake.auth.serverOffset || 0],
-//         (_err, row) => {
-//           socket.emit('chat message', row.content, row.id);
-//         }
-//       )
-//     } catch (e) {
-//       // something went wrong
-//     }
-//   }
+    io.to(user.room).emit("members", {
+      room: user.room,
+      users: usersInRoom(user.room),
+    });
+  });
 });
-  
-  
-let chat_port = 3000;
-server.listen(chat_port, () => {
-    console.log(`Chat server running at http://localhost:${chat_port}`);
-});
-  
 
+app.use(express.static(path.join(__dirname, "public")));
 
-
+const chat_port = 3000;
+server.listen(chat_port, () => console.log(`Chat server running at http://localhost:${chat_port}`));
 
 registry.register_routes(app);
 
