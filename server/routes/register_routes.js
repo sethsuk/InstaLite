@@ -56,6 +56,8 @@ function register_routes(app) {
     app.get('/:username/getNotifications', home.get_notifications); // verified
 
     app.get('/:username/authenticateChat', chat.authenticate_chat); 
+    app.get('/:username/onlineFriends', chat.get_online_friends); 
+    app.get('/:username/inviteToChat', chat.invite_to_chat); 
 
 
     // ------------

@@ -10,7 +10,8 @@ import axios from 'axios';
 import config from '../../config.json';
 import { io } from 'socket.io-client';
 
-
+const rootURL = config.serverRootURL;
+axios.defaults.withCredentials = true;
 //ADD FRIENDS MODAL 
 type AddFriendsModalProps = {
     open: boolean;
@@ -48,12 +49,14 @@ const AddFriendsModal = ({ open, onClose, friends, onInvite }: AddFriendsModalPr
 
 //CHAT HEADER COMPONENT
 type ChatHeaderProps = {
-    username: string;
+    username: any;
+    chatName: String;
+    chatId: Number;
     onBack: () => void;
     onLeaveChat: () => void;
 };
 
-const ChatHeader = ({ username, onBack, onLeaveChat}: ChatHeaderProps) => {
+const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId}: ChatHeaderProps) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const [isModalOpen, setModalOpen] = useState(false);
@@ -62,6 +65,7 @@ const ChatHeader = ({ username, onBack, onLeaveChat}: ChatHeaderProps) => {
         { username: 'username2' },
         { username: 'username3' }
     ]);
+    const [updated, setUpdated] = useState(false);
 
     const handleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -71,8 +75,12 @@ const ChatHeader = ({ username, onBack, onLeaveChat}: ChatHeaderProps) => {
         setAnchorEl(null);
     };
 
-    const handleInvite = () => {
-        // to do 
+    const handleInvite = async (friend: String) => {
+        console.log(friend);
+        console.log(chatId);
+        console.log(username);
+        let result = await axios.get(`${rootURL}/${username}/inviteToChat?inviteUsername=${friend}&chatId=${chatId}`);
+        console.log(result.status);
     };
 
     const handleOpenModal = () => {
@@ -82,6 +90,19 @@ const ChatHeader = ({ username, onBack, onLeaveChat}: ChatHeaderProps) => {
     const handleCloseModal = () => {
         setModalOpen(false);
     };
+    const onLoad = async () => {
+        if (!updated) {
+            console.log("loading friends");
+            let result = await axios.get(`${rootURL}/${username}/onlineFriends`);
+            setFriends(result.data.friends);
+            console.log(result.data);
+            setUpdated(true);
+        }
+        
+    }
+    useEffect(() => {
+        onLoad();
+    });
 
     return (
         <AppBar position="static" color="default" sx={{ boxShadow: 0 }}>
@@ -90,7 +111,7 @@ const ChatHeader = ({ username, onBack, onLeaveChat}: ChatHeaderProps) => {
                     <ArrowBackIcon />
                 </IconButton>
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                    {username}
+                    {chatName}
                 </Typography>
                 <IconButton edge="end" color="inherit" aria-label="display more actions" onClick={handleMenu}>
                     <MoreVertIcon />
@@ -160,10 +181,10 @@ export default function ChatRoom() {
     const input = useRef();
     const [message, setMessage] = useState('');
     const [clickHandler, setClickHandler] = useState(() => () => console.log('Initial handler'));
-    const { username, chatId } = useParams();
     const [auth, setAuth] = useState("loading");
-    const rootURL = config.serverRootURL;
-    axios.defaults.withCredentials = true;
+    const { username, chatId } = useParams();
+
+
     const onLoad = async () => {
         try {
             let authStatus = await axios.get(`${rootURL}/${username}/authenticateChat?chatId=${chatId}`);
@@ -220,7 +241,9 @@ export default function ChatRoom() {
                 <div className='flex justify-center p-8'>
                     <div className='w-[700px]'>
                         <ChatHeader
-                            username="username"
+                            username={username}
+                            chatName={chatId}
+                            chatId={chatId}
                             onBack={handleBack}
                             onLeaveChat={handleLeaveChat}
                         />
