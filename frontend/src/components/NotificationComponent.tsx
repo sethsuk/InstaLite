@@ -47,7 +47,7 @@ const NotificationComponent: React.FC<NotificationProps> = ({ type, users, date,
                 <span className='font-semibold'>{`${users[0]}`}</span>
               </div>
               <div>
-                <span>rejected your friend request ;(</span>
+                <span>rejected your friend request ;</span>
               </div>
             </div>
           </>
@@ -60,7 +60,7 @@ const NotificationComponent: React.FC<NotificationProps> = ({ type, users, date,
                 <img src={profileImages[0]} alt="Profile 1" className='w-10 h-10 rounded-full' />
                 <span className='font-semibold'>{`${users[0]}`}</span>
               </div>
-              <div>
+              <div className='w-[120px]'>
                 <span>is now linked to</span>
               </div>
               <div className='flex flex-row justify-center items-center space-x-2'>

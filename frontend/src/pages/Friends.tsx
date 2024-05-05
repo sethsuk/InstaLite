@@ -204,21 +204,23 @@ export default function Friends() {
         ),
         yourFriends: (
             <div className='flex flex-col space-y-4'>
-                <div className='p-6 space-y-4 flex flex-col'>
-                    <h2 className='font-bold text-2xl'>Your Friends</h2>
-                    <div className="space-y-2">
-                        {friendsData.length > 0 ? (
-                            friendsData.map((friend) => (
-                                <FriendsList
-                                    key={friend.userId}
-                                    username={friend.username}
-                                    online={friend.online === 1}
-                                    removed={() => handleRemove(friend.userId)}
-                                />
-                            ))
-                        ) : (
-                            <p>You currently have no friends. Make a friend request!</p>
-                        )}
+                <div className='p-6 space-y-6 flex flex-col'>
+                    <div className='space-y-4'>
+                        <h2 className='font-bold text-2xl'>Your Friends</h2>
+                        <div className="space-y-2">
+                            {friendsData.length > 0 ? (
+                                friendsData.map((friend) => (
+                                    <FriendsList
+                                        key={friend.userId}
+                                        username={friend.username}
+                                        online={friend.online === 1}
+                                        removed={() => handleRemove(friend.userId)}
+                                    />
+                                ))
+                            ) : (
+                                <p>You currently have no friends. Make a friend request!</p>
+                            )}
+                        </div>
                     </div>
                     <div>
                         <input
@@ -230,7 +232,7 @@ export default function Friends() {
                         />
                         <button
                             onClick={handleSendFriendRequest}
-                            className="ml-2 p-2 bg-blue-500 text-white rounded"
+                            className="ml-2 p-2 bg-indigo-400 text-white rounded"
                         >
                             Send friend request
                         </button>

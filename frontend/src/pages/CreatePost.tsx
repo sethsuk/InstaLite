@@ -14,28 +14,68 @@ export default function CreatePost() {
     const [file, setFile] = useState<File | null>(null);
     const [caption, setCaption] = useState('');
     const { username } = useParams();
+    const [imagePreviewUrl, setImagePreviewUrl] = useState('');
+
     const rootURL = config.serverRootURL;
 
-    const handleCreatePost = async () => {
-        console.log("triggered handleCaption");
-        const response = await axios.post(`${rootURL}/${username}/createPost`, {
-            caption: caption
-        });
+    const navigate = useNavigate();
+    const handleBack = () => navigate(-1);
 
-        if (response.status === 200) {
-            //to do update post
-        } else {
-            console.error('Fail to update caption.');
-            alert("Failed to update caption.");
+    const handleCreatePost = async () => {
+        const formData = new FormData();
+        console.log('Post photo:', file);
+        if (file) {
+            formData.append('file', file);
+        }
+        const userData = {
+            title: 'title',
+            content: caption
+        };
+
+        formData.append('json_data', JSON.stringify(userData));
+        console.log(formData);
+
+        try {
+            axios.defaults.withCredentials = true;
+            const response = await axios.post(`${rootURL}/${username}/createPost`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            if (response.status === 200) {
+                console.log('Post created successfully.');
+                alert('Post created successfully!');
+                setCaption('');
+                setFile(null);
+                setImagePreviewUrl('');
+                navigate(`/${username}/`);
+            } else {
+                console.error('Fail to update caption.');
+                alert("Failed to update caption.");
+            }
+
+        } catch (error) {
+            console.error('Error creating post:', error);
         }
     }
 
+
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
-            setFile(e.target.files[0]);
-            const fileLabel = document.getElementById('file-label');
-            if (fileLabel) {
-                fileLabel.innerText = e.target.files[0].name;
+            const file = e.target.files[0];
+            if (file) {
+                setFile(file);
+                const fileLabel = document.getElementById('file-label');
+                if (fileLabel) {
+                    fileLabel.innerText = file.name;
+                }
+
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setImagePreviewUrl(reader.result as string);
+                };
+                reader.readAsDataURL(file);
             }
         } else {
             setFile(null);
@@ -45,6 +85,7 @@ export default function CreatePost() {
             }
         }
     };
+
 
     return (
         <div className='w-screen h-screen space-y-8'>
@@ -68,7 +109,12 @@ export default function CreatePost() {
                                 <label htmlFor="profile-photo" className='w-fit text-indigo-400 font-semibold cursor-pointer'>
                                     Select Photo
                                 </label>
-                                <span id="file-label" className="italic text-slate-400">No file chosen</span>
+                                {file && (
+                                    <img src={imagePreviewUrl} alt="Preview" className="mt-4 w-fit h-fit object-cover" />
+                                )}
+                                {!file && (
+                                    <span id="file-label" className="italic text-slate-400">No file chosen</span>
+                                )}
                             </div>
                         </div>
 
@@ -97,6 +143,9 @@ export default function CreatePost() {
                         </button>
                     </div>
                 </div>
+            </div>
+            <div className="flex justify-center w-full">
+                <button onClick={handleBack} className="px-4 py-2 text-sm text-gray-500">Go Back</button>
             </div>
         </div>
     )

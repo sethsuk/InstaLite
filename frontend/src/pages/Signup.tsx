@@ -72,7 +72,7 @@ export default function Signup() {
                 alert("Hashtags added successfully.");
             }
         } catch (error) {
-            console.error("Failed to add hashtags:", error);
+            console.error("Failed to sdd hashtags:", error);
             alert("Failed to add hashtags.");
         }
     };
