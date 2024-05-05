@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import ProfileActor from "./pages/ProfileActor";
 import Post from "./pages/Post";
 import ChatRoom from "./pages/ChatRoom";
+import CreatePost from "./pages/CreatePost";
 
 function App() {
   return (
@@ -19,11 +20,12 @@ function App() {
         <Route path='/:username/signupactor' element={<SignupActor />} />
         <Route path='/:username/' element={<Home />} />
         <Route path='/post' element={<Post />} />
+        <Route path='/:username/createpost' element={<CreatePost />} />
         <Route path='/:username/profile' element={<Profile />} />
         <Route path='/:username/profileactor' element={<ProfileActor />} />
         <Route path='/:username/friends' element={<Friends />} />
-        <Route path="/chat" element={<Chat />} />
-        <Route path="/chatRoom" element={<ChatRoom />} />
+        <Route path="/:username/chat" element={<Chat />} />
+        <Route path="/:username/chatRoom" element={<ChatRoom />} />
       </Routes>
     </BrowserRouter>
   )

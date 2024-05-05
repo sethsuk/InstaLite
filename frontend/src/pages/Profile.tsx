@@ -236,10 +236,18 @@ export default function Profile() {
                                     onChange={handleFileChange}
                                     accept="image/*"
                                 />
-                                <label htmlFor="profile-photo" className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white cursor-pointer'>
+                                <label htmlFor="profile-photo" className='w-fit text-indigo-400 font-semibold cursor-pointer'>
                                     Select Photo
                                 </label>
-                                <span id="file-label">No file chosen</span>
+                                <span id="file-label" className="italic text-slate-400">No file chosen</span>
+                                {/*Submit photo button*/}
+                                <button
+                                    type="button"
+                                    className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'
+                                    onClick={(e) => handleFileChange(e as any)}
+                                >
+                                    Submit photo
+                                </button>
                             </div>
                             <div className='flex flex-col space-y-4'>
                                 <h2 className='font-semibold'> Update associated actor</h2>

@@ -72,6 +72,13 @@ export default function Home() {
     <div className='w-screen h-screen flex flex-col items-center justify-start'>
       <Navbar username={username}></Navbar>
       <div className='w-full max-w-[1800px] flex flex-col justify-center items-center space-y-8 p-8'>
+        <button
+          type="button"
+          className='px-4 py-2 rounded-md bg-indigo-500 outline-none font-bold text-white'
+          onClick={() => navigate(`/${username}/createPost`)}
+        >
+          Create Post
+        </button>
         <div className='space-y-3'>
           {notifications_test.map((notification, index) => (
             <NotificationComponent
