@@ -22,9 +22,7 @@ export default function PostComponent({
   likes: number
 }) {
   return (
-    <div className='bg-slate-100 w-full space-y-6 max-w-[500px] mx-auto p-6 rounded-md'
-      onClick={onClick}
-    >
+    <div className='bg-slate-100 w-full space-y-6 max-w-[500px] mx-auto p-6 rounded-md'>
       {/* User display at the top */}
       <div className='flex items-center space-x-2'>
         <img src={userProfileImage} alt="Profile" className='w-8 h-8 rounded-full' /> {/* User profile image */}
@@ -38,11 +36,13 @@ export default function PostComponent({
 
       <div>
         {/* Like and comment icons */}
-        <div className='flex items-center space-x-4 text-lg'>
+        <div className='flex items-center text-lg'>
           <FaHeart className={`cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-500'}`}
             onClick={(e) => { e.stopPropagation(); handleLike(); }} />
-          <span>{likes}</span>
-          <FaComment className='cursor-pointer' />
+          <span className='ml-2'>{likes}</span> {/* Margin left 2 for close spacing between like icon and count */}
+          <FaComment className='cursor-pointer ml-4' // Margin left 4 for more space between count and comment icon
+            onClick={onClick}
+          />
         </div>
         {/* Text and hashtags */}
         <div className='mt-2'>
