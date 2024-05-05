@@ -60,6 +60,8 @@ export default function Signup() {
             const newTags = hashtagsInput.split(/[\s,]+/).filter(tag => tag && !hashtags.includes(tag));
             if (newTags.length > 0) {
                 setHashtags([...hashtags, ...newTags]);
+                setSelectedItems([...selectedItems, ...newTags]);
+                setOptions([...options, ...newTags]);
             }
             axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/addHashtags`, {
@@ -174,10 +176,18 @@ export default function Signup() {
                                     }}
                                     accept="image/*"
                                 />
+
                                 <label htmlFor="profile-photo" className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white cursor-pointer'>
                                     Select photo
                                 </label>
-                                <span id="file-label">No file chosen</span>
+                                <span id="file-label" className="italic text-slate-400">No file chosen</span>
+                                {/*Submit photo button*/}
+                                <button
+                                    type="button"
+                                    className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'
+                                >
+                                    Submit photo
+                                </button>
                             </div>
                             <div className='flex flex-col space-y-4'>
                                 <h2 className='font-semibold'>Choose your interests</h2>

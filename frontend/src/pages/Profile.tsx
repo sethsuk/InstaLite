@@ -267,9 +267,10 @@ export default function Profile() {
                                     onChange={handleFileChange}
                                     accept="image/*"
                                 />
-                                <label htmlFor="profile-photo" className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white cursor-pointer'>
+                                <label htmlFor="profile-photo" className='w-fit text-indigo-400 font-semibold cursor-pointer'>
                                     Select Photo
                                 </label>
+
                                 <span id="file-label">No file chosen</span>
                                 <button
                                     type="button"
