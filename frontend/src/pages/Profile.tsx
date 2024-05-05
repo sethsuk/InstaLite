@@ -19,8 +19,8 @@ export default function Profile() {
     const [currPassword, setCurrPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [affiliation, setAffiliation] = useState('');
-    const [currInterests, setCurrInterests] = useState([]);
-    const [suggestedInterests, setSuggestedInterests] = useState([]);
+    const [currInterests, setCurrInterests] = useState<string[]>([]);
+    const [suggestedInterests, setSuggestedInterests] = useState<string[]>([]);
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
     const [hashtagsInput, setHashtagsInput] = useState<string>('');
     const [hashtags, setHashtags] = useState<string[]>([]);
@@ -193,6 +193,8 @@ export default function Profile() {
                 return;
             }
             setHashtags([...hashtags, ...newTags]);
+            setSelectedItems([...selectedItems, ...newTags]);
+            setSuggestedInterests([...suggestedInterests, ...newTags]);
             axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/addHashtags`, {
                 interests: newTags
