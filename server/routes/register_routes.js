@@ -4,7 +4,8 @@ const pfp = require('./pfp.js');
 const posts = require('./posts.js');
 const registration = require('./registration.js');
 const comments = require('./comments.js');
-const home = require('./home.js')
+const home = require('./home.js');
+const chat = require('./chat.js')
 
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
@@ -53,6 +54,8 @@ function register_routes(app) {
 
     app.get('/:username/getPosts', home.get_posts); // verified
     app.get('/:username/getNotifications', home.get_notifications); // verified
+
+    app.get('/:username/authenticateChat', chat.authenticate_chat); 
 
 
     // ------------

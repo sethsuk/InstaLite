@@ -6,7 +6,8 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Menu, MenuItem, Dialog, ListItem, List, ListItemText, IconButton, AppBar, Toolbar, Typography, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-
+import axios from 'axios';
+import config from '../../config.json';
 import { io } from 'socket.io-client';
 
 
@@ -160,27 +161,40 @@ export default function ChatRoom() {
     const [message, setMessage] = useState('');
     const [clickHandler, setClickHandler] = useState(() => () => console.log('Initial handler'));
     const { username, chatId } = useParams();
+    const [auth, setAuth] = useState("loading");
+    const rootURL = config.serverRootURL;
+    axios.defaults.withCredentials = true;
+    const onLoad = async () => {
+        try {
+            let authStatus = await axios.get(`${rootURL}/${username}/authenticateChat?chatId=${chatId}`);
+            setAuth("authenticated");
+            let socket = io("http://localhost:3000");
+            socket.emit("joinRoom", {username, chatId});
+            
+            // TODO: Join the chat socket
+            socket.on("message", (message: Message) => {
+                // console.log([...messages, { text: message.text, isMine: message.username == username }]);
+                setMessages(currentArray => [...currentArray , { text: message.text, isMine: message.username == username }]);
+            });
+            setClickHandler(() => () => {
+                console.log("click handler run");
+                console.log(input.current.value);
+                if (input.current.value.trim()) {
+                    console.log("handling new message: " + input.current.value);
+                    socket.emit("chatMessage", input.current.value);
+                    input.current.value = '';
+                    setMessage('');
+                } else {
+                    socket.emit("chatMessage", "test");
+                }
+            });
+        } catch (e) {
+            console.log("Auth failed")
+           setAuth("failed");
+        }
+    }
     useEffect(() => {
-        let socket = io("http://localhost:3000");
-        socket.emit("joinRoom", {username, chatId});
-        
-        // TODO: Join the chat socket
-        socket.on("message", (message: Message) => {
-            // console.log([...messages, { text: message.text, isMine: message.username == username }]);
-            setMessages(currentArray => [...currentArray , { text: message.text, isMine: message.username == username }]);
-        });
-        setClickHandler(() => () => {
-            console.log("click handler run");
-            console.log(input.current.value);
-            if (input.current.value.trim()) {
-                console.log("handling new message: " + input.current.value);
-                socket.emit("chatMessage", input.current.value);
-                input.current.value = '';
-                setMessage('');
-            } else {
-                socket.emit("chatMessage", "test");
-            }
-        });
+        onLoad();
     }, [username]);
 
 
@@ -199,36 +213,53 @@ export default function ChatRoom() {
     };
 
 
-
-    return (
-        <div>
-            <Navbar username={username}></Navbar>
-            <div className='flex justify-center p-8'>
-                <div className='w-[700px]'>
-                    <ChatHeader
-                        username="username"
-                        onBack={handleBack}
-                        onLeaveChat={handleLeaveChat}
-                    />
-                    <MessageList messages={messages} />
-                   
-                    <div className="flex items-center p-4">
-                        <input
-                            type="text"
-                            value={message}
-                            onChange={(e) => {
-                                setMessage(e.target.value);
-                            }}
-                            className="flex-1 p-2 border border-gray-300 rounded"
-                            placeholder="Type here..."
-                            ref={input}
+    if (auth == "authenticated") {
+        return (
+            <div>
+                <Navbar username={username}></Navbar>
+                <div className='flex justify-center p-8'>
+                    <div className='w-[700px]'>
+                        <ChatHeader
+                            username="username"
+                            onBack={handleBack}
+                            onLeaveChat={handleLeaveChat}
                         />
-                        <button onClick={clickHandler} className="ml-4 p-2 bg-indigo-500 text-white rounded">Send</button>
+                        <MessageList messages={messages} />
+                    
+                        <div className="flex items-center p-4">
+                            <input
+                                type="text"
+                                value={message}
+                                onChange={(e) => {
+                                    setMessage(e.target.value);
+                                }}
+                                className="flex-1 p-2 border border-gray-300 rounded"
+                                placeholder="Type here..."
+                                ref={input}
+                            />
+                            <button onClick={clickHandler} className="ml-4 p-2 bg-indigo-500 text-white rounded">Send</button>
+                        </div>
                     </div>
-                </div>
+                </div> 
             </div>
-        </div>
-    );
+        );
+    } else if (auth == "loading") {
+        return (
+            <div>
+                <Navbar username={username}></Navbar>
+                Authenticating...
+                 
+            </div>
+        );
+    } else {
+        return (
+            <div>
+                <Navbar username={username}></Navbar>
+                You are not in this chat.
+                 
+            </div>
+        );
+    }
 };
 
 
