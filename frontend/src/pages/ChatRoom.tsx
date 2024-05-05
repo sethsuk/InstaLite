@@ -80,7 +80,7 @@ const ChatHeader = ({ username, onBack, onLeaveChat }: ChatHeaderProps) => {
     };
 
     return (
-        <AppBar position="static" color="default" sx={{ boxShadow: 0 }}>
+        <AppBar position="sticky" color="default" sx={{ boxShadow: 0 }}>
             <Toolbar>
                 <IconButton edge="start" color="inherit" aria-label="back" onClick={onBack}>
                     <ArrowBackIcon />
@@ -181,7 +181,7 @@ const ChatInput = ({ onSend }: ChatInputProps) => {
     };
 
     return (
-        <div className="flex items-center p-4">
+        <div className="sticky flex items-center p-4">
             <input
                 type="text"
                 value={message}
@@ -206,7 +206,12 @@ export default function ChatRoom() {
     const [messages, setMessages] = useState([
         { text: "Hello", user: "user1", time: "2024-10-23", announcement: false, isMine: false },
         { text: "Hi!", user: "user2", time: "2024-10-23", announcement: false, isMine: true },
-        { text: "user3 has been removed", user: "user2", time: "2024-10-23", announcement: true, isMine: false }
+        { text: "user3 has been removed", user: "user2", time: "2024-10-23", announcement: true, isMine: false },
+        { text: "Hello", user: "user1", time: "2024-10-23", announcement: false, isMine: false },
+        { text: "Hi!", user: "user2", time: "2024-10-23", announcement: false, isMine: true },
+        { text: "Hello", user: "user1", time: "2024-10-23", announcement: false, isMine: false },
+        { text: "Hi!", user: "user2", time: "2024-10-23", announcement: false, isMine: true },
+        { text: "Hello", user: "user1", time: "2024-10-23", announcement: false, isMine: false },
     ]);
 
     const handleSendNewMessage = (newMessage: string) => {
@@ -233,8 +238,9 @@ export default function ChatRoom() {
                         onBack={handleBack}
                         onLeaveChat={handleLeaveChat}
                     />
-                    <MessageList messages={messages} />
-
+                    <div className='flex-1 h-[550px] overflow-y-scroll'>
+                        <MessageList messages={messages} />
+                    </div>
                     <ChatInput onSend={handleSendNewMessage} />
                 </div>
             </div>
