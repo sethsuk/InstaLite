@@ -53,7 +53,7 @@ export default function Login() {
           </div>
         </div>
         <form>
-          <div className='rounded-md bg-slate-300 p-6 space-y-2 w-full'>
+          <div className='rounded-md bg-slate-200 p-6 space-y-2 w-full'>
             <div className='font-bold flex w-full justify-center text-2xl mb-4'>
               Log In
             </div>

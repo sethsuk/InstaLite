@@ -1,5 +1,4 @@
 import Navbar from '../components/Navigation';
-import { FaHeart, FaComment } from 'react-icons/fa';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';

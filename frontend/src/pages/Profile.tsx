@@ -247,7 +247,7 @@ export default function Profile() {
     return (
         <div className='w-screen h-screen space-y-8'>
             <Navbar username={username}></Navbar>
-            <div className='flex flex-col justify-center items-center space-y-8'>
+            <div className='flex flex-col justify-center items-center space-y-8 py-8'>
                 <div className='rounded-md bg-slate-200 p-12 space-y-12 w-[800px]'>
                     <div className='font-bold flex w-full justify-center text-2xl mb-4'>
                         User Details
