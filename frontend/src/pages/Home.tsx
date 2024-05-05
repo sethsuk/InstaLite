@@ -40,6 +40,7 @@ export default function Home() {
 
   const fetchPosts = async () => {
     try {
+      axios.defaults.withCredentials = true;
       const response = await axios.get(`${rootURL}/${username}/getPosts`);
       console.log(response.data);
       setPosts(response.data);
@@ -50,6 +51,7 @@ export default function Home() {
 
   const fetchNotifications = async () => {
     try {
+      axios.defaults.withCredentials = true;
       const response = await axios.get(`${rootURL}/${username}/getNotifications`);
       console.log(response.data.results);
       setNotifications(response.data.results);
@@ -72,10 +74,12 @@ export default function Home() {
     try {
       let response;
       if (isLiked) {
+        axios.defaults.withCredentials = true;
         response = await axios.post(`${rootURL}/${username}/unlikePost`, {
           post_id: postId
         });
       } else {
+        axios.defaults.withCredentials = true;
         response = await axios.post(`${rootURL}/${username}/likePost`, {
           post_id: postId
         });

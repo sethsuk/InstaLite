@@ -44,6 +44,7 @@ export default function Profile() {
     // TODO
     const fetchCurrInterests = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.get(`${rootURL}/${username}/getHashtags`);
             setCurrInterests(response.data.tags);
         } catch (error) {
@@ -53,6 +54,7 @@ export default function Profile() {
 
     const fetchSuggestedInterests = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/suggestHashtags`);
             setSuggestedInterests(response.data.tags);
         } catch (error) {
@@ -62,6 +64,7 @@ export default function Profile() {
 
     const fetchPfp = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.get(`${rootURL}/${username}/getPfp`);
             setPfpUrl(response.data.pfp_url);
         } catch (error) {
@@ -108,6 +111,7 @@ export default function Profile() {
             console.log("added file");
             formData.append('file', file);
 
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/updatePfp`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -129,6 +133,7 @@ export default function Profile() {
 
     const handleEmail = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/changeEmail`, {
                 newEmail: email
             });
@@ -145,6 +150,7 @@ export default function Profile() {
 
     const handleAffiliation = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/changeAffiliation`, {
                 newAffiliation: affiliation
             });
@@ -161,6 +167,7 @@ export default function Profile() {
 
     const handlePassword = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/changePassword`, {
                 currentPassword: currPassword,
                 newPassword: newPassword
@@ -186,6 +193,7 @@ export default function Profile() {
                 return;
             }
             setHashtags([...hashtags, ...newTags]);
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/addHashtags`, {
                 interests: newTags
             });
@@ -202,6 +210,7 @@ export default function Profile() {
         try {
             const interests = Array.from(new Set([...hashtags, ...selectedItems]));
             console.log(interests);
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/updateHashtags`, {
                 hashtags: interests
             });
@@ -219,6 +228,7 @@ export default function Profile() {
 
     const handleRemoveInterests = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/removeHashtags`, {
                 hashtags: selectedItems
             });

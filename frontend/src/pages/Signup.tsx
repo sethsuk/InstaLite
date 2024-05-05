@@ -29,6 +29,7 @@ export default function Signup() {
     useEffect(() => {
         const fetchHashtags = async () => {
             try {
+                axios.defaults.withCredentials = true;
                 const response = await axios.get(`${rootURL}/getTop10Hashtags`);
                 setOptions(response.data.hashtags);
             } catch (error) {
@@ -60,6 +61,7 @@ export default function Signup() {
             if (newTags.length > 0) {
                 setHashtags([...hashtags, ...newTags]);
             }
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/addHashtags`, {
                 interests: hashtags
             });

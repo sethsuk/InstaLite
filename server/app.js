@@ -21,7 +21,8 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(session({
-    secret: 'nets2120_insecure', saveUninitialized: true, cookie: { httpOnly: false, sameSite: false, maxAge: 86400000 }, resave: true
+    secret: 'nets2120_insecure', saveUninitialized: true,
+    cookie: { secure: false, httpOnly: false, sameSite: 'lax', maxAge: 86400000 }, resave: true
 }));
 
 db.send_sql('TRUNCATE TABLE online');

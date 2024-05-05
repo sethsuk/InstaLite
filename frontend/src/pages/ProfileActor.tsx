@@ -23,6 +23,7 @@ export default function SignupActor() {
     useEffect(() => {
         const fetchActors = async () => {
             try {
+                axios.defaults.withCredentials = true;
                 const response = await axios.get(`${rootURL}/${username}/getTop5Actors`);
                 setActors(response.data.actors);
                 console.log(response.data.actors);
@@ -45,6 +46,7 @@ export default function SignupActor() {
         event.preventDefault();
         try {
             console.log(selectedActor);
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/associateActor`, {
                 actorNconst: selectedActor
             });
