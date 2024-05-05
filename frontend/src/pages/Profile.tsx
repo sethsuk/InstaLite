@@ -25,6 +25,7 @@ export default function Profile() {
     const [hashtagsInput, setHashtagsInput] = useState<string>('');
     const [hashtags, setHashtags] = useState<string[]>([]);
     const [file, setFile] = useState<File | null>(null);
+    const [pfpUrl, setPfpUrl] = useState('');
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.name;
@@ -43,8 +44,9 @@ export default function Profile() {
     // TODO
     const fetchCurrInterests = async () => {
         try {
-            const response = await axios.get(`${rootURL}/${username}/`);
-            setCurrInterests(response.data.results);
+            axios.defaults.withCredentials = true;
+            const response = await axios.get(`${rootURL}/${username}/getHashtags`);
+            setCurrInterests(response.data.tags);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
@@ -52,6 +54,7 @@ export default function Profile() {
 
     const fetchSuggestedInterests = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/suggestHashtags`);
             setSuggestedInterests(response.data.tags);
         } catch (error) {
@@ -59,10 +62,21 @@ export default function Profile() {
         }
     };
 
+    const fetchPfp = async () => {
+        try {
+            axios.defaults.withCredentials = true;
+            const response = await axios.get(`${rootURL}/${username}/getPfp`);
+            setPfpUrl(response.data.pfp_url);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    }
+
     useEffect(() => {
-        //fetchCurrInterests();
+        fetchPfp();
+        fetchCurrInterests();
         fetchSuggestedInterests();
-    }, []);
+    }, [username, rootURL]);
 
 
     const profileActor = () => {
@@ -70,31 +84,34 @@ export default function Profile() {
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        console.log("triggered handleFileChange");
         if (e.target.files && e.target.files.length > 0) {
-            console.log('file found');
-            const selectedFile = e.target.files[0];
-            setFile(selectedFile);
+            setFile(e.target.files[0]);
             const fileLabel = document.getElementById('file-label');
-
             if (fileLabel) {
                 fileLabel.innerText = e.target.files[0].name;
             }
+        } else {
+            setFile(null);
+            const fileLabel = document.getElementById('file-label');
+            if (fileLabel) {
+                fileLabel.innerText = 'No file chosen';
+            }
+        }
+    };
 
+    const handleUpload = async () => {
+        try {
             const formData = new FormData();
-
-            if (!selectedFile) {
+            if (!file) {
                 console.log("null file select photo");
                 alert('Please select a profile photo.')
                 return;
             }
-
             console.log(file);
             console.log("added file");
-            formData.append('file', selectedFile);
+            formData.append('file', file);
 
-            
-            console.log("sending to Axios");
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/updatePfp`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -107,25 +124,22 @@ export default function Profile() {
                 console.error('Fail to upload photo.');
                 alert("Failed to upload photo.");
             }
-        } else {
-            console.log("in the else clause")
-
-            setFile(null);
-            const fileLabel = document.getElementById('file-label');
-            if (fileLabel) {
-                console.log("no file chosen");
-                fileLabel.innerText = 'No file chosen';
-            }
+        } catch (error) {
+            console.error("Failed to upload photo:", error);
+            alert("Failed to upload photo.");
         }
-    };
+    }
+
 
     const handleEmail = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/changeEmail`, {
                 newEmail: email
             });
             if (response.status === 200) {
                 console.log("Email changed successfully.");
+                alert("Email changed successfully!");
                 setEmail('');
             }
         } catch (error) {
@@ -136,11 +150,13 @@ export default function Profile() {
 
     const handleAffiliation = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/changeAffiliation`, {
                 newAffiliation: affiliation
             });
             if (response.status === 200) {
                 console.log("Affiliation changed successfully.");
+                alert("Affiliation changed successfully!");
                 setAffiliation('');
             }
         } catch (error) {
@@ -151,12 +167,14 @@ export default function Profile() {
 
     const handlePassword = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/changePassword`, {
                 currentPassword: currPassword,
                 newPassword: newPassword
             });
             if (response.status === 200) {
                 console.log("Password changed successfully:", response.data);
+                alert("Password changed successfully!");
                 setCurrPassword('');
                 setNewPassword('');
             }
@@ -168,12 +186,16 @@ export default function Profile() {
 
     const handleAddHashtags = async () => {
         try {
-            const newTags = hashtagsInput.split(/[\s,]+/).filter(tag => tag && !hashtags.includes(tag));
-            if (newTags.length > 0) {
-                setHashtags([...hashtags, ...newTags]);
+            const newTags = hashtagsInput.split(/[\s,]+/);
+            console.log(newTags);
+            if (newTags.length < 1) {
+                alert("Field is empty.");
+                return;
             }
+            setHashtags([...hashtags, ...newTags]);
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/addHashtags`, {
-                interests: hashtags
+                interests: newTags
             });
             if (response.status === 200) {
                 console.log("Hashtags added successfully.");
@@ -187,6 +209,8 @@ export default function Profile() {
     const handleAddInterests = async () => {
         try {
             const interests = Array.from(new Set([...hashtags, ...selectedItems]));
+            console.log(interests);
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/updateHashtags`, {
                 hashtags: interests
             });
@@ -204,11 +228,14 @@ export default function Profile() {
 
     const handleRemoveInterests = async () => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/removeHashtags`, {
                 hashtags: selectedItems
             });
             if (response.status === 200) {
                 console.log("Interests removed successfully.");
+                alert("Interests removed successfully!");
+                fetchCurrInterests();
             }
         } catch (error) {
             console.error("Failed to remove interests:", error);
@@ -228,6 +255,10 @@ export default function Profile() {
                     <div className='flex flex-row space-x-40'>
                         <div className='flex flex-col space-y-12'>
                             <div className='flex flex-col space-y-4'>
+                                <h2 className='font-semibold'>Current profile photo</h2>
+                                <img src={pfpUrl} alt="Profile" className="w-24 h-24 rounded-full object-cover" />
+                            </div>
+                            <div className='flex flex-col space-y-4'>
                                 <h2 className='font-semibold'> Update your profile photo</h2>
                                 <input
                                     type="file"
@@ -239,14 +270,14 @@ export default function Profile() {
                                 <label htmlFor="profile-photo" className='w-fit text-indigo-400 font-semibold cursor-pointer'>
                                     Select Photo
                                 </label>
-                                <span id="file-label" className="italic text-slate-400">No file chosen</span>
-                                {/*Submit photo button*/}
+
+                                <span id="file-label">No file chosen</span>
                                 <button
                                     type="button"
                                     className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'
-                                    onClick={(e) => handleFileChange(e as any)}
+                                    onClick={handleUpload}
                                 >
-                                    Submit photo
+                                    Upload photo
                                 </button>
                             </div>
                             <div className='flex flex-col space-y-4'>
@@ -299,7 +330,7 @@ export default function Profile() {
                                     className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'
                                     onClick={handleAffiliation}
                                 >
-                                    Update email
+                                    Update affiliation
                                 </button>
                             </div>
                             <div className='flex flex-col space-y-6'>

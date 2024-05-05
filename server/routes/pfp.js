@@ -1,11 +1,10 @@
-const chromodb = require('../models/chroma.js');
+const chromadb = require('../models/chroma.js');
 const s3 = require('../models/s3.js');
 var db = require('../models/database.js');
 var path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
 const helper = require('./route_helper.js');
-const chromadb = require('../models/chroma.js');
 
 
 // GET /return a list of actor names and corresponding image urls 
@@ -20,7 +19,7 @@ const getTop5Actors = async function (req, res) {
         const collection = chromadb.getCollection();
         console.log('Collection retrived.');
 
-        const matches = await chromodb.findTopKMatches(collection, image, 5);
+        const matches = await chromadb.findTopKMatches(collection, image, 5);
         console.log('Found top 5 matches:', matches);
 
         let actors = [];
@@ -71,7 +70,11 @@ const associateActor = async function (req, res) {
     try {
         const query = `UPDATE users SET actor_nconst = "${actorNconst}" WHERE username = "${username}";`;
         await db.send_sql(query);
-        res.status(200).json({ message: 'Actor associated successfully.' })
+
+        await db.send_sql(`DELETE FROM actor_notifications WHERE user_id = ${req.session.user_id}`);
+        await db.send_sql(`INSERT INTO actor_notifications(user_id, actor_nconst) VALUES (${req.session.user_id}, "${actorNconst}")`);
+
+        return res.status(200).json({ message: 'Actor associated successfully.' })
     } catch (error) {
         return res.status(500).json({ error: 'Error querying database.' });
     }
@@ -134,7 +137,7 @@ const getPfp = async function (req, res) {
         if (!helper.isOK(username)) {
             return res.status(400).json({ error: 'Illegal input.' });
         }
-        const url = await s3.getFileFromS3(username);
+        const url = await s3.getUrlFromS3(`profile_pictures/${username}`);
         res.status(200).json({ pfp_url: url });
     } catch (error) {
         res.status(500).json({ error: 'Error querying database.' });

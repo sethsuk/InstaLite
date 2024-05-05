@@ -137,34 +137,6 @@ var suggestHashtags = async function (req, res) {
 }
 
 
-// GET /get current hashtags 
-var getHashtags = async function (req, res) {
-    const user_id = req.session.user_id;
-
-    const username = req.params.username;
-    if (!helper.isLoggedIn(req, username)) {
-        return res.status(403).send({ error: 'Not logged in.' });
-    }
-
-    try {
-        const query = `
-            SELECT tag FROM user_hashtags 
-            
-        `;
-        const results = await db.send_sql(query);
-
-        const toOutput = {
-            tags: results.map((hashtag) => hashtag.tag)
-        };
-
-        return res.status(200).json(toOutput);
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ error: 'Error querying database.' });
-    }
-}
-
-
 // add hashtag (use the one in registration.js) 
 
 
@@ -202,20 +174,20 @@ var updateHashtags = async function (req, res) {
             const query3 = `SELECT COUNT(*) FROM user_hashtags WHERE user_id = ${user_id} AND hashtag_id = ${hashtagId};`;
             const userHashtag = await db.send_sql(query3);
 
-            // TODO DEPENDING ON INTENDED FUNCTIONALITY
-
             if (userHashtag[0]["COUNT(*)"] == 0) {
                 const query4 = `INSERT INTO user_hashtags (user_id, hashtag_id) VALUES (${user_id}, ${hashtagId});`;
                 await db.insert_items(query4);
 
                 // Increment hashtag count
                 await db.send_sql(`
-                    UPDATE hashtags SET count = count + 1 WHERE hashtag_id = ${hashtag.hashtag_id}
+                    UPDATE hashtags SET count = count + 1 WHERE hashtag_id = ${hashtagId}
                 `);
             }
         }
+
         return res.status(200).json({ message: 'Hashtags updated sucessfully.' });
     } catch (error) {
+        console.log(error);
         res.status(500).json({ error: 'Error querying database.' });
     }
 }
@@ -248,11 +220,11 @@ var removeHashtags = async function (req, res) {
             const hashtagId = hashtagRow.hashtag_id;
 
             const checkHashtagResults = await db.send_sql(`
-                SELECT COUNT(*) FROM user_hashtags
+                SELECT COUNT(*) AS count FROM user_hashtags
                 WHERE user_id = ${user_id} AND hashtag_id = ${hashtagId}
             `);
 
-            if (checkHashtagResults[0]["COUNT(*)"] == 0) {
+            if (checkHashtagResults[0].count === 0) {
                 return res.status(404).json({ error: 'Hashtag not found for user' });
             }
 
@@ -308,6 +280,37 @@ var updatePfp = async function (req, res) {
     }
 }
 
+// GET /getHashtags
+var getHashtags = async function (req, res) {
+    console.log("calling getHashtags");
+
+    const user_id = req.session.user_id;
+
+    const username = req.params.username;
+
+    if (!helper.isLoggedIn(req, username)) {
+        console.log("not logged in");
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+
+    try {
+        var results = await db.send_sql(`
+            SELECT hashtags.tag FROM user_hashtags 
+            JOIN hashtags ON user_hashtags.hashtag_id = hashtags.hashtag_id
+            WHERE user_hashtags.user_id = ${user_id}
+        `);
+
+        const toOutput = {
+            tags: results.map((hashtag) => hashtag.tag)
+        };
+
+        return res.status(200).json(toOutput);
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Error querying database.' });
+    }
+}
+
 
 var account_routes = {
     get_helloworld: getHelloWorld,
@@ -317,7 +320,8 @@ var account_routes = {
     suggest_hashtags: suggestHashtags,
     update_hashtags: updateHashtags,
     remove_hashtags: removeHashtags,
-    update_pfp: updatePfp
+    update_pfp: updatePfp,
+    get_hashtags: getHashtags
 }
 
 module.exports = account_routes 

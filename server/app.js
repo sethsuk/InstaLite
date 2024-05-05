@@ -21,10 +21,23 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(session({
-    secret: 'nets2120_insecure', saveUninitialized: true, cookie: { httpOnly: false }, resave: true
+    secret: 'nets2120_insecure', saveUninitialized: true,
+    cookie: { secure: false, httpOnly: false, sameSite: 'lax', maxAge: 86400000 }, resave: true
 }));
 
 db.send_sql('TRUNCATE TABLE online');
+
+db.send_sql(`
+    DELETE FROM friend_requests WHERE timestamp < NOW() - INTERVAL 3 DAY;
+`);
+
+db.send_sql(`
+    DELETE FROM actor_notifications WHERE timestamp < NOW() - INTERVAL 3 DAY;
+`);
+
+db.send_sql(`
+    DELETE FROM chat_invites WHERE timestamp < NOW() - INTERVAL 3 DAY;
+`);
 
 registry.register_routes(app);
 
@@ -68,13 +81,13 @@ let kafka_config = {
 
 // run().catch(console.error);
 
-chromadb.initializeCollection()
-    .then(() => {
-        console.log('Collection initialized and ready to use.');
-    })
-    .catch(error => {
-        console.error('Error during collection initialization:', error);
-    });
+// chromadb.initializeCollection()
+//     .then(() => {
+//         console.log('Collection initialized and ready to use.');
+//     })
+//     .catch(error => {
+//         console.error('Error during collection initialization:', error);
+//     });
 
 
 app.listen(port, () => {

@@ -29,6 +29,7 @@ export default function Signup() {
     useEffect(() => {
         const fetchHashtags = async () => {
             try {
+                axios.defaults.withCredentials = true;
                 const response = await axios.get(`${rootURL}/getTop10Hashtags`);
                 setOptions(response.data.hashtags);
             } catch (error) {
@@ -62,6 +63,7 @@ export default function Signup() {
                 setSelectedItems([...selectedItems, ...newTags]);
                 setOptions([...options, ...newTags]);
             }
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/addHashtags`, {
                 interests: hashtags
             });
@@ -174,8 +176,9 @@ export default function Signup() {
                                     }}
                                     accept="image/*"
                                 />
-                                <label htmlFor="profile-photo" className='w-fit text-indigo-400 font-semibold cursor-pointer'>
-                                    Select Photo
+
+                                <label htmlFor="profile-photo" className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white cursor-pointer'>
+                                    Select photo
                                 </label>
                                 <span id="file-label" className="italic text-slate-400">No file chosen</span>
                                 {/*Submit photo button*/}

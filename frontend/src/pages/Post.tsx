@@ -1,7 +1,9 @@
 import Navbar from '../components/Navigation';
 import { FaHeart, FaComment } from 'react-icons/fa';
 import { useParams, useNavigate } from 'react-router-dom';
-
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import config from '../../config.json';
 
 interface CommentProps {
   username: string;
@@ -10,43 +12,74 @@ interface CommentProps {
 }
 
 interface PostProps {
+  user_id: number;
   user: string;
   userProfileImage: string;
   postImage: string;
-  imageDescription: string;
   hashtags: string;
   caption: string;
-  comments: CommentProps[];
+  timestamp: string
 }
 
 
 export default function Post() {
-  const {username} = useParams();
+  const { username, postId } = useParams();
+  const rootURL = config.serverRootURL;
 
-  const post: PostProps =
-  {
-    user: 'username',
-    userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg',
-    postImage: 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=0.752xw:1.00xh;0.175xw,0&resize=1200:*',
-    imageDescription: 'Image description here',
-    hashtags: '#hashtag #hashtag #hashtag',
-    caption: 'Caption here',
-    comments: [
-      { username: 'friend1', userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg', comment: 'comment1' },
-      { username: 'friend2', userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg', comment: 'comment2' },
-      { username: 'friend3', userProfileImage: 'https://st3.depositphotos.com/14903220/37662/v/450/depositphotos_376629516-stock-illustration-avatar-men-graphic-sign-profile.jpg', comment: 'comment3' },
-    ]
-  }
+  const [post, setPost] = useState<PostProps>();
+  const [comments, setComments] = useState<CommentProps[]>([]);
 
   const navigate = useNavigate();
   const handleBack = () => navigate(-1);
+
+  const fetchPost = async () => {
+    try {
+      console.log("fetching post");
+      axios.defaults.withCredentials = true;
+      const response = await axios.post(`${rootURL}/${username}/getSinglePost`, {
+        post_id: postId
+      });
+
+      console.log(response.data[0]);
+
+      setPost(response.data[0]);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+  const fetchComments = async () => {
+    try {
+      console.log("fetching comments");
+      axios.defaults.withCredentials = true;
+      const response = await axios.post(`${rootURL}/${username}/getComments`, {
+        post_id: postId
+      });
+
+      console.log(response.data);
+
+      setComments(response.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
+
+
+  useEffect(() => {
+    fetchPost();
+    fetchComments();
+  }, [username]); // Rerun when username changes
+
+  if (!post || !comments) { // Check if post is not defined
+    return <div>Loading...</div>; // Or any other placeholder
+  }
 
   return (
     <div className="w-screen h-screen flex flex-col items-center space-y-8 justify-start">
       <Navbar username={username}></Navbar>
       <div className="max-w-[1000px] flex bg-slate-100 rounded-lg overflow-hidden">
         <div className="w-3/5">
-          <img src={post.postImage} alt={post.imageDescription} className=" object-cover" />
+          <img src={post.postImage} className=" object-cover" />
         </div>
         <div className="p-8 space-y-8">
           <div >
@@ -67,7 +100,7 @@ export default function Post() {
           <div className='space-y-4'>
             <div>
               <strong>Comments</strong>
-              {post.comments.map((comment, index) => (
+              {comments.map((comment, index) => (
                 <div key={index} className="flex items-center space-x-3 py-2">
                   <div className="flex items-center space-x-2">
                     <img src={comment.userProfileImage} alt="user profile" className="w-7 h-7 rounded-full" />
@@ -80,8 +113,6 @@ export default function Post() {
             <div className="border-t border-gray-200 p-4 flex items-center space-x-3">
               {/* Like and comment icons */}
               <div className='flex items-center space-x-4'>
-                <FaHeart className='cursor-pointer' />
-                <FaComment className='cursor-pointer' />
               </div>
               <input className="flex-1 p-2 border rounded" placeholder="Add a comment..." />
               <button className="px-4 py-2 bg-indigo-400 text-white rounded hover:bg-indigo-600">Post</button>
@@ -93,3 +124,4 @@ export default function Post() {
     </div>
   );
 }
+

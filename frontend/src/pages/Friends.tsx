@@ -9,8 +9,8 @@ type MenuKey = 'invitations' | 'yourFriends';
 
 type FriendInfo = {
     userId: number;
-    name: string;
-    online: boolean;
+    username: string;
+    online: number;
 };
 
 type RequestInfo = {
@@ -66,6 +66,7 @@ export default function Friends() {
     const [activeMenu, setActiveMenu] = useState<MenuKey>('invitations');
     const [invitationsData, setInvitationsData] = useState<RequestInfo[]>([]);
     const [friendsData, setFriendsData] = useState<FriendInfo[]>([]);
+    const [newFriendUsername, setNewFriendUsername] = useState('');
 
     const handleMenuClick = (
         event: React.MouseEvent<HTMLElement>,
@@ -75,28 +76,48 @@ export default function Friends() {
         }
     }
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const friendsResponse = await axios.get(`${rootURL}/${username}/getFriends`);
-                setFriendsData(friendsResponse.data.results);
-                const invitationsResponse = await axios.get(`${rootURL}/${username}/getFriendRequests`);
-                setInvitationsData(invitationsResponse.data.results);
-            } catch (error) {
-                console.error('Failed to fetch data:', error);
-            }
-        };
-        fetchData();
-    }, []);
-
-    const handleAccept = async (requestId: number) => {
+    const fetchData = async () => {
         try {
+            axios.defaults.withCredentials = true;
+            const friendsResponse = await axios.get(`${rootURL}/${username}/getFriends`);
+            if (friendsResponse.data.results) {
+                console.log('Friends:', friendsResponse.data.results);
+                setFriendsData(friendsResponse.data.results);
+            } else {
+                console.log('null friends response');
+                setFriendsData([]);
+            }
+            axios.defaults.withCredentials = true;
+            const invitationsResponse = await axios.get(`${rootURL}/${username}/getFriendRequests`);
+            console.log('axios for getFriendRequests sent');
+            if (invitationsResponse.data.friendRequests) {
+                console.log('Invitations:', invitationsResponse.data.friendRequests);
+                setInvitationsData(invitationsResponse.data.friendRequests);
+            } else {
+                console.log('null invitations response');
+                setInvitationsData([]);
+            }
+        } catch (error) {
+            console.error('Failed to fetch data:', error);
+        }
+    };
+
+
+    useEffect(() => {
+        fetchData();
+    }, [username, rootURL]);
+
+
+    const handleAccept = async (senderId: number) => {
+        try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/acceptFriendRequest`, {
-                requestId: requestId
+                senderId: senderId
             });
+            console.log('Axios for acceptFriendRequest sent.');
             if (response.status === 200) {
                 console.log("Request accepted successfully.");
-                setInvitationsData(prevData => prevData.filter(request => request.requestId !== requestId));
+                fetchData();
             }
         } catch (error) {
             console.error("Failed to accept request:", error);
@@ -105,6 +126,7 @@ export default function Friends() {
 
     const handleReject = async (requestId: number) => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/rejectFriendRequest`, {
                 requestId: requestId
             });
@@ -119,6 +141,7 @@ export default function Friends() {
 
     const handleRemove = async (userId: number) => {
         try {
+            axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/removeFriend`, {
                 friendId: userId
             });
@@ -131,20 +154,50 @@ export default function Friends() {
         }
     }
 
+    // TODO!
+    const handleSendFriendRequest = async () => {
+        try {
+            axios.defaults.withCredentials = true;
+            const response = await axios.post(`${rootURL}/${username}/sendFriendRequest`, {
+                receiverUsername: newFriendUsername
+            });
+            if (response.status === 400) {
+                alert("Invalid username.");
+                return;
+            }
+            if (response.status === 409) {
+                alert("Invalid request.");
+                return;
+            }
+            if (response.status === 200) {
+                console.log("Friend request sent successfully.");
+                alert("Your friend request to " + newFriendUsername + " was sent successfully!");
+                setNewFriendUsername('');
+            }
+        } catch (error) {
+            console.error("Failed to send request:", error);
+            alert("Fail to send request.");
+        }
+    }
+
     const content: Record<MenuKey, JSX.Element> = {
         invitations: (
             <div className='flex flex-col space-y-4'>
                 <div className='p6 space-y-4 flex flex-col'>
                     <h2 className='text-bold'>Invitations</h2>
                     <div className="space-y-2">
-                        {invitationsData.map((friend) => (
-                            <UserInvitation
-                                key={friend.senderId}
-                                username={friend.senderName}
-                                onAccept={() => handleAccept(friend.requestId)}
-                                onReject={() => handleReject(friend.requestId)}
-                            />
-                        ))}
+                        {invitationsData.length > 0 ? (
+                            invitationsData.map((invitation) => (
+                                <UserInvitation
+                                    key={invitation.senderId}
+                                    username={invitation.senderName}
+                                    onAccept={() => handleAccept(invitation.senderId)}
+                                    onReject={() => handleReject(invitation.requestId)}
+                                />
+                            ))
+                        ) : (
+                            <p>You currently have no invitations.</p>
+                        )}
                     </div>
                 </div>
             </div>
@@ -154,14 +207,33 @@ export default function Friends() {
                 <div className='p6 space-y-4 flex flex-col'>
                     <h2 className='text-bold'>Your Friends</h2>
                     <div className="space-y-2">
-                        {friendsData.map((friend) => (
-                            <FriendsList
-                                key={friend.userId}
-                                username={friend.name}
-                                online={friend.online}
-                                removed={() => handleRemove(friend.userId)}
-                            />
-                        ))}
+                        {friendsData.length > 0 ? (
+                            friendsData.map((friend) => (
+                                <FriendsList
+                                    key={friend.userId}
+                                    username={friend.username}
+                                    online={friend.online === 1}
+                                    removed={() => handleRemove(friend.userId)}
+                                />
+                            ))
+                        ) : (
+                            <p>You currently have no friends. Make a friend request!</p>
+                        )}
+                    </div>
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="Enter username to add"
+                            value={newFriendUsername}
+                            onChange={(e) => setNewFriendUsername(e.target.value)}
+                            className="border p-2 rounded"
+                        />
+                        <button
+                            onClick={handleSendFriendRequest}
+                            className="ml-2 p-2 bg-blue-500 text-white rounded"
+                        >
+                            Send friend request
+                        </button>
                     </div>
                 </div>
             </div>

@@ -3,17 +3,23 @@ import { FaHeart, FaComment } from 'react-icons/fa';
 export default function PostComponent({
   user = 'username',
   userProfileImage = '../assets/avatar.svg',
-  postImage = 'https://hips.hearstapps.com/hmg-prod/images/dog-puppy-on-garden-royalty-free-image-1586966191.jpg?crop=0.752xw:1.00xh;0.175xw,0&resize=1200:*',
-  imageDescription = 'Image description here',
+  postImage,
   hashtags = '#hashtag',
-  caption = 'Caption here'
-} : {
-  user: string,
-  userProfileImage: string,
-  postImage: string,
-  imageDescription: string,
-  hashtags: string,
-  caption: string
+  caption = 'Caption here',
+  onClick,
+  handleLike,
+  isLiked,
+  likes
+}: {
+  user: string;
+  userProfileImage: string;
+  postImage?: string;
+  hashtags: string;
+  caption: string;
+  onClick: () => void;
+  handleLike: () => void;
+  isLiked: boolean;
+  likes: number
 }) {
   return (
     <div className='bg-slate-100 w-full space-y-6 max-w-[500px] mx-auto p-6 rounded-md'>
@@ -24,13 +30,19 @@ export default function PostComponent({
       </div>
 
       {/* Image for the post */}
-      <img src={postImage} alt={imageDescription} className='mt-2 mb-2  w-[450px] h-[350px] object-cover' /> {/* Main post image */}
+      {postImage && (
+        <img src={postImage} className='mt-2 mb-2 w-[450px] h-[350px] object-cover' /> // Main post image
+      )}
 
       <div>
         {/* Like and comment icons */}
-        <div className='flex items-center space-x-4 text-lg'>
-          <FaHeart className='cursor-pointer' />
-          <FaComment className='cursor-pointer' />
+        <div className='flex items-center text-lg'>
+          <FaHeart className={`cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-500'}`}
+            onClick={(e) => { e.stopPropagation(); handleLike(); }} />
+          <span className='ml-2'>{likes}</span> {/* Margin left 2 for close spacing between like icon and count */}
+          <FaComment className='cursor-pointer ml-4' // Margin left 4 for more space between count and comment icon
+            onClick={onClick}
+          />
         </div>
         {/* Text and hashtags */}
         <div className='mt-2'>

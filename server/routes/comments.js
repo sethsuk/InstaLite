@@ -85,8 +85,85 @@ var createComment = async function (req, res) {
     }
 };
 
+var getComments = async function (req, res) {
+    const post_id = parseInt(req.body["post_id"]);
+
+    if (!Number.isInteger(post_id)) {
+        return res.status(400).json({ error: "Invalid post_id" });
+    }
+
+    try {
+        var postResults = await db.send_sql(`
+            SELECT COUNT(*) FROM posts WHERE post_id = ${post_id}
+        `);
+
+        if (postResults[0]["COUNT(*)"] == 0) {
+            return res.status(400).json({ error: "Post does not exist." })
+        }
+
+        // Fetch top-level comments (comments without a parent)
+        const topLevelComments = await fetchComments(post_id, null);
+
+        // Iterate through top-level comments and fetch their replies recursively
+        const threadedComments = await Promise.all(
+            topLevelComments.map(async (comment) => {
+                const replies = await fetchReplies(comment.comment_id);
+                return { ...comment, replies };
+            })
+        );
+
+        return res.status(200).json(threadedComments.slice(0, 10));
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({ error: 'Error querying database.' });
+    }
+};
+
+// Function to fetch top-level comments
+const fetchComments = async (post_id, parent_id) => {
+    const sql = `
+        SELECT comments.comment_id, comments.content, u.username, u.pfp_url, comments.timestamp, comments.parent_id, GROUP_CONCAT(DISTINCT hashtags.tag ORDER BY hashtags.tag ASC SEPARATOR ', ') AS hashtags
+        FROM comments
+        LEFT JOIN hashtags_to_comments htc ON comments.comment_id = htc.comment_id
+        LEFT JOIN hashtags ON htc.hashtag_id = hashtags.hashtag_id
+        LEFT JOIN users u ON u.user_id = comments.user_id
+        WHERE post_id = ${post_id} AND parent_id ${parent_id ? `= ${parent_id}` : 'IS NULL'}
+        GROUP BY comments.comment_id
+        ORDER BY timestamp DESC
+        LIMIT 10;
+    `;
+    const comments = await db.send_sql(sql);
+    return comments;
+};
+
+// Recursive function to fetch replies for a comment
+const fetchReplies = async (parent_id) => {
+    const sql = `
+        SELECT comments.comment_id, comments.content, u.username, u.pfp_url, comments.timestamp, comments.parent_id, GROUP_CONCAT(DISTINCT hashtags.tag ORDER BY hashtags.tag ASC SEPARATOR ', ') AS hashtags
+        FROM comments
+        LEFT JOIN hashtags_to_comments htc ON comments.comment_id = htc.comment_id
+        LEFT JOIN hashtags ON htc.hashtag_id = hashtags.hashtag_id
+        LEFT JOIN users u ON u.user_id = comments.user_id
+        WHERE parent_id = ${parent_id}
+        GROUP BY comments.comment_id
+        ORDER BY timestamp DESC;
+    `;
+    const replies = await db.send_sql(sql);
+
+    const nestedReplies = await Promise.all(
+        replies.map(async (reply) => {
+            const childReplies = await fetchReplies(reply.comment_id);
+            return { ...reply, replies: childReplies };
+        })
+    );
+
+    return nestedReplies;
+};
+
+
 const routes = {
     create_comment: createComment,
+    get_comments: getComments
 };
 
 module.exports = routes;
