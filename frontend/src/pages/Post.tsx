@@ -5,9 +5,13 @@ import axios from 'axios';
 import config from '../../config.json';
 
 interface CommentProps {
+  comment_id: number;
   username: string;
-  userProfileImage: string;
-  comment: string;
+  pfp_url: string;
+  content: string;
+  timestamp: string;
+  hashtags: string;
+  replies: CommentProps[];
 }
 
 interface PostProps {
@@ -69,6 +73,23 @@ export default function Post() {
     fetchComments();
   }, [username]); // Rerun when username changes
 
+
+
+  const renderComment = (comment: CommentProps) => (
+    <div key={comment.comment_id} className="flex flex-col space-y-2 ml-4">
+      <div className="flex items-center space-x-2">
+        <img src={comment.pfp_url} alt="user profile" className="w-7 h-7 rounded-full" />
+        <strong>{comment.username}</strong>
+      </div>
+      <div>{comment.content}</div>
+      <div className='text-blue-500'>{comment.hashtags}</div>
+      <div className="pl-4">
+        {comment.replies.map(renderComment)}
+      </div>
+    </div>
+  );
+
+
   if (!post || !comments) { // Check if post is not defined
     return <div>Loading...</div>; // Or any other placeholder
   }
@@ -99,15 +120,7 @@ export default function Post() {
           <div className='space-y-4'>
             <div>
               <strong>Comments</strong>
-              {comments.map((comment, index) => (
-                <div key={index} className="flex items-center space-x-3 py-2">
-                  <div className="flex items-center space-x-2">
-                    <img src={comment.userProfileImage} alt="user profile" className="w-7 h-7 rounded-full" />
-                    <strong>{comment.username}</strong>
-                  </div>
-                  <div>{comment.comment}</div>
-                </div>
-              ))}
+              {comments.map(renderComment)}
             </div>
             <div className="border-t border-gray-200 p-4 flex items-center space-x-3">
               {/* Like and comment icons */}

@@ -17,7 +17,7 @@ var getPosts = async function (req, res) {
 
     try {
         var results = await db.send_sql(`
-            SELECT DISTINCT p.post_id, p.title, p.media, p.content, p.likes, p.timestamp,
+            SELECT DISTINCT p.post_id, p.title, p.media, p.content, p.likes, date(p.timestamp) AS timestamp,
                             u.user_id, u.username, u.pfp_url, 
                             GROUP_CONCAT(DISTINCT CONCAT('#', h.tag) ORDER BY h.tag ASC SEPARATOR ', ') AS hashtags,
                             (CASE WHEN pl.user_id IS NOT NULL THEN true ELSE false END) AS isLiked
@@ -55,7 +55,7 @@ var getNotifications = async function (req, res) {
 
     try {
         var friendRequestsResults = await db.send_sql(`
-            SELECT fr.request_id, fr.sender_id, fr.receiver_id, fr.timestamp, fr.status, 
+            SELECT fr.request_id, fr.sender_id, fr.receiver_id, date(fr.timestamp) AS timestamp, fr.status, 
                    u.username as sender_username, u.pfp_url as sender_pfp
             FROM friend_requests fr
             JOIN users u ON fr.sender_id = u.user_id
@@ -64,7 +64,7 @@ var getNotifications = async function (req, res) {
         `);
 
         var friendRequestsResultsAcc = await db.send_sql(`
-            SELECT fr.request_id, fr.sender_id, fr.receiver_id, fr.timestamp, fr.status, 
+            SELECT fr.request_id, fr.sender_id, fr.receiver_id, date(fr.timestamp) AS timestamp, fr.status, 
                    u.username as receiver_username, u.pfp_url as receiver_pfp
             FROM friend_requests fr
             JOIN users u ON fr.receiver_id = u.user_id
@@ -73,7 +73,7 @@ var getNotifications = async function (req, res) {
         `);
 
         var friendRequestsResultsRej = await db.send_sql(`
-            SELECT fr.request_id, fr.sender_id, fr.receiver_id, fr.timestamp, fr.status, 
+            SELECT fr.request_id, fr.sender_id, fr.receiver_id, date(fr.timestamp) AS timestamp, fr.status, 
                 u.username as receiver_username, u.pfp_url as receiver_pfp
             FROM friend_requests fr
             JOIN users u ON fr.receiver_id = u.user_id
@@ -82,7 +82,7 @@ var getNotifications = async function (req, res) {
         `);
 
         var chatInvitesResults = await db.send_sql(`
-            SELECT ci.chat_id, ci.sender_id, ci.reciever_id, ci.timestamp, ci.status,
+            SELECT ci.chat_id, ci.sender_id, ci.reciever_id, date(ci.timestamp) AS timestamp, ci.status,
                 u.username as sender_username, u.pfp_url as sender_pfp
             FROM chat_invites ci
             JOIN users u ON ci.sender_id = u.user_id
@@ -91,7 +91,7 @@ var getNotifications = async function (req, res) {
         `);
 
         var chatInvitesResultsAcc = await db.send_sql(`
-            SELECT ci.chat_id, ci.sender_id, ci.reciever_id, ci.timestamp, ci.status,
+            SELECT ci.chat_id, ci.sender_id, ci.reciever_id, date(ci.timestamp) AS timestamp, ci.status,
                 u.username as receiver_username, u.pfp_url as receiver_pfp
             FROM chat_invites ci
             JOIN users u ON ci.reciever_id = u.user_id
@@ -100,7 +100,7 @@ var getNotifications = async function (req, res) {
         `);
 
         var chatInvitesResultsRej = await db.send_sql(`
-            SELECT ci.chat_id, ci.sender_id, ci.reciever_id, ci.timestamp, ci.status,
+            SELECT ci.chat_id, ci.sender_id, ci.reciever_id, date(ci.timestamp) AS timestamp, ci.status,
                 u.username as receiver_username, u.pfp_url as receiver_pfp
             FROM chat_invites ci
             JOIN users u ON ci.reciever_id = u.user_id
@@ -109,7 +109,7 @@ var getNotifications = async function (req, res) {
         `);
 
         var actorNotificationsResultsSelf = await db.send_sql(`
-            SELECT an.user_id, an.actor_nconst, an.timestamp,
+            SELECT an.user_id, an.actor_nconst, date(an.timestamp) AS timestamp,
             u.username, u.pfp_url
             FROM actor_notifications an
             JOIN users u ON an.user_id = u.user_id
@@ -118,7 +118,7 @@ var getNotifications = async function (req, res) {
 
         // Fetching actor notifications involving friends
         var actorNotificationsResultsFriends = await db.send_sql(`
-            SELECT an.user_id, an.actor_nconst, an.timestamp,
+            SELECT an.user_id, an.actor_nconst, date(an.timestamp) AS timestamp,
                 u.username, u.pfp_url
             FROM actor_notifications an
             JOIN friends f ON an.user_id = f.followed
@@ -132,17 +132,19 @@ var getNotifications = async function (req, res) {
             return {
                 type: 'association',
                 users: [notification.username, actorInfo ? actorInfo.name : 'Unknown Actor'],
-                date: notification.timestamp,
+                date: notification.timestamp.toDateString(),
                 profileImages: [notification.pfp_url, actorInfo ? actorInfo.imageUrl : '']
             };
         }));
+
+        console.log(actorNotificationsResultsSelf);
 
         var actorNotificationsResultsFriends = await Promise.all(actorNotificationsResultsFriends.map(async (notification) => {
             const actorInfo = await getInfoHelper(notification.actor_nconst);
             return {
                 type: 'association',
                 users: [notification.username, actorInfo ? actorInfo.name : 'Unknown Actor'],
-                date: notification.timestamp,
+                date: notification.timestamp.toDateString(),
                 profileImages: [notification.pfp_url, actorInfo ? actorInfo.imageUrl : '']
             };
         }));
@@ -152,42 +154,42 @@ var getNotifications = async function (req, res) {
                 {
                     type: 'friendRequest',
                     users: [request.sender_username],
-                    date: request.timestamp,
+                    date: request.timestamp.toDateString(),
                     profileImages: [request.sender_pfp]
                 }
             )), ...friendRequestsResultsAcc.map((result) => (
                 {
                     type: 'friendRequestAccepted',
                     users: [result.receiver_username],
-                    date: result.timestamp,
+                    date: result.timestamp.toDateString(),
                     profileImages: [result.receiver_pfp]
                 }
             )), ...friendRequestsResultsRej.map((result) => (
                 {
                     type: 'friendRequestRejected',
                     users: [result.receiver_username],
-                    date: result.timestamp,
+                    date: result.timestamp.toDateString(),
                     profileImages: [result.receiver_pfp]
                 }
             )), ...chatInvitesResults.map((invite) => (
                 {
                     type: 'chatInvite',
                     users: [invite.sender_username],
-                    date: invite.timestamp,
+                    date: invite.timestamp.toDateString(),
                     profileImages: [invite.sender_pfp]
                 }
             )), ...chatInvitesResultsAcc.map((invite) => (
                 {
                     type: 'chatInviteAccepted',
                     users: [invite.receiver_username],
-                    date: invite.timestamp,
+                    date: invite.timestamp.toDateString(),
                     profileImages: [invite.receiver_pfp]
                 }
             )), ...chatInvitesResultsRej.map((invite) => (
                 {
                     type: 'chatInviteRejected',
                     users: [invite.receiver_username],
-                    date: invite.timestamp,
+                    date: invite.timestamp.toDateString(),
                     profileImages: [invite.receiver_pfp]
                 }
             )), ...actorNotificationsResultsSelf, ...actorNotificationsResultsFriends]
