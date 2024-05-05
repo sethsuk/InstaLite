@@ -56,9 +56,9 @@ export default function Post() {
         post_id: postId
       });
 
-      console.log(response.data[0]);
+      console.log(response.data);
 
-      setComments(response.data[0]);
+      setComments(response.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
