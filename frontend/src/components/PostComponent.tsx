@@ -9,7 +9,8 @@ export default function PostComponent({
   onClick,
   handleLike,
   isLiked,
-  likes
+  likes,
+  timestamp
 }: {
   user: string;
   userProfileImage: string;
@@ -19,14 +20,18 @@ export default function PostComponent({
   onClick: () => void;
   handleLike: () => void;
   isLiked: boolean;
-  likes: number
+  likes: number;
+  timestamp: string;
 }) {
   return (
     <div className='bg-slate-100 w-full space-y-6 max-w-[500px] mx-auto p-6 rounded-md'>
       {/* User display at the top */}
-      <div className='flex items-center space-x-2'>
-        <img src={userProfileImage} alt="Profile" className='w-8 h-8 rounded-full' /> {/* User profile image */}
-        <span className='font-semibold text-slate-800'>{user}</span>
+      <div className='flex flex-col space-y-2'>
+        <span className='text-slate-400 text-sm italic'>{timestamp}</span>
+        <div className='flex items-center space-x-2'>
+          <img src={userProfileImage} alt="Profile" className='w-8 h-8 rounded-full' /> {/* User profile image */}
+          <span className='font-semibold text-slate-800'>{user}</span>
+        </div>
       </div>
 
       {/* Image for the post */}

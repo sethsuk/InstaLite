@@ -7,6 +7,10 @@ import Navbar from '../components/Navigation';
 
 type MenuKey = 'existingChats' | 'requestChats' | 'invitations';
 
+//time stamp and username to message
+// third style of message in the middle for added user or removed user
+
+
 type FriendInfo = {
     userId: number;
     name: string;
@@ -159,8 +163,8 @@ export default function Chat() {
     const content: Record<MenuKey, JSX.Element> = {
         invitations: (
             <div className='flex flex-col space-y-4'>
-                <div className='p6 space-y-4 flex flex-col'>
-                    <h2 className='text-bold'>Invitations</h2>
+                <div className='p-6 space-y-4 flex flex-col'>
+                    <h2 className='font-bold text-2xl'>Invitations</h2>
                     <div className="space-y-2">
                         {invitationsData1.map((friend) => (
                             <UserInvitation
@@ -176,8 +180,8 @@ export default function Chat() {
         ),
         existingChats: (
             <div className='flex flex-col space-y-4'>
-                <div className='p6 space-y-4 flex flex-col'>
-                    <h2 className='text-bold'>Your Chats</h2>
+                <div className='p-6 space-y-4 flex flex-col'>
+                    <h2 className='font-bold text-2xl'>Your Chats</h2>
                     <div className="space-y-2">
                         {chatData.map((chat) => (
                             <ChatItem
@@ -192,8 +196,8 @@ export default function Chat() {
         ),
         requestChats: (
             <div className='flex flex-col space-y-4'>
-                <div className='p6 space-y-4 flex flex-col'>
-                    <h2 className='text-bold'>Currently online friends</h2>
+                <div className='p-6 space-y-4 flex flex-col'>
+                    <h2 className='font-bold text-2xl'>Currently online friends</h2>
                     <div className="space-y-2">
                         {requestData.map((friend, index) => (
                             <FriendItem

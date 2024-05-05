@@ -4,7 +4,6 @@ import axios from 'axios';
 import config from '../../config.json';
 import PostComponent from '../components/PostComponent';
 import NotificationComponent from '../components/NotificationComponent';
-import CreatePostComponent from '../components/CreatePostComponent';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navigation';
 
@@ -132,6 +131,7 @@ export default function Home() {
               handleLike={() => handleLike(post.post_id, post.isLiked)}
               likes={post.likes}
               isLiked={post.isLiked}
+              timestamp={post.timestamp}
             />
           ))}
         </div>

@@ -271,7 +271,7 @@ export default function Profile() {
                                     Select Photo
                                 </label>
 
-                                <span id="file-label">No file chosen</span>
+                                <span id="file-label" className='italic text-slate-400'>No file chosen</span>
                                 <button
                                     type="button"
                                     className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'

@@ -49,7 +49,7 @@ type ChatHeaderProps = {
     onLeaveChat: () => void;
 };
 
-const ChatHeader = ({ username, onBack, onLeaveChat}: ChatHeaderProps) => {
+const ChatHeader = ({ username, onBack, onLeaveChat }: ChatHeaderProps) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const [isModalOpen, setModalOpen] = useState(false);
@@ -123,23 +123,43 @@ const ChatHeader = ({ username, onBack, onLeaveChat}: ChatHeaderProps) => {
 //MESSAGE LIST COMPONENT
 type MessageProps = {
     text: string;
+    time: string;
+    user: string;
+    announcement: boolean;
     isMine: boolean;
 };
 
-const Message = ({ text, isMine }: MessageProps) => (
-    <div className={`p-2 ${isMine ? 'ml-auto rounded-md bg-indigo-100' : 'mr-auto rounded-md bg-gray-100'}`}>
-        {text}
-    </div>
-);
+
+const Message = ({ text, time, user, announcement, isMine }: MessageProps) => {
+    // Check message type
+    if (announcement) {
+        return (
+            <div className="text-center text-gray-400 italic text-sm">
+                {text}
+            </div>
+        );
+    }
+
+    // Standard message
+    return (
+        <div className={`p-2 flex flex-col space-y-1 ${isMine ? 'ml-auto' : 'mr-auto'}`}>
+            <span className="text-xs font-semibold">{user}</span>
+            <div className={`p-2 ${isMine ? 'rounded-md bg-indigo-100' : 'rounded-md bg-gray-100'}`}>
+                {text}
+            </div>
+            <span className="text-xs italic text-slate-400">{time}</span>
+        </div>
+    );
+};
 
 type MessageListProps = {
-    messages: { text: string; isMine: boolean }[];
+    messages: { text: string; time: string; user: string; announcement: boolean; isMine: boolean }[];
 };
 
 const MessageList = ({ messages }: MessageListProps) => (
     <div className="flex flex-col space-y-2 p-4">
         {messages.map((message, index) => (
-            <Message key={index} text={message.text} isMine={message.isMine} />
+            <Message key={index} text={message.text} time={message.time} user={message.user} announcement={message.announcement} isMine={message.isMine} />
         ))}
     </div>
 );
@@ -180,16 +200,17 @@ const ChatInput = ({ onSend }: ChatInputProps) => {
 //MAIN FUNCTION
 export default function ChatRoom() {
     const { username } = useParams();
-    
+
 
     const navigate = useNavigate();
     const [messages, setMessages] = useState([
-        { text: "Hello", isMine: false },
-        { text: "Hi!", isMine: true }
+        { text: "Hello", user: "user1", time: "2024-10-23", announcement: false, isMine: false },
+        { text: "Hi!", user: "user2", time: "2024-10-23", announcement: false, isMine: true },
+        { text: "user3 has been removed", user: "user2", time: "2024-10-23", announcement: true, isMine: false }
     ]);
 
     const handleSendNewMessage = (newMessage: string) => {
-        setMessages([...messages, { text: newMessage, isMine: true }]);
+        //to do 
     };
 
     const handleBack = () => {
@@ -213,7 +234,7 @@ export default function ChatRoom() {
                         onLeaveChat={handleLeaveChat}
                     />
                     <MessageList messages={messages} />
-                    
+
                     <ChatInput onSend={handleSendNewMessage} />
                 </div>
             </div>
