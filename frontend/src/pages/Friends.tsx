@@ -183,8 +183,8 @@ export default function Friends() {
     const content: Record<MenuKey, JSX.Element> = {
         invitations: (
             <div className='flex flex-col space-y-4'>
-                <div className='p6 space-y-4 flex flex-col'>
-                    <h2 className='text-bold'>Invitations</h2>
+                <div className='p-6 space-y-4 flex flex-col'>
+                    <h2 className='font-bold text-2xl'>Invitations</h2>
                     <div className="space-y-2">
                         {invitationsData.length > 0 ? (
                             invitationsData.map((invitation) => (
@@ -204,8 +204,8 @@ export default function Friends() {
         ),
         yourFriends: (
             <div className='flex flex-col space-y-4'>
-                <div className='p6 space-y-4 flex flex-col'>
-                    <h2 className='text-bold'>Your Friends</h2>
+                <div className='p-6 space-y-4 flex flex-col'>
+                    <h2 className='font-bold text-2xl'>Your Friends</h2>
                     <div className="space-y-2">
                         {friendsData.length > 0 ? (
                             friendsData.map((friend) => (
