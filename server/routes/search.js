@@ -10,11 +10,11 @@ const { OpenAIEmbeddings } = require("@langchain/openai");
 // const { createStuffDocumentsChain } = require("langchain/chains/combine_documents");
 // const { Document } = require("@langchain/core/documents");
 // const { createRetrievalChain } = require("langchain/chains/retrieval");
-// const { formatDocumentsAsString } = require("langchain/util/document");
-// const {
-//     RunnableSequence,
-//     RunnablePassthrough,
-//   } = require("@langchain/core/runnables");
+const { formatDocumentsAsString } = require("langchain/util/document");
+const {
+    RunnableSequence,
+    RunnablePassthrough,
+  } = require("@langchain/core/runnables");
 const { Chroma } = require("@langchain/community/vectorstores/chroma");
 
 var db = require('../models/database.js');
@@ -39,28 +39,55 @@ const helper = require('./route_helper.js');
 var query = async function (req, res) {
     // const {prompt} = req.query;
     let results = await db.send_sql(` SELECT post_id, content from posts;`);
-    console.log(results);
-    let captions = results.map(result => result.content);
-    ids = results.map(function (item) {
+    let captions = results.map(result => `${result.content}`);
+    let ids = results.map(function (item) {
         return {id: item.post_id}; 
     });
-    console.log(captions);
-    console.log(ids);
     const vectorStore = await Chroma.fromTexts(
         captions,
         ids,
-        new OpenAIEmbeddings(),
+        new OpenAIEmbeddings({model: "text-embedding-3-large", apiKey: process.env.OPENAI_API_KEY}),
         {
-          collectionName: "post-content",
+          collectionName: `${Date.now()}`,
         }
       );
 
-      
-      const response = await vectorStore.similaritySearch("happy", 2);
-      
-      console.log(response);
-      return res.status(200).json({response: response});
+    // const retriever = vectorStore.asRetriever();
+    let question = req.query.prompt;
+    console.log(question);
+    const response = await vectorStore.similaritySearch(question, 3);
+
+    let context = '';
+
+    for (let i = 0; i < 3; i++) {
+        context += `Post ${response[i].metadata.id}: ${response[i].pageContent}`;
+    }
+
+    let system = 'You are a helpful recommendation chatbot. Explain why one of these posts is relevant to answering the question. You must include an explanation in your response.Respond in the JSON format with the parameters explanation and selected_post_id';
+    const prompt = PromptTemplate.fromTemplate(`${system}
     
+    ${context}
+    
+    Question: {question}
+    
+    Helpful Answer:`);
+    const llm = new ChatOpenAI({ model: "gpt-3.5-turbo-16k", temperature: 0, apiKey: process.env.OPENAI_API_KEY });
+
+    const ragChain = RunnableSequence.from([
+        {
+            question: new RunnablePassthrough(),
+          },    
+      prompt,
+      llm,
+      new StringOutputParser(),
+    ]);
+
+   
+
+    result = await ragChain.invoke(question);
+    let result_ids = response.map(item => item.metadata.id);
+    res.status(200).json({recs: response, llm: result, id: result_ids});
+   
 }
 
 var search_routes = {
