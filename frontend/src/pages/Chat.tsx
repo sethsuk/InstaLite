@@ -29,12 +29,14 @@ type RequestInfo = {
 
 type UserInvitationProps = {
     username: string;
+    chat_id: Number;
     onAccept: () => void;
     onReject: () => void;
 };
 
 type ChatItemProps = {
     name: string;
+    chat_id: number;
     onNavigate: () => void;
 };
 
@@ -45,10 +47,10 @@ type FriendItemProps = {
     onInvite: () => void;
 };
 
-const ChatItem = ({ name, onNavigate }: ChatItemProps) => (
+const ChatItem = ({ chat_id, name, onNavigate }: ChatItemProps) => (
     <div className="flex justify-between items-center p-4 bg-gray-100 rounded-md mb-2 ">
         <div className="flex items-center">
-            <span className="font-semibold">{name}</span>
+            <span className="font-semibold">Chat #{chat_id} ({name})</span>
         </div>
         <div>
             <button onClick={onNavigate} className="text-blue-600 hover:text-blue-800">Go to chat</button>
@@ -56,10 +58,10 @@ const ChatItem = ({ name, onNavigate }: ChatItemProps) => (
     </div>
 );
 
-const UserInvitation = ({ username, onAccept, onReject }: UserInvitationProps) => (
+const UserInvitation = ({ username, onAccept, onReject, chat_id }: UserInvitationProps) => (
     <div className="flex justify-between items-center p-4 bg-slate-100 rounded-md mb-2">
         <div className="flex items-center space-x-2">
-            <span className="font-semibold">{username}</span>
+            <span className="font-semibold">{username} has invited you to Chat #{chat_id}</span>
         </div>
         <div>
             <button onClick={onAccept} className="text-green-600 hover:text-green-800 mr-4">Accept</button>
@@ -221,6 +223,7 @@ export default function Chat() {
                                 <UserInvitation
                                     key={friend.invite_id}
                                     username={friend.username}
+                                    chat_id={friend.chat_id}
                                     onAccept={() => handleAccept(friend.invite_id)}
                                     onReject={() => handleReject(friend.invite_id)}
                                 />
@@ -237,6 +240,7 @@ export default function Chat() {
                             {chatData.map((chat) => (
                                 <ChatItem
                                     key={chat.chat_id}
+                                    chat_id={chat.chat_id}
                                     name={chat.name}
                                     onNavigate={() => handleNavigate(chat.chat_id)}
                                 />

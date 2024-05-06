@@ -179,13 +179,13 @@ const Message = ({ text, time, user, announcement, isMine }: MessageProps) => {
 };
 
 type MessageListProps = {
-    messages: { text: string; time: string; user: string; announcement: boolean; isMine: boolean }[];
+    messages: { text: string; time: string; username: string; announcement: boolean; isMine: boolean }[];
 };
 
 const MessageList = ({ messages }: MessageListProps) => (
     <div className="flex flex-col space-y-2 p-4">
         {messages.map((message, index) => (
-            <Message key={index} text={message.text} time={message.time} user={message.user} announcement={message.announcement} isMine={message.isMine} />
+            <Message key={index} text={message.text} time={message.time} user={message.username} announcement={message.username == 'Info'} isMine={message.isMine} />
         ))}
     </div>
 );
@@ -205,6 +205,7 @@ export default function ChatRoom() {
     const [auth, setAuth] = useState("loading");
     const { username, chatId } = useParams();
     const [sendAnouncement, setSendAnouncement] = useState(() => () => console.log('sending anouncement'));
+    const [leaveChat, setLeaveChat] = useState(() => () => console.log('sending anouncement'));
 
 
     const onLoad = async () => {
@@ -217,7 +218,7 @@ export default function ChatRoom() {
             // TODO: Join the chat socket
             socket.on("message", (message: Message) => {
                 // console.log([...messages, { text: message.text, isMine: message.username == username }]);
-                setMessages(currentArray => [...currentArray , { text: message.text, isMine: message.username == username }]);
+                setMessages(currentArray => [...currentArray , { text: message.text, isMine: message.username == username, time: message.time, username: message.username }]);
             });
             setClickHandler(() => () => {
                 console.log("click handler run");
@@ -234,6 +235,15 @@ export default function ChatRoom() {
 
             setSendAnouncement(() => (anouncement: String) => {
                 socket.emit("anouncement", `${anouncement}`);
+            });
+            setLeaveChat(() => async () => {
+                // to do 
+                let result = await axios.get(`${rootURL}/${username}/leaveChat?chatId=${chatId}`);
+                console.log(result.status);
+                if (result.status == 200) {
+                    navigate(-1);
+                    socket.emit("anouncement", `${username} left the chat`);
+                }
             });
         } catch (e) {
             console.log("Auth failed")
@@ -252,10 +262,6 @@ export default function ChatRoom() {
         navigate(-1);
     };
 
-    const handleLeaveChat = () => {
-        // to do 
-    };
-
 
 
     if (auth == "authenticated") {
@@ -270,7 +276,7 @@ export default function ChatRoom() {
                             chatId={chatId}
                             onBack={handleBack}
                             anouncer={sendAnouncement}
-                            onLeaveChat={handleLeaveChat}
+                            onLeaveChat={leaveChat}
                         />
                         <MessageList messages={messages} />
                     

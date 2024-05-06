@@ -92,7 +92,7 @@ var get_chat_invitations = async function (req, res) {
     }
     try {
         const userId = req.session.user_id;
-        const query = `SELECT invite_id, username FROM chat_invites LEFT JOIN users ON sender_id=user_id WHERE reciever_id=${userId} AND status='pending'`;
+        const query = `SELECT invite_id, username, chat_id FROM chat_invites LEFT JOIN users ON sender_id=user_id WHERE reciever_id=${userId} AND status='pending'`;
         let result = await db.send_sql(query);
         return res.status(200).json({requests: result});
        
@@ -190,9 +190,25 @@ var invitable_to_chat = async function (req, res) {
     }
     try {
         const userId = req.session.user_id;
-        let result = await db.send_sql(`SELECT DISTINCT followed as user_id, username FROM friends f LEFT JOIN users_to_chat uc on f.followed=uc.user_id
+        let result = await db.send_sql(`SELECT DISTINCT followed as user_id, username FROM friends f
         LEFT JOIN users u ON f.followed=u.user_id WHERE followed NOT IN (SELECT user_id FROM users_to_chat WHERE chat_id = ${chatId}) AND followed NOT IN (SELECT reciever_id FROM chat_invites WHERE chat_id =${chatId} AND sender_id=${userId}) AND follower=${userId};`);
         res.status(200).json({ friends: result});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Error querying database.' });
+    }
+}
+
+var leave_chat = async function (req, res) {
+    const username = req.params.username;
+    const {chatId} = req.query;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+    try {
+        const userId = req.session.user_id;
+        let result = await db.send_sql(`DELETE FROM users_to_chat WHERE user_id = ${userId} AND chat_id = ${chatId}`);
+        res.status(200).json({ result: `Left chat {chatId} succesfully`});
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: 'Error querying database.' });
@@ -212,7 +228,8 @@ var chat_routes = {
     reject_invite: reject_invite,
     get_invitable_friends: getInvitableFriends,
     send_invite: sendInvite,
-    invitable_to_chat: invitable_to_chat
+    invitable_to_chat: invitable_to_chat,
+    leave_chat: leave_chat
 }
 
 module.exports = chat_routes 
