@@ -5,7 +5,8 @@ const posts = require('./posts.js');
 const registration = require('./registration.js');
 const comments = require('./comments.js');
 const home = require('./home.js');
-const chat = require('./chat.js')
+const chat = require('./chat.js');
+const search = require('./search.js')
 
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
@@ -67,7 +68,7 @@ function register_routes(app) {
     app.get('/:username/invitableToChat', chat.invitable_to_chat); 
     app.get('/:username/leaveChat', chat.leave_chat); 
 
-
+    app.get('/query', search.query);
     // ------------
 
     app.post('/dummyS3Upload', upload.single('file'), registration.dummy_s3_upload);
