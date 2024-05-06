@@ -114,7 +114,7 @@ public class ComputeRanks {
         try (Connection connection = DriverManager.getConnection(Config.DATABASE_CONNECTION, Config.DATABASE_USERNAME,
                 Config.DATABASE_PASSWORD)) {
             List<String> l = ranks.map(entry -> 
-                "INSERT INTO " + table_name + " VALUES ('" + entry._1() + "', '"+ entry._2() + ");"
+                "REPLACE INTO " + table_name + " VALUES (" + entry._1().substring(1) + ", "+ entry._2() + ");"
             ).collect();
          
             if(l.size() > 0){
@@ -142,7 +142,7 @@ public class ComputeRanks {
     public void run() throws IOException, InterruptedException {
         logger.info("Running");
 
-        Double d_max = 30.0;
+        Double d_max = 5.0;
         Double i_max = 15.0;
 
         Connection connection = getJDBCConnection();
@@ -198,9 +198,11 @@ public class ComputeRanks {
         JavaPairRDD<String, Double> hashtags_rank = newRank.filter(rank -> rank._1().charAt(0) == 'h');
         JavaPairRDD<String, Double> posts_rank = newRank.filter(rank -> rank._1().charAt(0) == 'p');
         
-        sendResultsToDatabase(users_rank, "user_rank");
-        sendResultsToDatabase(hashtags_rank, "hashtag_rank");
-        sendResultsToDatabase(posts_rank, "post_rank");
+        logger.info("*** Writing to database! ***");
+
+        sendResultsToDatabase(users_rank, "users_rank");
+        sendResultsToDatabase(hashtags_rank, "hashtags_rank");
+        sendResultsToDatabase(posts_rank, "posts_rank");
 
         logger.info("*** Finished social ranks! ***");
     }
