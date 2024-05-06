@@ -149,23 +149,43 @@ const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId, anouncer}
 //MESSAGE LIST COMPONENT
 type MessageProps = {
     text: string;
+    time: string;
+    user: string;
+    announcement: boolean;
     isMine: boolean;
 };
 
-const Message = ({ text, isMine }: MessageProps) => (
-    <div className={`p-2 ${isMine ? 'ml-auto rounded-md bg-indigo-100' : 'mr-auto rounded-md bg-gray-100'}`}>
-        {text}
-    </div>
-);
+
+const Message = ({ text, time, user, announcement, isMine }: MessageProps) => {
+    // Check message type
+    if (announcement) {
+        return (
+            <div className="text-center text-gray-400 italic text-sm">
+                {text}
+            </div>
+        );
+    }
+
+    // Standard message
+    return (
+        <div className={`p-2 flex flex-col space-y-1 ${isMine ? 'ml-auto' : 'mr-auto'}`}>
+            <span className="text-xs font-semibold">{user}</span>
+            <div className={`p-2 ${isMine ? 'rounded-md bg-indigo-100' : 'rounded-md bg-gray-100'}`}>
+                {text}
+            </div>
+            <span className="text-xs italic text-slate-400">{time}</span>
+        </div>
+    );
+};
 
 type MessageListProps = {
-    messages: { text: string; isMine: boolean }[];
+    messages: { text: string; time: string; user: string; announcement: boolean; isMine: boolean }[];
 };
 
 const MessageList = ({ messages }: MessageListProps) => (
     <div className="flex flex-col space-y-2 p-4">
         {messages.map((message, index) => (
-            <Message key={index} text={message.text} isMine={message.isMine} />
+            <Message key={index} text={message.text} time={message.time} user={message.user} announcement={message.announcement} isMine={message.isMine} />
         ))}
     </div>
 );
@@ -223,13 +243,10 @@ export default function ChatRoom() {
     useEffect(() => {
         onLoad();
     }, [username]);
-
-
     
 
     const navigate = useNavigate();
     const [messages, setMessages] = useState([]);
-
 
     const handleBack = () => {
         navigate(-1);
@@ -238,6 +255,7 @@ export default function ChatRoom() {
     const handleLeaveChat = () => {
         // to do 
     };
+
 
 
     if (auth == "authenticated") {

@@ -1,14 +1,18 @@
 import Navbar from '../components/Navigation';
-import { FaHeart, FaComment } from 'react-icons/fa';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import config from '../../config.json';
+import { FaComment } from 'react-icons/fa';
 
 interface CommentProps {
+  comment_id: number;
   username: string;
-  userProfileImage: string;
-  comment: string;
+  pfp_url: string;
+  content: string;
+  timestamp: string;
+  hashtags: string;
+  replies: CommentProps[];
 }
 
 interface PostProps {
@@ -28,6 +32,10 @@ export default function Post() {
 
   const [post, setPost] = useState<PostProps>();
   const [comments, setComments] = useState<CommentProps[]>([]);
+
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState<string>("");
+  const [replyContentParent, setReplyContentParent] = useState<string>("");
 
   const navigate = useNavigate();
   const handleBack = () => navigate(-1);
@@ -70,6 +78,67 @@ export default function Post() {
     fetchComments();
   }, [username]); // Rerun when username changes
 
+
+
+  const renderComment = (comment: CommentProps) => (
+    <div key={comment.comment_id} className="flex flex-col space-y-2 ml-4">
+      <div className="flex items-center space-x-2">
+        <img src={comment.pfp_url} alt="user profile" className="w-7 h-7 rounded-full" />
+        <strong>{comment.username}</strong>
+      </div>
+      <div>{comment.content}</div>
+      <div className='flex items-center space-x-1'>
+        <div className='text-blue-500'>{comment.hashtags}</div>
+        <button className='text-indigo-400 font-bold cursor-pointer' onClick={() => setReplyingTo(comment.comment_id)}>Reply</button>
+      </div>
+      {replyingTo === comment.comment_id && (
+        <div className="ml-8">
+          <textarea
+            value={replyContent}
+            onChange={(e) => setReplyContent(e.target.value)}
+            className="border border-gray-300 p-2 rounded"
+            placeholder="Type your reply..."
+          ></textarea>
+          <button onClick={() => postReply(replyingTo)} className="px-4 py-2 space-x-2 flex items-center bg-indigo-400 text-white rounded hover:bg-indigo-600">Post</button>
+        </div>
+      )}
+      <div className="pl-4">
+        {comment.replies.map(renderComment)}
+      </div>
+    </div>
+  );
+  
+
+  const postReply = async (parent_id : number) => {
+    try {
+      if (parent_id == -1) {
+        await axios.post(`${rootURL}/${username}/createComment`, {
+          post_id: postId,
+          content: replyContentParent
+        });
+
+        // Clear reply content and close reply box
+        setReplyContentParent("");
+      } else {
+        await axios.post(`${rootURL}/${username}/createComment`, {
+          post_id: postId,
+          parent_id: parent_id,
+          content: replyContent
+        });
+
+        // Clear reply content and close reply box
+        setReplyContent("");
+      }
+
+      setReplyingTo(null);
+
+      // Fetch updated comments
+      fetchComments();
+    } catch (error) {
+      console.error('Error posting reply:', error);
+    }
+  };
+
   if (!post || !comments) { // Check if post is not defined
     return <div>Loading...</div>; // Or any other placeholder
   }
@@ -77,7 +146,7 @@ export default function Post() {
   return (
     <div className="w-screen h-screen flex flex-col items-center space-y-8 justify-start">
       <Navbar username={username}></Navbar>
-      <div className="max-w-[1000px] flex bg-slate-100 rounded-lg overflow-hidden">
+      <div className="max-w-[1000px] flex bg-slate-100 rounded-lg">
         <div className="w-3/5">
           <img src={post.postImage} className=" object-cover" />
         </div>
@@ -100,22 +169,19 @@ export default function Post() {
           <div className='space-y-4'>
             <div>
               <strong>Comments</strong>
-              {comments.map((comment, index) => (
-                <div key={index} className="flex items-center space-x-3 py-2">
-                  <div className="flex items-center space-x-2">
-                    <img src={comment.userProfileImage} alt="user profile" className="w-7 h-7 rounded-full" />
-                    <strong>{comment.username}</strong>
-                  </div>
-                  <div>{comment.comment}</div>
-                </div>
-              ))}
+              {comments.map(renderComment)}
             </div>
             <div className="border-t border-gray-200 p-4 flex items-center space-x-3">
               {/* Like and comment icons */}
               <div className='flex items-center space-x-4'>
               </div>
-              <input className="flex-1 p-2 border rounded" placeholder="Add a comment..." />
-              <button className="px-4 py-2 bg-indigo-400 text-white rounded hover:bg-indigo-600">Post</button>
+              <textarea
+                value={replyContentParent}
+                onChange={(e) => setReplyContentParent(e.target.value)}
+                className="flex-1 p-2 border rounded"
+                placeholder="Add a comment..."
+              ></textarea>
+              <button onClick={() => {setReplyingTo(null); postReply(-1);}} className="px-4 py-2 bg-indigo-400 text-white rounded hover:bg-indigo-600">Post</button>
             </div>
           </div>
         </div>

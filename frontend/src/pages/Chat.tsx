@@ -7,6 +7,10 @@ import Navbar from '../components/Navigation';
 
 type MenuKey = 'existingChats' | 'requestChats' | 'invitations';
 
+//time stamp and username to message
+// third style of message in the middle for added user or removed user
+
+
 type FriendInfo = {
     user_id: number;
     username: string;
@@ -207,7 +211,6 @@ export default function Chat() {
     }
     let content: Record<MenuKey, JSX.Element>;
     if (invitationsData && chatData && friendsData) {
-
         content = {
             invitations: (
                 <div className='flex flex-col space-y-4'>

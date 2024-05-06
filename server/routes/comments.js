@@ -122,7 +122,7 @@ var getComments = async function (req, res) {
 // Function to fetch top-level comments
 const fetchComments = async (post_id, parent_id) => {
     const sql = `
-        SELECT comments.comment_id, comments.content, u.username, u.pfp_url, comments.timestamp, comments.parent_id, GROUP_CONCAT(DISTINCT hashtags.tag ORDER BY hashtags.tag ASC SEPARATOR ', ') AS hashtags
+        SELECT comments.comment_id, comments.content, u.username, u.pfp_url, date(comments.timestamp) AS timestamp, comments.parent_id, GROUP_CONCAT(DISTINCT CONCAT('#', hashtags.tag) ORDER BY hashtags.tag ASC SEPARATOR ', ') AS hashtags
         FROM comments
         LEFT JOIN hashtags_to_comments htc ON comments.comment_id = htc.comment_id
         LEFT JOIN hashtags ON htc.hashtag_id = hashtags.hashtag_id
@@ -139,7 +139,7 @@ const fetchComments = async (post_id, parent_id) => {
 // Recursive function to fetch replies for a comment
 const fetchReplies = async (parent_id) => {
     const sql = `
-        SELECT comments.comment_id, comments.content, u.username, u.pfp_url, comments.timestamp, comments.parent_id, GROUP_CONCAT(DISTINCT hashtags.tag ORDER BY hashtags.tag ASC SEPARATOR ', ') AS hashtags
+        SELECT comments.comment_id, comments.content, u.username, u.pfp_url, date(comments.timestamp) AS timestamp, comments.parent_id, GROUP_CONCAT(DISTINCT CONCAT('#', hashtags.tag) ORDER BY hashtags.tag ASC SEPARATOR ', ') AS hashtags
         FROM comments
         LEFT JOIN hashtags_to_comments htc ON comments.comment_id = htc.comment_id
         LEFT JOIN hashtags ON htc.hashtag_id = hashtags.hashtag_id

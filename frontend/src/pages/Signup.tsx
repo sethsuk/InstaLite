@@ -60,6 +60,8 @@ export default function Signup() {
             const newTags = hashtagsInput.split(/[\s,]+/).filter(tag => tag && !hashtags.includes(tag));
             if (newTags.length > 0) {
                 setHashtags([...hashtags, ...newTags]);
+                setSelectedItems([...selectedItems, ...newTags]);
+                setOptions([...options, ...newTags]);
             }
             axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/addHashtags`, {
@@ -70,7 +72,7 @@ export default function Signup() {
                 alert("Hashtags added successfully.");
             }
         } catch (error) {
-            console.error("Failed to add hashtags:", error);
+            console.error("Failed to sdd hashtags:", error);
             alert("Failed to add hashtags.");
         }
     };
@@ -143,10 +145,10 @@ export default function Signup() {
     };
 
     return (
-        <div className='w-screen h-screen flex items-center justify-center'>
+        <div className='py-12 flex items-center justify-center'>
             <form onSubmit={handleSubmit}>
-                <div className='rounded-md bg-slate-200 p-12 space-y-12 w-full'>
-                    <div className='font-bold flex w-full justify-center text-2xl mb-4'>
+                <div className='rounded-md bg-slate-200 p-12 space-y-12'>
+                    <div className='font-bold flex justify-center text-2xl mb-4'>
                         Create a new account
                     </div>
                     <div className='flex flex-row space-x-40'>
@@ -174,10 +176,12 @@ export default function Signup() {
                                     }}
                                     accept="image/*"
                                 />
+
                                 <label htmlFor="profile-photo" className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white cursor-pointer'>
                                     Select photo
                                 </label>
-                                <span id="file-label">No file chosen</span>
+                                <span id="file-label" className="italic text-slate-400">No file chosen</span>
+                        
                             </div>
                             <div className='flex flex-col space-y-4'>
                                 <h2 className='font-semibold'>Choose your interests</h2>

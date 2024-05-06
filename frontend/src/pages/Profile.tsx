@@ -19,8 +19,8 @@ export default function Profile() {
     const [currPassword, setCurrPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [affiliation, setAffiliation] = useState('');
-    const [currInterests, setCurrInterests] = useState([]);
-    const [suggestedInterests, setSuggestedInterests] = useState([]);
+    const [currInterests, setCurrInterests] = useState<string[]>([]);
+    const [suggestedInterests, setSuggestedInterests] = useState<string[]>([]);
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
     const [hashtagsInput, setHashtagsInput] = useState<string>('');
     const [hashtags, setHashtags] = useState<string[]>([]);
@@ -193,6 +193,8 @@ export default function Profile() {
                 return;
             }
             setHashtags([...hashtags, ...newTags]);
+            setSelectedItems([...selectedItems, ...newTags]);
+            setSuggestedInterests([...suggestedInterests, ...newTags]);
             axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/addHashtags`, {
                 interests: newTags
@@ -216,6 +218,7 @@ export default function Profile() {
             });
             if (response.status === 200) {
                 console.log("Interests added successfully.");
+                alert('New interests added successfully!');
                 setHashtagsInput('');
                 fetchCurrInterests();
                 fetchSuggestedInterests();
@@ -247,7 +250,7 @@ export default function Profile() {
     return (
         <div className='w-screen h-screen space-y-8'>
             <Navbar username={username}></Navbar>
-            <div className='flex flex-col justify-center items-center space-y-8'>
+            <div className='flex flex-col justify-center items-center space-y-8 py-8'>
                 <div className='rounded-md bg-slate-200 p-12 space-y-12 w-[800px]'>
                     <div className='font-bold flex w-full justify-center text-2xl mb-4'>
                         User Details
@@ -267,10 +270,11 @@ export default function Profile() {
                                     onChange={handleFileChange}
                                     accept="image/*"
                                 />
-                                <label htmlFor="profile-photo" className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white cursor-pointer'>
+                                <label htmlFor="profile-photo" className='w-fit text-indigo-400 font-semibold cursor-pointer'>
                                     Select Photo
                                 </label>
-                                <span id="file-label">No file chosen</span>
+
+                                <span id="file-label" className='italic text-slate-400'>No file chosen</span>
                                 <button
                                     type="button"
                                     className='w-fit px-4 py-2 rounded-md bg-indigo-400 outline-none font-semibold text-white'

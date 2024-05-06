@@ -13,13 +13,19 @@ var createPost = async function (req, res) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
 
+    var hasImage = false;
+
     var { title, content } = JSON.parse(req.body.json_data)
 
-    if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded.' });
+    if (req.file) {
+        hasImage = true;
     }
 
-    const image = fs.readFileSync(req.file.path);
+    var image;
+
+    if (hasImage) {
+        image = fs.readFileSync(req.file.path);
+    }
 
     if (!title) {
         return res.status(400).json({ error: "One or more of the fields you entered was empty, please try again." });
@@ -56,9 +62,11 @@ var createPost = async function (req, res) {
         var post_id = results.insertId;
 
         // upload to s3 (keyed on post_id)
-        await s3.uploadFileToS3(image, `posts/${post_id}`);
+        if (hasImage) {
+            await s3.uploadFileToS3(image, `posts/${post_id}`);
 
-        await db.send_sql(`UPDATE posts SET media = '${await s3.getUrlFromS3(`posts/${post_id}`)}' WHERE post_id = ${post_id}`);
+            await db.send_sql(`UPDATE posts SET media = '${await s3.getUrlFromS3(`posts/${post_id}`)}' WHERE post_id = ${post_id}`);
+        }
 
         // link hashtags to posts
         for (const tag of hashtags) {
@@ -205,7 +213,7 @@ var getSinglePost = async function (req, res) {
         }
 
         var results = await db.send_sql(`
-            SELECT p.post_id, p.title, p.media, p.content, p.likes, p.timestamp,
+            SELECT p.post_id, p.title, p.media, p.content, p.likes, date(p.timestamp) AS timestamp,
                 u.user_id, u.username, u.pfp_url, 
                 GROUP_CONCAT(DISTINCT CONCAT('#', h.tag) ORDER BY h.tag ASC SEPARATOR ', ') AS hashtags
             FROM posts p
