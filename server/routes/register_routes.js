@@ -62,6 +62,8 @@ function register_routes(app) {
     app.get('/:username/getChatInvites', chat.get_chat_invitations); 
     app.post('/:username/acceptInvite', chat.accept_invite); 
     app.post('/:username/rejectInvite', chat.reject_invite); 
+    app.get('/:username/getInvitableFriends', chat.get_invitable_friends); 
+    app.post('/:username/sendInvite', chat.send_invite); 
 
 
     // ------------

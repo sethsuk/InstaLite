@@ -10,6 +10,7 @@ type MenuKey = 'existingChats' | 'requestChats' | 'invitations';
 type FriendInfo = {
     user_id: number;
     username: string;
+    status: string;
 };
 
 type ChatInfo = {
@@ -35,6 +36,7 @@ type ChatItemProps = {
 
 type FriendItemProps = {
     username: string;
+    user_id: number;
     status: 'Invite' | 'Pending';
     onInvite: () => void;
 };
@@ -62,7 +64,7 @@ const UserInvitation = ({ username, onAccept, onReject }: UserInvitationProps) =
     </div>
 );
 
-const FriendItem = ({ username, status, onInvite }: FriendItemProps) => (
+const FriendItem = ({ username, status, onInvite, user_id }: FriendItemProps) => (
     <div className="flex justify-between items-center p-4 bg-gray-100 rounded-md mb-2">
         <span className="font-semibold">{username}</span>
         {status === 'Invite' ? (
@@ -114,13 +116,17 @@ export default function Chat() {
 
     const fetchData = async () => {
         try {
-            const friendsResponse = await axios.get(`${rootURL}/${username}/getFriends`);
-            setFriendsData(friendsResponse.data.results);
+            const friendsResponse = await axios.get(`${rootURL}/${username}/getInvitableFriends`);
+            let friends = friendsResponse.data.friends;
+            console.log("Fetching data");
+            console.log(friends);
+            setFriendsData(friends.map((friend: any) => ({user_id: friend.user_id,
+                username: friend.username,
+                status: processStatus(friend.status)})));
             const invitationsResponse = await axios.get(`${rootURL}/${username}/getChatInvites`);
             setInvitationsData(invitationsResponse.data.requests);
             const chatResponse = await axios.get(`${rootURL}/${username}/getChats`);
             setChatData(chatResponse.data.chats);
-            console.log(chatResponse.data.chats);
         } catch (error) {
             console.error('Failed to fetch data:', error);
         }
@@ -165,8 +171,39 @@ export default function Chat() {
         navigate(`/${username}/chatRoom/${chat_id}`);
     }
 
-    const handleInvite = async (username: string) => {
+    const handleInvite = async (friend_id: number) => {
+
         // to do
+
+        try {
+            console.log(friend_id);
+            const response = await axios.post(`${rootURL}/${username}/sendInvite`, {
+                friendId: friend_id,
+            });
+            if (response.status === 200) {
+                console.log("Request sent successfully.");
+                let prevData = friendsData;
+                if (prevData) {
+                    console.log(prevData.findIndex((friend: any) => friend.user_id == friend_id));
+                    let loc = prevData.findIndex((friend: any) => friend.user_id == friend_id);
+                    prevData[loc] = {...prevData[loc], status: "Pending"};
+                    console.log(prevData);
+                    setFriendsData(prevData);
+                    fetchData();
+                }
+            }
+        } catch (error) {
+            console.error("Failed to send request:", error);
+        }
+        
+
+    }
+    const processStatus = (status: boolean) => {
+        if (status) {
+            return 'Pending';
+        } else {
+            return 'Invite';
+        }
     }
     let content: Record<MenuKey, JSX.Element>;
     if (invitationsData && chatData && friendsData) {
@@ -210,12 +247,13 @@ export default function Chat() {
                     <div className='p6 space-y-4 flex flex-col'>
                         <h2 className='text-bold'>Currently online friends</h2>
                         <div className="space-y-2">
-                            {friendsData.map((friend, index) => (
+                            {friendsData.map((friend) => (
                                 <FriendItem
-                                    key={index}
+                                    key={friend.user_id}
                                     username={friend.username}
-                                    status={false}
-                                    onInvite={() => handleInvite(friend.username)}
+                                    status={friend.status}
+                                    user_id={friend.user_id}
+                                    onInvite={() => handleInvite(friend.user_id)}
                                 />
                             ))}
                         </div>

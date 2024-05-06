@@ -84,6 +84,7 @@ var get_chats = async function (req, res) {
     try {
         const userId = req.session.user_id;
         const query = `SELECT GROUP_CONCAT(username) as name, chat_id FROM users_to_chat uc LEFT JOIN users u on uc.user_id=u.user_id WHERE chat_id IN (SELECT chat_id FROM users_to_chat WHERE user_id=${userId}) GROUP BY chat_id;`;
+        console.log(query);
         let result = await db.send_sql(query);
         return res.status(200).json({chats: result});
        
@@ -156,6 +157,42 @@ var reject_invite = async function (req, res) {
     }
 }
 
+var getInvitableFriends = async function (req, res) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+    try {
+        const userId = req.session.user_id;
+        const query = `SELECT DISTINCT username, o.user_id, MAX(CASE WHEN i.status = 'pending' THEN 1 ELSE 0 END) as status FROM online o LEFT JOIN friends f ON user_id=f.followed LEFT JOIN users u ON o.user_id=u.user_id LEFT JOIN chat_invites i ON o.user_id=i.reciever_id AND f.follower=i.sender_id WHERE f.follower=${userId} GROUP BY user_id;`;
+        const result = await db.send_sql(query);
+        res.status(200).json({ friends:  result});
+    } catch (error) {
+        res.status(500).json({ error: 'Error querying database.' });
+    }
+}
+
+var sendInvite = async function (req, res) {
+    const username = req.params.username;
+    const {friendId} = req.body;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+    try {
+        const userId = req.session.user_id;
+        await db.send_sql('INSERT INTO chat_rooms VALUES();');
+        const result1 = await db.send_sql('SELECT LAST_INSERT_ID() as id;');
+        const chat_id = result1[0].id;
+        await db.send_sql(`INSERT INTO users_to_chat (user_id, chat_id) VALUES(${userId}, ${chat_id})`);
+        await db.send_sql(`INSERT INTO chat_invites (sender_id, reciever_id, chat_id, status) VALUES(${userId}, ${friendId}, ${chat_id}, 'pending')`);
+        res.status(200).json({ result: `Created chat ${chat_id} succesfully`});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Error querying database.' });
+    }
+}
+
+
 
 
 var chat_routes = {
@@ -166,7 +203,8 @@ var chat_routes = {
     get_chat_invitations: get_chat_invitations,
     accept_invite: accept_invite,
     reject_invite: reject_invite,
-
+    get_invitable_friends: getInvitableFriends,
+    send_invite: sendInvite
 }
 
 module.exports = chat_routes 
