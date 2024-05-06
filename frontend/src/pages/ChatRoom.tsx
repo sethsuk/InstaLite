@@ -8,7 +8,7 @@ import { Menu, MenuItem, Dialog, ListItem, List, ListItemText, IconButton, AppBa
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import config from '../../config.json';
-import { io } from 'socket.io-client';
+import { Socket, io } from 'socket.io-client';
 
 const rootURL = config.serverRootURL;
 axios.defaults.withCredentials = true;
@@ -16,7 +16,7 @@ axios.defaults.withCredentials = true;
 type AddFriendsModalProps = {
     open: boolean;
     onClose: () => void;
-    friends: { username: string }[];
+    friends: { username: string, user_id: number }[];
     onInvite: (username: string) => void;
 };
 
@@ -36,9 +36,9 @@ const AddFriendsModal = ({ open, onClose, friends, onInvite }: AddFriendsModalPr
             </AppBar>
             <List>
                 {friends.map((friend) => (
-                    <ListItem key={friend.username} button>
+                    <ListItem key={friend.user_id} button>
                         <ListItemText primary={friend.username} />
-                        <Button onClick={() => onInvite(friend.username)}>Invite</Button>
+                        <Button onClick={() => onInvite(friend.user_id, friend.username)}>Invite</Button>
                     </ListItem>
                 ))}
             </List>
@@ -54,17 +54,14 @@ type ChatHeaderProps = {
     chatId: Number;
     onBack: () => void;
     onLeaveChat: () => void;
+    anouncer: (arg0: String) => void;
 };
 
-const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId}: ChatHeaderProps) => {
+const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId, anouncer}: ChatHeaderProps) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const [isModalOpen, setModalOpen] = useState(false);
-    const [friends, setFriends] = useState([
-        { username: 'username1' },
-        { username: 'username2' },
-        { username: 'username3' }
-    ]);
+    const [friends, setFriends] = useState([]);
     const [updated, setUpdated] = useState(false);
 
     const handleMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -75,12 +72,16 @@ const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId}: ChatHead
         setAnchorEl(null);
     };
 
-    const handleInvite = async (friend: String) => {
-        console.log(friend);
+    const handleInvite = async (friend_id: Number, friend_name: String) => {
+        console.log(friend_id);
         console.log(chatId);
         console.log(username);
-        let result = await axios.get(`${rootURL}/${username}/inviteToChat?friend=${friend}&chatId=${chatId}`);
+        let result = await axios.get(`${rootURL}/${username}/inviteToChat?friend_id=${friend_id}&chatId=${chatId}`);
         console.log(result.status);
+        if (result.status == 200) {
+            setFriends(prevData => prevData.filter(friend => friend.user_id !== friend_id));
+            anouncer(`Invitation sent to ${friend_name} by ${username}`);
+        }
     };
 
     const handleOpenModal = () => {
@@ -93,7 +94,7 @@ const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId}: ChatHead
     const onLoad = async () => {
         if (!updated) {
             console.log("loading friends");
-            let result = await axios.get(`${rootURL}/${username}/onlineFriends`);
+            let result = await axios.get(`${rootURL}/${username}/invitableToChat?chatId=${chatId}`);
             setFriends(result.data.friends);
             console.log(result.data);
             setUpdated(true);
@@ -183,6 +184,7 @@ export default function ChatRoom() {
     const [clickHandler, setClickHandler] = useState(() => () => console.log('Initial handler'));
     const [auth, setAuth] = useState("loading");
     const { username, chatId } = useParams();
+    const [sendAnouncement, setSendAnouncement] = useState(() => () => console.log('sending anouncement'));
 
 
     const onLoad = async () => {
@@ -208,6 +210,10 @@ export default function ChatRoom() {
                 } else {
                     socket.emit("chatMessage", "test");
                 }
+            });
+
+            setSendAnouncement(() => (anouncement: String) => {
+                socket.emit("anouncement", `${anouncement}`);
             });
         } catch (e) {
             console.log("Auth failed")
@@ -245,6 +251,7 @@ export default function ChatRoom() {
                             chatName={chatId}
                             chatId={chatId}
                             onBack={handleBack}
+                            anouncer={sendAnouncement}
                             onLeaveChat={handleLeaveChat}
                         />
                         <MessageList messages={messages} />

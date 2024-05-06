@@ -46,8 +46,7 @@ var get_online_friends = async function (req, res) {
 var invite_to_chat = async function (req, res) {
     const username = req.params.username;
     const chatId = req.query.chatId;
-    const toInvite = req.query.inviteUsername;
-    let invite_user_id;
+    let invite_user_id = req.query.friend_id;
     const userId = req.session.user_id;
 
     if (!helper.isLoggedIn(req, username)) {
@@ -55,19 +54,10 @@ var invite_to_chat = async function (req, res) {
     }
 
     try {
-        let result = await db.send_sql(`SELECT user_id FROM users WHERE username = '${toInvite}' LIMIT 1`);
-        console.log(result);
-        invite_user_id = result[0].user_id;
-    } catch(e) {
-        return res.status(404).json({error: "requested friend does not exist"});
-    }
-
-    try {
-        
         const query = `INSERT IGNORE INTO chat_invites(sender_id, reciever_id, chat_id, status) values(${userId}, ${invite_user_id}, ${chatId}, 'pending');`;
         console.log(query);
         result = await db.send_sql(query);
-        return res.status(200).json({result: `sent an invite to ${toInvite} succesfully`});
+        return res.status(200).json({result: `sent an invite to ${invite_user_id} succesfully`});
        
     } catch (error) {
         console.log(error);
@@ -192,6 +182,23 @@ var sendInvite = async function (req, res) {
     }
 }
 
+var invitable_to_chat = async function (req, res) {
+    const username = req.params.username;
+    const {chatId} = req.query;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+    try {
+        const userId = req.session.user_id;
+        let result = await db.send_sql(`SELECT DISTINCT followed as user_id, username FROM friends f LEFT JOIN users_to_chat uc on f.followed=uc.user_id
+        LEFT JOIN users u ON f.followed=u.user_id WHERE followed NOT IN (SELECT user_id FROM users_to_chat WHERE chat_id = ${chatId}) AND followed NOT IN (SELECT reciever_id FROM chat_invites WHERE chat_id =${chatId} AND sender_id=${userId}) AND follower=${userId};`);
+        res.status(200).json({ friends: result});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ error: 'Error querying database.' });
+    }
+}
+
 
 
 
@@ -204,7 +211,8 @@ var chat_routes = {
     accept_invite: accept_invite,
     reject_invite: reject_invite,
     get_invitable_friends: getInvitableFriends,
-    send_invite: sendInvite
+    send_invite: sendInvite,
+    invitable_to_chat: invitable_to_chat
 }
 
 module.exports = chat_routes 

@@ -114,6 +114,13 @@ io.on("connection", (socket) => {
   
   });
 
+  socket.on("anouncement", (msg) => {
+    const user = socketidToUser(socket.id);
+    if (user) {
+        io.to(user.room).emit("message", formatMessage("Info", msg,  date.toLocaleString('en-US')));
+    }
+  });
+
   socket.on("disconnect", () => {
     const user = userLeaves(socket.id);
     if (user) {
