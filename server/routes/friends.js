@@ -179,6 +179,8 @@ var removeFriend = async function (req, res) {
 }
 
 
+
+
 var friend_routes = {
     send_friend_request: sendFriendRequest,
     get_friend_requests: getFriendRequests,

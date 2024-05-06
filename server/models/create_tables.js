@@ -208,6 +208,7 @@ async function create_tables(db) {
     var q20 = db.create_tables(`
     CREATE TABLE IF NOT EXISTS chat_invites
     (
+        invite_id INT NOT NULL AUTO_INCREMENT,
         sender_id INT NOT NULL,
         reciever_id INT NOT NULL,
         chat_id INT NOT NULL,
@@ -216,7 +217,7 @@ async function create_tables(db) {
         FOREIGN KEY (sender_id) REFERENCES users(user_id),
         FOREIGN KEY (reciever_id) REFERENCES users(user_id),
         FOREIGN KEY (chat_id) REFERENCES chat_rooms(chat_id),
-        PRIMARY KEY (sender_id, reciever_id)
+        PRIMARY KEY (invite_id)
     );`);
 
     // create actor_notifications table
