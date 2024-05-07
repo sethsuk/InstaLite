@@ -20,7 +20,7 @@ function App() {
         <Route path='/signup' element={<Signup />} />
         <Route path='/:username/signupactor' element={<SignupActor />} />
         <Route path='/:username/' element={<Home />} />
-        <Route path='/search' element={<Search />} />
+        <Route path='/:username/search' element={<Search />} />
         <Route path='/:username/createpost' element={<CreatePost />} />
         <Route path='/:username/post/:postId' element={<Post />} />
         <Route path='/:username/profile' element={<Profile />} />

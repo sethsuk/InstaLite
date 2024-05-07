@@ -39,7 +39,7 @@ const helper = require('./route_helper.js');
 var query = async function (req, res) {
     // const {prompt} = req.query;
     let results = await db.send_sql(` SELECT post_id, content from posts;`);
-    let captions = results.map(result => `${result.content}`);
+    let captions = results.map(result => `Post ${result.post_id}: ${result.content}`);
     let ids = results.map(function (item) {
         return {id: item.post_id}; 
     });
@@ -66,7 +66,8 @@ var query = async function (req, res) {
     let system = 'You are a helpful recommendation chatbot. Explain why one of these posts is relevant to answering the question. You must include an explanation in your response.Respond in the JSON format with the parameters explanation and selected_post_id';
     const prompt = PromptTemplate.fromTemplate(`${system}
     
-    ${context}
+    {context}
+
     
     Question: {question}
     
@@ -75,6 +76,7 @@ var query = async function (req, res) {
 
     const ragChain = RunnableSequence.from([
         {
+            context: vectorStore.asRetriever().pipe(formatDocumentsAsString),
             question: new RunnablePassthrough(),
           },    
       prompt,
