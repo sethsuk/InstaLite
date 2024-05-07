@@ -67,6 +67,7 @@ var query = async function (req, res) {
     const prompt = PromptTemplate.fromTemplate(`${system}
     
     {context}
+
     
     Question: {question}
     
