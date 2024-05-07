@@ -86,7 +86,6 @@ export default function Home() {
           post_id: postId
         });
       }
-      // Assume the backend returns the new likes count
       const newLikes = response.data.likes;
 
       // Update the posts state with the new like status and count
