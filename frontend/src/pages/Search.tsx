@@ -10,16 +10,17 @@ import PostComponent from '../components/PostComponent';
 type MenuKey = 'searchActors' | 'searchPosts';
 
 type PostProps = {
-    user: string;
-    userProfileImage: string;
-    postImage?: string;
-    hashtags: string;
-    caption: string;
-    onClick: () => void;
-    handleLike: () => void;
-    isLiked: boolean;
+    post_id: number;
+    title: string;
+    media: string | undefined;
+    content: string;
     likes: number;
     timestamp: string;
+    user_id: number;
+    username: string;
+    pfp_url: string | null;
+    hashtags: string;
+    isLiked: boolean
 };
 
 interface Actor {
@@ -61,7 +62,7 @@ export default function Search() {
     const [actorResults, setActorResults] = useState<Actor[]>([]);
     const [postResults, setPostResults] = useState<PostProps[]>([]);
 
-
+    // type does not match 
     const mockActors: Actor[] = [
         {
             name: 'Lady Gaga',
@@ -82,6 +83,7 @@ export default function Search() {
     ];
 
     const mockPosts = [{
+        post_id: 1,
         user: 'JohnDoe',
         userProfileImage: 'https://cdn.vectorstock.com/i/1000v/06/18/male-avatar-profile-picture-vector-10210618.jpg',
         postImage: 'https://i.natgeofe.com/n/c9107b46-78b1-4394-988d-53927646c72b/1095.jpg',
@@ -92,6 +94,7 @@ export default function Search() {
         caption: 'Exploring the great outdoors!'
     },
     {
+        post_id: 2,
         user: 'JohnDoe',
         userProfileImage: 'https://cdn.vectorstock.com/i/1000v/06/18/male-avatar-profile-picture-vector-10210618.jpg',
         postImage: 'https://i.natgeofe.com/n/c9107b46-78b1-4394-988d-53927646c72b/1095.jpg',
