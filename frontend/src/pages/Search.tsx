@@ -57,9 +57,10 @@ export default function Search() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [results, setResults] = useState<Actor[]>([]);
-    const [activeMenu, setActiveMenu] = useState<MenuKey>('searchActors');
+    const [activeMenu, setActiveMenu] = useState<MenuKey>('searchPosts');
     const [actorResults, setActorResults] = useState<Actor[]>([]);
     const [postResults, setPostResults] = useState<PostProps[]>([]);
+    const [response, setResponse] = useState('');
 
 
     const mockActors: Actor[] = [
@@ -105,17 +106,17 @@ export default function Search() {
     const handleMenuClick = (
         event: React.MouseEvent<HTMLElement>,
         newMenu: MenuKey | null) => {
-        if (newMenu !== null) {
-            setActiveMenu(newMenu);
-            // Optionally clear out irrelevant data
-            if (newMenu === 'searchActors') {
-                setPostResults([]);
-                if (searchTerm) handleSearchActors(searchTerm);
-            } else {
-                setActorResults([]);
-                if (searchTerm) handleSearchPosts(searchTerm);
-            }
-        }
+        // if (newMenu !== null) {
+        //     setActiveMenu(newMenu);
+        //     // Optionally clear out irrelevant data
+        //     if (newMenu === 'searchActors') {
+        //         setPostResults([]);
+        //         if (searchTerm) handleSearchActors(searchTerm);
+        //     } else {
+        //         setActorResults([]);
+        //         if (searchTerm) handleSearchPosts(searchTerm);
+        //     }
+        // }
     }
 
     const handleClick = (postId: number) => {
@@ -158,14 +159,34 @@ export default function Search() {
         }
     };
 
-    const handleSearchPosts = (term: string) => {
+    const handleSearchPosts = async (term: string) => {
+        console.log("handling search for " + term);
         setSearchTerm(term);
-        // to do 
-        if (term.length > 2) {
-            setPostResults(mockPosts);
+        setResponse('Loading results');
+        let result = await axios.get(`${rootURL}/query?prompt=${term}`);
+        console.log(result.data);
+        if (result.status == 200) {
+            // to do 
+            let json = JSON.parse(result.data.llm);
+            console.log(json);
+            setResponse(json.explanation);
+            let post = await axios.post(`${rootURL}/${username}/getSinglePost`, {
+                post_id: json.selected_post_id
+              });
+
+            console.log(post.data);
+
+
+            if (post.status == 201) {
+                let posts = post.data;
+                posts[0].post_id = json.selected_post_id;
+                setPostResults(post.data);
+            }
+          
         } else {
-            setPostResults([]);
+            setResponse('Search failed, please try again');
         }
+       
     };
 
     const content: Record<MenuKey, JSX.Element> = {
@@ -178,18 +199,23 @@ export default function Search() {
                             placeholder={`Search for ${activeMenu === 'searchActors' ? 'actors' : 'posts'}...`}
                             value={searchTerm}
                             onChange={(e) => {
-                                if (activeMenu === 'searchActors') {
-                                    handleSearchActors(e.target.value);
-                                } else {
-                                    handleSearchPosts(e.target.value);
-                                }
+                                
+                                setSearchTerm(e.target.value);
+                               
                             }}
                             style={{ padding: '10px', margin: '10px', width: '300px' }}
                         />
                         <button
                             type="button"
                             className='h-fit px-4 py-2 rounded-md bg-indigo-500 outline-none font-bold text-white'
-                            onClick={() => handleSearchActors(searchTerm)}
+                            onClick={() => {
+
+                                if (activeMenu === 'searchActors') {
+                                    handleSearchActors(searchTerm);
+                                } else {
+                                    handleSearchPosts(searchTerm);
+                                }
+                            }}
                         >
                             Search
                         </button>
@@ -214,11 +240,7 @@ export default function Search() {
                             placeholder={`Search for ${activeMenu === 'searchActors' ? 'actors' : 'posts'}...`}
                             value={searchTerm}
                             onChange={(e) => {
-                                if (activeMenu === 'searchActors') {
-                                    handleSearchActors(e.target.value);
-                                } else {
-                                    handleSearchPosts(e.target.value);
-                                }
+                                setSearchTerm(e.target.value);
                             }}
                             style={{ padding: '10px', margin: '10px', width: '300px' }}
                         />
@@ -231,7 +253,8 @@ export default function Search() {
                         </button>
                     </div>
                     <div className="space-y-2">
-                        {mockPosts.map((post, index) => (
+                    <h2 className='text-center'>LLM Response: {response}</h2>
+                        {postResults.map((post, index) => (
                             <PostComponent
                                 key={index}
                                 user={post.user}
@@ -265,9 +288,6 @@ export default function Search() {
                             orientation="vertical"
                             className="w-full"
                         >
-                            <ToggleButton value="searchActors" className="text-left">
-                                Search Actors
-                            </ToggleButton>
                             <ToggleButton value="searchPosts" className="text-left">
                                 Search Posts
                             </ToggleButton>
