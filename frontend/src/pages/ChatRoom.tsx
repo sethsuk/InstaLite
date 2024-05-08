@@ -99,7 +99,6 @@ const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId, anouncer 
             console.log(result.data);
             setUpdated(true);
         }
-
     }
     useEffect(() => {
         onLoad();
@@ -333,5 +332,3 @@ export default function ChatRoom() {
         );
     }
 };
-
-
