@@ -17,7 +17,7 @@ type AddFriendsModalProps = {
     open: boolean;
     onClose: () => void;
     friends: { username: string, user_id: number }[];
-    onInvite: (username: string) => void;
+    onInvite: (user_id: number, username: string) => void;
 };
 
 
@@ -57,7 +57,7 @@ type ChatHeaderProps = {
     anouncer: (arg0: String) => void;
 };
 
-const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId, anouncer}: ChatHeaderProps) => {
+const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId, anouncer }: ChatHeaderProps) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const [isModalOpen, setModalOpen] = useState(false);
@@ -99,7 +99,7 @@ const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId, anouncer}
             console.log(result.data);
             setUpdated(true);
         }
-        
+
     }
     useEffect(() => {
         onLoad();
@@ -213,12 +213,12 @@ export default function ChatRoom() {
             let authStatus = await axios.get(`${rootURL}/${username}/authenticateChat?chatId=${chatId}`);
             setAuth("authenticated");
             let socket = io("http://localhost:3000");
-            socket.emit("joinRoom", {username, chatId});
-            
+            socket.emit("joinRoom", { username, chatId });
+
             // TODO: Join the chat socket
             socket.on("message", (message: Message) => {
                 // console.log([...messages, { text: message.text, isMine: message.username == username }]);
-                setMessages(currentArray => [...currentArray , { text: message.text, isMine: message.username == username, time: message.time, username: message.username }]);
+                setMessages(currentArray => [...currentArray, { text: message.text, isMine: message.username == username, time: message.time, username: message.username }]);
             });
             setClickHandler(() => () => {
                 console.log("click handler run");
@@ -247,13 +247,13 @@ export default function ChatRoom() {
             });
         } catch (e) {
             console.log("Auth failed")
-           setAuth("failed");
+            setAuth("failed");
         }
     }
     useEffect(() => {
         onLoad();
     }, [username]);
-    
+
 
     const navigate = useNavigate();
     const [messages, setMessages] = useState([]);
@@ -279,7 +279,7 @@ export default function ChatRoom() {
                             onLeaveChat={leaveChat}
                         />
                         <MessageList messages={messages} />
-                    
+
                         <div className="flex items-center p-4">
                             <input
                                 type="text"
@@ -294,7 +294,7 @@ export default function ChatRoom() {
                             <button onClick={clickHandler} className="ml-4 p-2 bg-indigo-500 text-white rounded">Send</button>
                         </div>
                     </div>
-                </div> 
+                </div>
             </div>
         );
     } else if (auth == "loading") {
@@ -302,7 +302,7 @@ export default function ChatRoom() {
             <div>
                 <Navbar username={username}></Navbar>
                 Authenticating...
-                 
+
             </div>
         );
     } else {
@@ -310,7 +310,7 @@ export default function ChatRoom() {
             <div>
                 <Navbar username={username}></Navbar>
                 You are not in this chat.
-                 
+
             </div>
         );
     }
