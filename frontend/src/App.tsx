@@ -20,14 +20,14 @@ function App() {
         <Route path='/signup' element={<Signup />} />
         <Route path='/:username/signupactor' element={<SignupActor />} />
         <Route path='/:username/' element={<Home />} />
-        <Route path='/search' element={<Search />} />
+        <Route path='/:username/search' element={<Search />} />
         <Route path='/:username/createpost' element={<CreatePost />} />
         <Route path='/:username/post/:postId' element={<Post />} />
         <Route path='/:username/profile' element={<Profile />} />
         <Route path='/:username/profileactor' element={<ProfileActor />} />
         <Route path='/:username/friends' element={<Friends />} />
         <Route path="/:username/chat" element={<Chat />} />
-        <Route path="/:username/chatRoom" element={<ChatRoom />} />
+        <Route path="/:username/chatRoom/:chatId" element={<ChatRoom />} />
       </Routes>
     </BrowserRouter>
   )
