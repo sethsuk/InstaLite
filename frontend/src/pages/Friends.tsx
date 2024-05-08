@@ -5,7 +5,7 @@ import config from '../../config.json';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';;
 import Navbar from '../components/Navigation';
 
-type MenuKey = 'invitations' | 'yourFriends';
+type MenuKey = 'invitations' | 'yourFriends' | 'recommendations';
 
 type FriendInfo = {
     userId: number;
@@ -37,6 +37,7 @@ const UserInvitation = ({ username, onAccept, onReject }: UserInvitationProps) =
     </div>
 );
 
+
 type FriendsListProps = {
     username: string;
     online: boolean;
@@ -57,6 +58,26 @@ const FriendsList = ({ username, online, removed }: FriendsListProps) => (
     </div>
 );
 
+type RecommendationsProps = {
+    username: string;
+    online: boolean;
+    onInvite: () => void;
+};
+
+const RecommendationsList = ({ username, online, onInvite }: RecommendationsProps) => (
+    <div className="flex justify-between items-center p-2 bg-slate-100 rounded-md mb-2">
+        <div className="flex items-center space-x-2">
+            {/* Status indicator */}
+            <span className={`h-2 w-2 rounded-full ${online ? 'bg-green-400' : 'bg-gray-400'}`}></span>
+            <span className="font-semibold">{username}</span>
+            {online && <span className="text-sm text-gray-500">Currently online</span>}
+        </div>
+        <div>
+            <button onClick={onInvite} className="text-blue-600 hover:text-blue-800 mr-4">Invite</button>
+        </div>
+    </div>
+);
+
 export default function Friends() {
 
     const { username } = useParams();
@@ -66,6 +87,7 @@ export default function Friends() {
     const [activeMenu, setActiveMenu] = useState<MenuKey>('invitations');
     const [invitationsData, setInvitationsData] = useState<RequestInfo[]>([]);
     const [friendsData, setFriendsData] = useState<FriendInfo[]>([]);
+    const [recommendationsData, setRecommendationsData] = useState<FriendInfo[]>([]);
     const [newFriendUsername, setNewFriendUsername] = useState('');
 
     const handleMenuClick = (
@@ -180,6 +202,22 @@ export default function Friends() {
         }
     }
 
+    // TO DO -- handle invite
+    const handleInvite = async (userId: number) => {
+        try {
+            axios.defaults.withCredentials = true;
+            const response = await axios.post(`${rootURL}/${username}/removeFriend`, {
+                friendId: userId
+            });
+            if (response.status === 200) {
+                console.log("Friend removed successfully.");
+                setFriendsData(prevData => prevData.filter(friend => friend.userId !== userId));
+            }
+        } catch (error) {
+            console.error("Failed to remove friend:", error);
+        }
+    }
+
     const content: Record<MenuKey, JSX.Element> = {
         invitations: (
             <div className='flex flex-col space-y-4'>
@@ -239,7 +277,28 @@ export default function Friends() {
                     </div>
                 </div>
             </div>
-        )
+        ),
+        recommendations: (
+            <div className='flex flex-col space-y-4'>
+                <div className='p-6 space-y-4 flex flex-col'>
+                    <h2 className='font-bold text-2xl'>Recommendations</h2>
+                    <div className="space-y-2">
+                        {recommendationsData.length > 0 ? (
+                            recommendationsData.map((recommendation) => (
+                                <RecommendationsList
+                                    key={recommendation.userId}
+                                    username={recommendation.username}
+                                    online={recommendation.online === 1}
+                                    onInvite={() => handleInvite(recommendation.userId)}
+                                />
+                            ))
+                        ) : (
+                            <p>You currently have no recommendations.</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+        ),
     }
 
     return (
@@ -260,6 +319,9 @@ export default function Friends() {
                             </ToggleButton>
                             <ToggleButton value="yourFriends" className="text-left">
                                 Your Friends
+                            </ToggleButton>
+                            <ToggleButton value="recommendations" className="text-left">
+                                Recommendations
                             </ToggleButton>
                         </ToggleButtonGroup>
                     </div>
