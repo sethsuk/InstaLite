@@ -99,14 +99,13 @@ const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId, anouncer 
             console.log(result.data);
             setUpdated(true);
         }
-
     }
     useEffect(() => {
         onLoad();
     });
 
     return (
-        <AppBar position="sticky" color="default" sx={{ boxShadow: 0 }}>
+        <AppBar position="static" color="default" sx={{ boxShadow: 0 }}>
             <Toolbar>
                 <IconButton edge="start" color="inherit" aria-label="back" onClick={onBack}>
                     <ArrowBackIcon />
@@ -190,37 +189,11 @@ const MessageList = ({ messages }: MessageListProps) => (
     </div>
 );
 
-
-//CHAT INPUT COMPONENT
-type ChatInputProps = {
-    onSend: (message: string) => void;
-};
-
-const ChatInput = ({ onSend }: ChatInputProps) => {
-    const [message, setMessage] = useState('');
-
-    const handleSend = () => {
-        if (message.trim()) {
-            onSend(message);
-            setMessage('');
-        }
-    };
-
-    return (
-        <div className="flex items-center p-4">
-            <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="flex-1 p-2 border border-gray-300 rounded"
-                placeholder="Type here..."
-            />
-            <button onClick={handleSend} className="ml-4 p-2 bg-indigo-500 text-white rounded">Send</button>
-        </div>
-    );
-};
-
-
+interface Message {
+    text: string;
+    username: string;
+    time: string,
+}
 
 
 //MAIN FUNCTION
@@ -282,15 +255,7 @@ export default function ChatRoom() {
 
 
     const navigate = useNavigate();
-    const [messages, setMessages] = useState([
-        { text: "Hello", user: "user1", time: "2024-10-23", announcement: false, isMine: false },
-        { text: "Hi!", user: "user2", time: "2024-10-23", announcement: false, isMine: true },
-        { text: "user3 has been removed", user: "user2", time: "2024-10-23", announcement: true, isMine: false }
-    ]);
-
-    const handleSendNewMessage = (newMessage: string) => {
-        //to do 
-    };
+    const [messages, setMessages] = useState([]);
 
     const handleBack = () => {
         navigate(-1);
@@ -298,20 +263,36 @@ export default function ChatRoom() {
 
 
 
+    if (auth == "authenticated") {
+        return (
+            <div>
+                <Navbar username={username}></Navbar>
+                <div className='flex justify-center p-8'>
+                    <div className='w-[700px]'>
+                        <ChatHeader
+                            username={username}
+                            chatName={chatId}
+                            chatId={chatId}
+                            onBack={handleBack}
+                            anouncer={sendAnouncement}
+                            onLeaveChat={leaveChat}
+                        />
+                        <MessageList messages={messages} />
 
-    return (
-        <div>
-            <Navbar username={username}></Navbar>
-            <div className='flex justify-center p-8'>
-                <div className='w-[700px]'>
-                    <ChatHeader
-                        username="username"
-                        onBack={handleBack}
-                        onLeaveChat={handleLeaveChat}
-                    />
-                    <MessageList messages={messages} />
-
-                    <ChatInput onSend={handleSendNewMessage} />
+                        <div className="flex items-center p-4">
+                            <input
+                                type="text"
+                                value={message}
+                                onChange={(e) => {
+                                    setMessage(e.target.value);
+                                }}
+                                className="flex-1 p-2 border border-gray-300 rounded"
+                                placeholder="Type here..."
+                                ref={input}
+                            />
+                            <button onClick={clickHandler} className="ml-4 p-2 bg-indigo-500 text-white rounded">Send</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
@@ -333,5 +314,4 @@ export default function ChatRoom() {
         );
     }
 };
-
 
