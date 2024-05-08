@@ -73,7 +73,7 @@ const RecommendationsList = ({ username, online, onInvite }: RecommendationsProp
             {online && <span className="text-sm text-gray-500">Currently online</span>}
         </div>
         <div>
-            <button onClick={onInvite} className="text-blue-600 hover:text-blue-800 mr-4">Invite</button>
+            <button onClick={onInvite} className="text-blue-600 hover:text-blue-800 mr-4">Send friend request</button>
         </div>
     </div>
 );
@@ -100,25 +100,38 @@ export default function Friends() {
 
     const fetchData = async () => {
         try {
+            // get friends
             axios.defaults.withCredentials = true;
             const friendsResponse = await axios.get(`${rootURL}/${username}/getFriends`);
             if (friendsResponse.data.results) {
-                console.log('Friends:', friendsResponse.data.results);
                 setFriendsData(friendsResponse.data.results);
             } else {
                 console.log('null friends response');
                 setFriendsData([]);
             }
+
+            // get friend requests
             axios.defaults.withCredentials = true;
             const invitationsResponse = await axios.get(`${rootURL}/${username}/getFriendRequests`);
             console.log('axios for getFriendRequests sent');
             if (invitationsResponse.data.friendRequests) {
-                console.log('Invitations:', invitationsResponse.data.friendRequests);
                 setInvitationsData(invitationsResponse.data.friendRequests);
             } else {
                 console.log('null invitations response');
                 setInvitationsData([]);
             }
+
+            // get recommendations
+            axios.defaults.withCredentials = true;
+            const recommendationResponse = await axios.get(`${rootURL}/${username}/getRecommendations`);
+            if (recommendationResponse.data) {
+                console.log('Recommendations:', recommendationResponse);
+                setRecommendationsData(recommendationResponse.data);
+            } else {
+                console.log('null recommendations response');
+                setRecommendationsData([]);
+            }
+
         } catch (error) {
             console.error('Failed to fetch data:', error);
         }
@@ -136,7 +149,6 @@ export default function Friends() {
             const response = await axios.post(`${rootURL}/${username}/acceptFriendRequest`, {
                 senderId: senderId
             });
-            console.log('Axios for acceptFriendRequest sent.');
             if (response.status === 200) {
                 console.log("Request accepted successfully.");
                 fetchData();
@@ -176,7 +188,6 @@ export default function Friends() {
         }
     }
 
-    // TODO!
     const handleSendFriendRequest = async () => {
         try {
             axios.defaults.withCredentials = true;
@@ -203,15 +214,16 @@ export default function Friends() {
     }
 
     // TO DO -- handle invite
-    const handleInvite = async (userId: number) => {
+    const handleInvite = async (username: string) => {
         try {
             axios.defaults.withCredentials = true;
-            const response = await axios.post(`${rootURL}/${username}/removeFriend`, {
-                friendId: userId
+            const response = await axios.post(`${rootURL}/${username}/sendFriendRequest`, {
+                receiverUsername: username
             });
             if (response.status === 200) {
-                console.log("Friend removed successfully.");
-                setFriendsData(prevData => prevData.filter(friend => friend.userId !== userId));
+                console.log("Friend request sent successfully.");
+                alert("Friend request sent successfully!");
+                fetchData();
             }
         } catch (error) {
             console.error("Failed to remove friend:", error);
@@ -289,7 +301,7 @@ export default function Friends() {
                                     key={recommendation.userId}
                                     username={recommendation.username}
                                     online={recommendation.online === 1}
-                                    onInvite={() => handleInvite(recommendation.userId)}
+                                    onInvite={() => handleInvite(recommendation.username)}
                                 />
                             ))
                         ) : (
