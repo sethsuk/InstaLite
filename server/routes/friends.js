@@ -179,6 +179,43 @@ var removeFriend = async function (req, res) {
 }
 
 
+// GET
+var getRecommendations = async function (req, res) {
+    const username = req.params.username;
+    if (!helper.isLoggedIn(req, username)) {
+        return res.status(403).send({ error: 'Not logged in.' });
+    }
+    const userId = req.session.user_id;
+
+    try {
+        var query = `
+            SELECT DISTINCT r.recommendation AS userId, u.username, (o.session_id IS NOT NULL) as online
+            FROM recommendations r
+            JOIN users u ON u.user_id = r.recommendation
+            LEFT JOIN friends f 
+            ON (f.followed = r.recommendation AND f.follower = ${userId}) 
+                OR (f.follower = r.recommendation AND f.followed = ${userId})
+            LEFT JOIN friend_requests fr 
+            ON (fr.sender_id = r.recommendation AND fr.receiver_id = ${userId} AND fr.status = 'pending') 
+                OR (fr.receiver_id = r.recommendation AND fr.sender_id = ${userId} AND fr.status = 'pending')
+            LEFT JOIN online o ON o.user_id = r.recommendation
+            WHERE r.recommend_to = ${userId} 
+                AND f.followed IS NULL 
+                AND fr.status IS NULL  
+            ORDER BY r.weight DESC
+            LIMIT 10;
+        `;
+
+        var results = await db.send_sql(query);
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'No recommendations available.' });
+        }
+        return res.status(200).json(results);
+
+    } catch (error) {
+        res.status(500).json({ error: 'Error querying database.' });
+    }
+}
 
 
 var friend_routes = {
@@ -187,7 +224,8 @@ var friend_routes = {
     accept_friend_request: acceptFriendRequest,
     reject_friend_request: rejectFriendRequest,
     get_friends: getFriends,
-    remove_friend: removeFriend
+    remove_friend: removeFriend,
+    get_recommendations: getRecommendations
 }
 
 module.exports = friend_routes 

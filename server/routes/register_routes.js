@@ -43,6 +43,7 @@ function register_routes(app) {
     app.post('/:username/rejectFriendRequest', friends.reject_friend_request); // verified
     app.get('/:username/getFriends', friends.get_friends); // verified
     app.post('/:username/removeFriend', friends.remove_friend); // verified
+    app.get('/:username/getRecommendations', friends.get_recommendations);
 
     app.post('/:username/createPost', upload.single('file'), posts.create_post); // verified
     app.post('/:username/likePost', posts.like_post); // verified
@@ -56,17 +57,17 @@ function register_routes(app) {
     app.get('/:username/getPosts', home.get_posts); // verified
     app.get('/:username/getNotifications', home.get_notifications); // verified
 
-    app.get('/:username/authenticateChat', chat.authenticate_chat); 
-    app.get('/:username/onlineFriends', chat.get_online_friends); 
-    app.get('/:username/inviteToChat', chat.invite_to_chat); 
-    app.get('/:username/getChats', chat.get_chats); 
-    app.get('/:username/getChatInvites', chat.get_chat_invitations); 
-    app.post('/:username/acceptInvite', chat.accept_invite); 
-    app.post('/:username/rejectInvite', chat.reject_invite); 
-    app.get('/:username/getInvitableFriends', chat.get_invitable_friends); 
-    app.post('/:username/sendInvite', chat.send_invite); 
-    app.get('/:username/invitableToChat', chat.invitable_to_chat); 
-    app.get('/:username/leaveChat', chat.leave_chat); 
+    app.get('/:username/authenticateChat', chat.authenticate_chat);
+    app.get('/:username/onlineFriends', chat.get_online_friends);
+    app.get('/:username/inviteToChat', chat.invite_to_chat);
+    app.get('/:username/getChats', chat.get_chats);
+    app.get('/:username/getChatInvites', chat.get_chat_invitations);
+    app.post('/:username/acceptInvite', chat.accept_invite);
+    app.post('/:username/rejectInvite', chat.reject_invite);
+    app.get('/:username/getInvitableFriends', chat.get_invitable_friends);
+    app.post('/:username/sendInvite', chat.send_invite);
+    app.get('/:username/invitableToChat', chat.invitable_to_chat);
+    app.get('/:username/leaveChat', chat.leave_chat);
 
     app.get('/query', search.query);
     // ------------
