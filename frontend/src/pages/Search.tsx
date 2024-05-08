@@ -12,13 +12,12 @@ type MenuKey = 'searchActors' | 'searchPosts';
 type PostProps = {
     post_id: number;
     title: string;
-    media: string | undefined;
-    content: string;
+    postImage: string | undefined;
+    caption: string;
     likes: number;
     timestamp: string;
-    user_id: number;
-    username: string;
-    pfp_url: string | null;
+    user: string;
+    userProfileImage: string | null;
     hashtags: string;
     isLiked: boolean
 };
@@ -166,6 +165,7 @@ export default function Search() {
         console.log("handling search for " + term);
         setSearchTerm(term);
         setResponse('Loading results');
+        axios.defaults.withCredentials = true;
         let result = await axios.get(`${rootURL}/query?prompt=${term}`);
         console.log(result.data);
         if (result.status == 200) {
@@ -173,9 +173,10 @@ export default function Search() {
             let json = JSON.parse(result.data.llm);
             console.log(json);
             setResponse(json.explanation);
+            axios.defaults.withCredentials = true;
             let post = await axios.post(`${rootURL}/${username}/getSinglePost`, {
                 post_id: json.selected_post_id
-              });
+            });
 
             console.log(post.data);
 
@@ -185,11 +186,11 @@ export default function Search() {
                 posts[0].post_id = json.selected_post_id;
                 setPostResults(post.data);
             }
-          
+
         } else {
             setResponse('Search failed, please try again');
         }
-       
+
     };
 
     const content: Record<MenuKey, JSX.Element> = {
@@ -202,9 +203,9 @@ export default function Search() {
                             placeholder={`Search for ${activeMenu === 'searchActors' ? 'actors' : 'posts'}...`}
                             value={searchTerm}
                             onChange={(e) => {
-                                
+
                                 setSearchTerm(e.target.value);
-                               
+
                             }}
                             style={{ padding: '10px', margin: '10px', width: '300px' }}
                         />
@@ -256,12 +257,12 @@ export default function Search() {
                         </button>
                     </div>
                     <div className="space-y-2">
-                    <h2 className='text-center'>LLM Response: {response}</h2>
+                        <h2 className='text-center'>LLM Response: {response}</h2>
                         {postResults.map((post, index) => (
                             <PostComponent
                                 key={index}
                                 user={post.user}
-                                userProfileImage={post.userProfileImage}
+                                userProfileImage={post.userProfileImage || 'default-avatar-url'}
                                 postImage={post.postImage}
                                 hashtags={post.hashtags}
                                 caption={post.caption}
