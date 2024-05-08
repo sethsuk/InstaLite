@@ -214,13 +214,16 @@ var getSinglePost = async function (req, res) {
 
         var results = await db.send_sql(`
             SELECT p.post_id, p.title, p.media, p.content, p.likes, date(p.timestamp) AS timestamp,
-                u.user_id, u.username, u.pfp_url, 
-                GROUP_CONCAT(DISTINCT CONCAT('#', h.tag) ORDER BY h.tag ASC SEPARATOR ', ') AS hashtags
+                   u.user_id, u.username, u.pfp_url, 
+                   GROUP_CONCAT(DISTINCT CONCAT('#', h.tag) ORDER BY h.tag ASC SEPARATOR ', ') AS hashtags,
+                   (CASE WHEN pl.user_id IS NOT NULL THEN true ELSE false END) AS isLiked
             FROM posts p
             LEFT JOIN users u ON p.user_id = u.user_id
             LEFT JOIN hashtags_to_posts ON hashtags_to_posts.post_id = p.post_id
             LEFT JOIN hashtags h ON hashtags_to_posts.hashtag_id = h.hashtag_id
+            LEFT JOIN post_likes pl ON p.post_id = pl.post_id AND pl.user_id = ${req.session.user_id}
             WHERE p.post_id = ${post_id}
+            GROUP BY p.post_id
         `);
 
         console.log(results);
@@ -232,6 +235,8 @@ var getSinglePost = async function (req, res) {
             postImage: result.media,
             hashtags: result.hashtags,
             caption: result.content,
+            likes: result.likes,
+
             timeStamp: result.timestamp
         })));
     } catch (err) {
