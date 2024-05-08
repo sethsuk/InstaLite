@@ -236,7 +236,7 @@ var getSinglePost = async function (req, res) {
             hashtags: result.hashtags,
             caption: result.content,
             likes: result.likes,
-
+            isLiked: result.isLiked,
             timeStamp: result.timestamp
         })));
     } catch (err) {
