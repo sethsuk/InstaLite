@@ -214,11 +214,11 @@ export default function Friends() {
     }
 
     // TO DO -- handle invite
-    const handleInvite = async (username: string) => {
+    const handleInvite = async (friendUsername: string) => {
         try {
             axios.defaults.withCredentials = true;
             const response = await axios.post(`${rootURL}/${username}/sendFriendRequest`, {
-                receiverUsername: username
+                receiverUsername: friendUsername
             });
             if (response.status === 200) {
                 console.log("Friend request sent successfully.");

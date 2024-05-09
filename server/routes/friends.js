@@ -188,21 +188,22 @@ var getRecommendations = async function (req, res) {
     const userId = req.session.user_id;
 
     try {
+        // Updated SQL query using user_rank instead of recommendations
         var query = `
-            SELECT DISTINCT r.recommendation AS userId, u.username, (o.session_id IS NOT NULL) as online
-            FROM recommendations r
-            JOIN users u ON u.user_id = r.recommendation
+            SELECT DISTINCT ur.user_id AS userId, u.username, (o.session_id IS NOT NULL) AS online
+            FROM users_rank ur
+            JOIN users u ON u.user_id = ur.user_id
             LEFT JOIN friends f 
-            ON (f.followed = r.recommendation AND f.follower = ${userId}) 
-                OR (f.follower = r.recommendation AND f.followed = ${userId})
+                ON (f.followed = ur.user_id AND f.follower = ${userId}) 
+                OR (f.follower = ur.user_id AND f.followed = ${userId})
             LEFT JOIN friend_requests fr 
-            ON (fr.sender_id = r.recommendation AND fr.receiver_id = ${userId} AND fr.status = 'pending') 
-                OR (fr.receiver_id = r.recommendation AND fr.sender_id = ${userId} AND fr.status = 'pending')
-            LEFT JOIN online o ON o.user_id = r.recommendation
-            WHERE r.recommend_to = ${userId} 
-                AND f.followed IS NULL 
+                ON (fr.sender_id = ur.user_id AND fr.receiver_id = ${userId} AND fr.status = 'pending') 
+                OR (fr.receiver_id = ur.user_id AND fr.sender_id = ${userId} AND fr.status = 'pending')
+            LEFT JOIN online o ON o.user_id = ur.user_id
+            WHERE ur.user_id != ${userId}  
+                AND f.followed IS NULL  
                 AND fr.status IS NULL  
-            ORDER BY r.weight DESC
+            ORDER BY ur.user_rank DESC  
             LIMIT 10;
         `;
 
@@ -213,6 +214,7 @@ var getRecommendations = async function (req, res) {
         return res.status(200).json(results);
 
     } catch (error) {
+        console.error('Error querying database:', error);
         res.status(500).json({ error: 'Error querying database.' });
     }
 }
