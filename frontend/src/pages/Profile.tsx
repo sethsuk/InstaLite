@@ -30,18 +30,14 @@ export default function Profile() {
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.name;
         setSelectedItems(prev => {
-            // Check if the item is already in the array
             if (prev.includes(value)) {
-                // If it is, remove it
                 return prev.filter(item => item !== value);
             } else {
-                // Otherwise, add it
                 return [...prev, value];
             }
         });
     };
 
-    // TODO
     const fetchCurrInterests = async () => {
         try {
             axios.defaults.withCredentials = true;

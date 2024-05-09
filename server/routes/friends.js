@@ -1,5 +1,4 @@
 var db = require('../models/database.js');
-const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 
 // POST /send friend request
@@ -188,7 +187,6 @@ var getRecommendations = async function (req, res) {
     const userId = req.session.user_id;
 
     try {
-        // Updated SQL query using user_rank instead of recommendations
         var query = `
             SELECT DISTINCT ur.user_id AS userId, u.username, (o.session_id IS NOT NULL) AS online
             FROM users_rank ur

@@ -53,7 +53,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
-      setHasMorePosts(false); // Assume no more posts if there's an error
+      setHasMorePosts(false);
     }
   };
 
@@ -68,9 +68,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchPosts(); // Fetch initial posts
-    fetchNotifications(); // Fetch notifications
-  }, [username]); // Fetch data again when username changes
+    fetchPosts();
+    fetchNotifications();
+  }, [username]);
 
   const handleLike = async (postId: number, isLiked: boolean) => {
     try {
@@ -88,7 +88,6 @@ export default function Home() {
       }
       const newLikes = response.data.likes;
 
-      // Update the posts state with the new like status and count
       setPosts(prevPosts => prevPosts.map(post =>
         post.post_id === postId ? { ...post, isLiked: !isLiked, likes: newLikes } : post
       ));

@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import config from '../../config.json';
-import { FaComment } from 'react-icons/fa';
 
 interface CommentProps {
   comment_id: number;
@@ -76,7 +75,7 @@ export default function Post() {
   useEffect(() => {
     fetchPost();
     fetchComments();
-  }, [username]); // Rerun when username changes
+  }, [username]);
 
 
 
@@ -107,9 +106,9 @@ export default function Post() {
       </div>
     </div>
   );
-  
 
-  const postReply = async (parent_id : number) => {
+
+  const postReply = async (parent_id: number) => {
     try {
       if (parent_id == -1) {
         await axios.post(`${rootURL}/${username}/createComment`, {
@@ -117,7 +116,6 @@ export default function Post() {
           content: replyContentParent
         });
 
-        // Clear reply content and close reply box
         setReplyContentParent("");
       } else {
         await axios.post(`${rootURL}/${username}/createComment`, {
@@ -126,21 +124,19 @@ export default function Post() {
           content: replyContent
         });
 
-        // Clear reply content and close reply box
         setReplyContent("");
       }
 
       setReplyingTo(null);
 
-      // Fetch updated comments
       fetchComments();
     } catch (error) {
       console.error('Error posting reply:', error);
     }
   };
 
-  if (!post || !comments) { // Check if post is not defined
-    return <div>Loading...</div>; // Or any other placeholder
+  if (!post || !comments) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -181,7 +177,7 @@ export default function Post() {
                 className="flex-1 p-2 border rounded"
                 placeholder="Add a comment..."
               ></textarea>
-              <button onClick={() => {setReplyingTo(null); postReply(-1);}} className="px-4 py-2 bg-indigo-400 text-white rounded hover:bg-indigo-600">Post</button>
+              <button onClick={() => { setReplyingTo(null); postReply(-1); }} className="px-4 py-2 bg-indigo-400 text-white rounded hover:bg-indigo-600">Post</button>
             </div>
           </div>
         </div>

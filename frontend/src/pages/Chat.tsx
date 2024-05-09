@@ -1,15 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Navigate, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import config from '../../config.json';
 import { ToggleButton, ToggleButtonGroup } from '@mui/material';;
 import Navbar from '../components/Navigation';
 
 type MenuKey = 'existingChats' | 'requestChats' | 'invitations';
-
-//time stamp and username to message
-// third style of message in the middle for added user or removed user
-
 
 type FriendInfo = {
     user_id: number;
@@ -82,30 +78,11 @@ const FriendItem = ({ username, status, onInvite, user_id }: FriendItemProps) =>
 );
 
 export default function Chat() {
-    const navigate = useNavigate(); 
+    const navigate = useNavigate();
 
     const { username } = useParams();
     const rootURL = config.serverRootURL;
 
-    // Sample data
-    const invitationsData1 = [
-        { requestId: 1, senderId: 1, senderName: 'friend1' },
-        { requestId: 2, senderId: 2, senderName: 'friend2' }
-    ];
-
-    const chatData1 = [
-        { id: 1, usernames: ['username1'] },
-        { id: 2, usernames: ['username2'] },
-        { id: 3, usernames: ['username1', 'username3'] },
-    ];
-
-    const requestData = [
-        { username: 'username1', status: 'Invite' },
-        { username: 'username2', status: 'Invite' },
-        { username: 'username3', status: 'Pending' },
-    ];
-
-    // TODO: add state variables for friends and recommendations
     const [activeMenu, setActiveMenu] = useState<MenuKey>('existingChats');
     const [invitationsData, setInvitationsData] = useState<RequestInfo[]>([]);
     const [friendsData, setFriendsData] = useState<FriendInfo[]>([]);
@@ -126,9 +103,11 @@ export default function Chat() {
             let friends = friendsResponse.data.friends;
             console.log("Fetching data");
             console.log(friends);
-            setFriendsData(friends.map((friend: any) => ({user_id: friend.user_id,
+            setFriendsData(friends.map((friend: any) => ({
+                user_id: friend.user_id,
                 username: friend.username,
-                status: processStatus(friend.status)})));
+                status: processStatus(friend.status)
+            })));
             const invitationsResponse = await axios.get(`${rootURL}/${username}/getChatInvites`);
             setInvitationsData(invitationsResponse.data.requests);
             const chatResponse = await axios.get(`${rootURL}/${username}/getChats`);
@@ -139,7 +118,7 @@ export default function Chat() {
     };
 
     useEffect(() => {
-        
+
         fetchData();
     }, []);
 
@@ -173,14 +152,10 @@ export default function Chat() {
     };
 
     const handleNavigate = async (chat_id: number) => {
-        // to do
         navigate(`/${username}/chatRoom/${chat_id}`);
     }
 
     const handleInvite = async (friend_id: number) => {
-
-        // to do
-
         try {
             console.log(friend_id);
             const response = await axios.post(`${rootURL}/${username}/sendInvite`, {
@@ -192,7 +167,7 @@ export default function Chat() {
                 if (prevData) {
                     console.log(prevData.findIndex((friend: any) => friend.user_id == friend_id));
                     let loc = prevData.findIndex((friend: any) => friend.user_id == friend_id);
-                    prevData[loc] = {...prevData[loc], status: "Pending"};
+                    prevData[loc] = { ...prevData[loc], status: "Pending" };
                     console.log(prevData);
                     setFriendsData(prevData);
                     fetchData();
@@ -201,7 +176,7 @@ export default function Chat() {
         } catch (error) {
             console.error("Failed to send request:", error);
         }
-        
+
 
     }
     const processStatus = (status: boolean) => {
@@ -269,7 +244,7 @@ export default function Chat() {
             )
         }
     } else {
-        content = {invitations: (<p>Loading...</p>), requestChats: (<p>f</p>), existingChats: (<p>t</p>)};
+        content = { invitations: (<p>Loading...</p>), requestChats: (<p>f</p>), existingChats: (<p>t</p>) };
     }
 
     return (

@@ -1,6 +1,4 @@
 var db = require('../models/database.js');
-const bcrypt = require('bcrypt');
-const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 const s3 = require('../models/s3.js');
 const fs = require('fs');
@@ -61,7 +59,7 @@ var createPost = async function (req, res) {
 
         var post_id = results.insertId;
 
-        // upload to s3 (keyed on post_id)
+        // upload to s3 
         if (hasImage) {
             await s3.uploadFileToS3(image, `posts/${post_id}`);
 

@@ -11,7 +11,7 @@ var getPosts = async function (req, res) {
         return res.status(403).json({ error: 'Not logged in.' });
     }
 
-    const page = parseInt(req.query.page) || 1; // Get page number from query parameter or default to 1
+    const page = parseInt(req.query.page) || 1;
     const postsPerPage = 10;
     const startIndex = (page - 1) * postsPerPage;
 
@@ -117,7 +117,6 @@ var getNotifications = async function (req, res) {
             WHERE an.user_id = ${req.session.user_id}
         `);
 
-        // Fetching actor notifications involving friends
         var actorNotificationsResultsFriends = await db.send_sql(`
             SELECT an.user_id, an.actor_nconst, date(an.timestamp) AS timestamp,
                 u.username, u.pfp_url
@@ -217,17 +216,16 @@ async function getInfoHelper(nconst) {
                 if (data.nconst === nconst) {
                     found = {
                         nconst: data.nconst,
-                        name: data.name.replace(/_/g, ' '), // Replace underscores in names
+                        name: data.name.replace(/_/g, ' '),
                         imageUrl: data.url
                     };
                 }
             })
             .on('end', () => {
-                // Only resolve the promise after finishing reading the CSV
                 if (found) {
                     resolve(found);
                 } else {
-                    resolve(null); // Resolve with null if no actor found
+                    resolve(null);
                 }
             })
             .on('error', (err) => {

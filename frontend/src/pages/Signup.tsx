@@ -19,7 +19,7 @@ export default function Signup() {
     const [email, setEmail] = useState('');
     const [birthday, setBirthday] = useState('');
     const [affiliation, setAffiliation] = useState('');
-    const [file, setFile] = useState<File | null>(null); // For storing the uploaded image file
+    const [file, setFile] = useState<File | null>(null);
     const [hashtagsInput, setHashtagsInput] = useState<string>('');
     const [hashtags, setHashtags] = useState<string[]>([]);
     const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -44,12 +44,9 @@ export default function Signup() {
     const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.name;
         setSelectedItems(prev => {
-            // Check if the item is already in the array
             if (prev.includes(value)) {
-                // If it is, remove it
                 return prev.filter(item => item !== value);
             } else {
-                // Otherwise, add it
                 return [...prev, value];
             }
         });
@@ -115,7 +112,6 @@ export default function Signup() {
             interests: Array.from(new Set([...hashtags, ...selectedItems]))
         };
 
-        // // Append the JSON data as a string under the key 'json_data'
         formData.append('json_data', JSON.stringify(userData));
 
         console.log("sending to back end");
@@ -181,7 +177,7 @@ export default function Signup() {
                                     Select photo
                                 </label>
                                 <span id="file-label" className="italic text-slate-400">No file chosen</span>
-                        
+
                             </div>
                             <div className='flex flex-col space-y-4'>
                                 <h2 className='font-semibold'>Choose your interests</h2>

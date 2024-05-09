@@ -1,5 +1,4 @@
 var db = require('../models/database.js');
-const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 const bcrypt = require('bcrypt');
 const s3 = require('../models/s3.js');

@@ -83,7 +83,6 @@ export default function Friends() {
     const { username } = useParams();
     const rootURL = config.serverRootURL;
 
-    // TODO: add state variables for friends and recommendations
     const [activeMenu, setActiveMenu] = useState<MenuKey>('invitations');
     const [invitationsData, setInvitationsData] = useState<RequestInfo[]>([]);
     const [friendsData, setFriendsData] = useState<FriendInfo[]>([]);
@@ -213,7 +212,6 @@ export default function Friends() {
         }
     }
 
-    // TO DO -- handle invite
     const handleInvite = async (friendUsername: string) => {
         try {
             axios.defaults.withCredentials = true;

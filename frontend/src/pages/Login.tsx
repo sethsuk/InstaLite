@@ -1,19 +1,17 @@
 import { useState } from 'react';
-import axios from 'axios'; // Import Axios
+import axios from 'axios';
 import config from '../../config.json';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const navigate = useNavigate();
 
-  // TODO: set appropriate state variables for username and password 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const rootURL = config.serverRootURL;
 
   const handleLogin = async () => {
-    // TODO: check username and password using /login route 
     try {
       axios.defaults.withCredentials = true;
       const response = await axios.post(`${rootURL}/login`, {

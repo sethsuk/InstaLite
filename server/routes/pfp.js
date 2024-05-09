@@ -7,7 +7,7 @@ const csv = require('csv-parser');
 const helper = require('./route_helper.js');
 
 
-// GET /return a list of actor names and corresponding image urls 
+// GET 
 const getTop5Actors = async function (req, res) {
     try {
         const username = req.params.username;
@@ -24,14 +24,13 @@ const getTop5Actors = async function (req, res) {
 
         let actors = [];
 
-        // Process matches to get actor details
         if (matches.length > 0) {
             const match = matches[0];
-            const documentIds = match.documents[0]; // Assuming first set of documents
+            const documentIds = match.documents[0];
 
             for (let actorDocument of documentIds) {
                 let actorNconst = actorDocument.replace('.jpg', '');
-                console.log('Processing actor:', actorNconst); // Verify the actor constant
+                console.log('Processing actor:', actorNconst);
 
                 const info = await getInfoHelper(actorNconst);
                 if (info) {
@@ -109,17 +108,16 @@ async function getInfoHelper(nconst) {
                 if (data.nconst === nconst) {
                     found = {
                         nconst: data.nconst,
-                        name: data.name.replace(/_/g, ' '), // Replace underscores in names
+                        name: data.name.replace(/_/g, ' '),
                         imageUrl: data.url
                     };
                 }
             })
             .on('end', () => {
-                // Only resolve the promise after finishing reading the CSV
                 if (found) {
                     resolve(found);
                 } else {
-                    resolve(null); // Resolve with null if no actor found
+                    resolve(null);
                 }
             })
             .on('error', (err) => {
@@ -131,7 +129,6 @@ async function getInfoHelper(nconst) {
 
 // GET /get pfp from s3
 const getPfp = async function (req, res) {
-    // Logic to upload photo and return URL/path
     try {
         const username = req.params.username;
         if (!helper.isOK(username)) {

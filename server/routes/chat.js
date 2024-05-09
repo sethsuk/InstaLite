@@ -1,5 +1,4 @@
 var db = require('../models/database.js');
-const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 
 var authenticate_chat = async function (req, res) {

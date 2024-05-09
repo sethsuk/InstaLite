@@ -1,6 +1,5 @@
 var db = require('../models/database.js');
 const bcrypt = require('bcrypt');
-const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 const s3 = require('../models/s3.js');
 const fs = require('fs');
@@ -19,7 +18,7 @@ var dummyS3Upload = async function (req, res) {
     console.log(image);
 
     try {
-        // upload to s3 (keyed on username)
+        // upload to s3
         const url = await s3.uploadFileToS3(image, "test/dummy.jpeg");
 
         var location = await s3.getUrlFromS3("test/dummy.jpeg")
@@ -58,7 +57,6 @@ var addHashtags = async function (req, res) {
 
 
 // POST /signup
-// hashtags are array of interests 
 var signup = async function (req, res) {
     console.log("calling signup");
     console.log(JSON.parse(req.body.json_data));
@@ -96,7 +94,7 @@ var signup = async function (req, res) {
     var dateParts = birthday.split("-");
 
     var day = parseInt(dateParts[2], 10);
-    var month = parseInt(dateParts[1], 10) - 1; // Months are 0-based in JavaScript
+    var month = parseInt(dateParts[1], 10) - 1;
     var year = parseInt(dateParts[0], 10);
 
     if (month < 0 || month > 11) {
@@ -113,7 +111,7 @@ var signup = async function (req, res) {
     var currentDate = new Date();
 
 
-    if (currentDate < inputDate) {  // Compare input date with current date
+    if (currentDate < inputDate) {
         return res.status(400).json({ error: "Birthday cannot be in the future." });
     }
 
@@ -129,12 +127,11 @@ var signup = async function (req, res) {
                 return res.status(500).json({ error: 'Error hashing password.' });
             }
 
-            // upload to s3 (keyed on username)
+            // upload to s3 
             await s3.uploadFileToS3(image, `profile_pictures/${username}`);
 
             var url = await s3.getUrlFromS3(`profile_pictures/${username}`);
 
-            // insert to users table 
             const query2 = `INSERT INTO users (username, hashed_password, first_name, last_name, email, affiliation, birthday, pfp_url, actor_nconst) 
                 VALUES ("${username}", "${hash}", "${first_name}", "${last_name}", "${email}", "${affiliation}", "${birthday}", "${url}", null);`;
             await db.insert_items(query2);
@@ -208,7 +205,6 @@ var login = async function (req, res) {
             req.session.user_id = user.user_id;
             req.session.username = user.username;
 
-            // await db.insert_items(`INSERT INTO online (session_id, user_id) VALUES (${req.sessionID}, ${user.user_id})`);
             await db.insert_items(`INSERT INTO online (user_id) VALUES (${user.user_id})`);
 
             return res.status(200).json({ username: username });

@@ -92,7 +92,7 @@ export default function SignupActor() {
                     </ToggleButtonGroup>
                     <div className='flex justify-between'>
                         <button
-                            type="button" // Change to "button" if this should not submit the form
+                            type="button"
                             className='px-4 py-2 rounded-md bg-slate-400 outline-none font-semibold text-white'
                             onClick={() => navigate(`/${username}/profile`)}
                         >

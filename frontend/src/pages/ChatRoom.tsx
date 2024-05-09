@@ -12,6 +12,7 @@ import { Socket, io } from 'socket.io-client';
 
 const rootURL = config.serverRootURL;
 axios.defaults.withCredentials = true;
+
 //ADD FRIENDS MODAL 
 type AddFriendsModalProps = {
     open: boolean;
@@ -214,9 +215,7 @@ export default function ChatRoom() {
             let socket = io("http://localhost:3000");
             socket.emit("joinRoom", { username, chatId });
 
-            // TODO: Join the chat socket
             socket.on("message", (message: Message) => {
-                // console.log([...messages, { text: message.text, isMine: message.username == username }]);
                 setMessages(currentArray => [...currentArray, { text: message.text, isMine: message.username == username, time: message.time, username: message.username }]);
             });
             setClickHandler(() => () => {
@@ -236,7 +235,6 @@ export default function ChatRoom() {
                 socket.emit("anouncement", `${anouncement}`);
             });
             setLeaveChat(() => async () => {
-                // to do 
                 let result = await axios.get(`${rootURL}/${username}/leaveChat?chatId=${chatId}`);
                 console.log(result.status);
                 if (result.status == 200) {

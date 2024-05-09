@@ -1,6 +1,4 @@
 var db = require('../models/database.js');
-const bcrypt = require('bcrypt');
-const config = require('../../config.json'); // Load configuration
 const helper = require('./route_helper.js');
 
 // POST /createComments
@@ -12,7 +10,7 @@ var createComment = async function (req, res) {
 
     const post_id = parseInt(req.body["post_id"]);
     var content = req.body["content"];
-    
+
     if (!post_id || !content) {
         return res.status(400).json({ error: "One or more of the fields you entered was empty, please try again." });
     }
