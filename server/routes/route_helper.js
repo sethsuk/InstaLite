@@ -22,7 +22,7 @@ var route_helper = function () {
             if (str == null)
                 return false;
             for (var i = 0; i < str.length; i++) {
-                if (!/[A-Za-z0-9 \.\?\#\',_@-]/.test(str[i])) {
+                if (!/[A-Za-z0-9 \.\?\#\'\!,_@-]/.test(str[i])) {
                     return false;
                 }
             }

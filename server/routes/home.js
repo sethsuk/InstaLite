@@ -137,7 +137,7 @@ var getNotifications = async function (req, res) {
             };
         }));
 
-        console.log(actorNotificationsResultsSelf);
+        // console.log(actorNotificationsResultsSelf);
 
         var actorNotificationsResultsFriends = await Promise.all(actorNotificationsResultsFriends.map(async (notification) => {
             const actorInfo = await getInfoHelper(notification.actor_nconst);
@@ -195,7 +195,7 @@ var getNotifications = async function (req, res) {
             )), ...actorNotificationsResultsSelf, ...actorNotificationsResultsFriends]
         };
 
-        console.log(response.results);
+        // console.log(response.results);
 
         return res.status(200).json(response);
     } catch (err) {

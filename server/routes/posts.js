@@ -75,7 +75,7 @@ var createPost = async function (req, res) {
             }
 
             await db.send_sql(`
-                UPDATE hashtags SET count = count + 1 WHERE tag = ${tag}
+                UPDATE hashtags SET count = count + 1 WHERE tag = "${tag}"
             `);
 
             let hashtag = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
@@ -224,7 +224,7 @@ var getSinglePost = async function (req, res) {
             GROUP BY p.post_id
         `);
 
-        console.log(results);
+        // console.log(results);
 
         return res.status(201).json(results.map((result) => ({
             user_id: result.user_id,

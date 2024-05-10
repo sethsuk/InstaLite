@@ -25,7 +25,7 @@ app.use(session({
     cookie: { secure: false, httpOnly: false, sameSite: 'lax', maxAge: 86400000 }, resave: true
 }));
 
-// db.send_sql('TRUNCATE TABLE online');
+db.send_sql('TRUNCATE TABLE online');
 
 // Imports for socket.io
 const socketio = require('socket.io');
@@ -108,8 +108,10 @@ io.on("connection", (socket) => {
     socket.on("chatMessage", (msg) => {
         const user = socketidToUser(socket.id);
         if (user) {
-            io.to(user.room).emit("message", formatMessage(user.username, msg, date.toLocaleString('en-US')));
-            db.send_sql(`INSERT INTO chat_messages (chat_id, user_id, content, client_offset) VALUES (${user.room}, ${user.user_id}, '${msg}', 'test');`);
+          var cleanMsg = msg.replace(/"/g, '\\"')
+
+          io.to(user.room).emit("message", formatMessage(user.username, msg, date.toLocaleString('en-US')));
+          db.send_sql(`INSERT INTO chat_messages (chat_id, user_id, content, client_offset) VALUES (${user.room}, ${user.user_id}, "${cleanMsg}", 'test');`);
         }
 
     });
@@ -157,45 +159,45 @@ db.send_sql(`
 
 registry.register_routes(app);
 
-const { Kafka } = require('kafkajs');
-const { CompressionTypes, CompressionCodecs } = require('kafkajs')
+// const { Kafka } = require('kafkajs');
+// const { CompressionTypes, CompressionCodecs } = require('kafkajs')
 
-const SnappyCodec = require('kafkajs-snappy')
+// const SnappyCodec = require('kafkajs-snappy')
 
-CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec
-let kafka_config = {
-    groupId: "nets-2120-group-java-swingers",
-    bootstrapServers: ["localhost:9092"],
-    topic: "Twitter-Kafka"
-};
+// CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec
+// let kafka_config = {
+//     groupId: "nets-2120-group-java-swingers",
+//     bootstrapServers: ["localhost:9092"],
+//     topic: "Twitter-Kafka"
+// };
 
-const kafka = new Kafka({
-    clientId: 'my-app',
-    brokers: kafka_config.bootstrapServers
-});
+// const kafka = new Kafka({
+//     clientId: 'my-app',
+//     brokers: kafka_config.bootstrapServers
+// });
 
-const consumer = kafka.consumer({
-    groupId: kafka_config.groupId,
-    bootstrapServers: kafka_config.bootstrapServers
-}
-);
+// const consumer = kafka.consumer({
+//     groupId: kafka_config.groupId,
+//     bootstrapServers: kafka_config.bootstrapServers
+// }
+// );
 
-const run = async () => {
-    // Consuming
-    await consumer.connect();
-    console.log(`Following topic ${kafka_config.topic}`);
-    await consumer.subscribe({ topic: kafka_config.topic, fromBeginning: true });
+// const run = async () => {
+//     // Consuming
+//     await consumer.connect();
+//     console.log(`Following topic ${kafka_config.topic}`);
+//     await consumer.subscribe({ topic: kafka_config.topic, fromBeginning: true });
 
-    await consumer.run({
-        eachMessage: async ({ topic, partition, message }) => {
-            let post = JSON.parse(message.value.toString());
-            console.log(post);
-            results = await db.send_sql(`INSERT INTO posts (title, media, content, user_id) VALUES ('Kafka Test', 'https://variety.com/wp-content/uploads/2023/07/Twitter-rebrands-X.jpg', '${post.text}', 5);`);
-        },
-    });
-};
+//     await consumer.run({
+//         eachMessage: async ({ topic, partition, message }) => {
+//             let post = JSON.parse(message.value.toString());
+//             console.log(post);
+//             results = await db.send_sql(`INSERT INTO posts (title, media, content, user_id) VALUES ('Kafka Test', 'https://variety.com/wp-content/uploads/2023/07/Twitter-rebrands-X.jpg', '${post.text}', 5);`);
+//         },
+//     });
+// };
 
-run().catch(console.error);
+// run().catch(console.error);
 
 
 chromadb.initializeCollection()
