@@ -159,89 +159,89 @@ db.send_sql(`
 
 registry.register_routes(app);
 
-const { Kafka } = require('kafkajs');
-const { CompressionTypes, CompressionCodecs } = require('kafkajs')
+// const { Kafka } = require('kafkajs');
+// const { CompressionTypes, CompressionCodecs } = require('kafkajs')
 
-const SnappyCodec = require('kafkajs-snappy')
+// const SnappyCodec = require('kafkajs-snappy')
 
-CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec
-let kafka_config = {
-    groupId: "nets-2120-group-java-swingers",
-    bootstrapServers: ["localhost:9092"],
-    topic: "Twitter-Kafka"
-};
+// CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec
+// let kafka_config = {
+//     groupId: "nets-2120-group-java-swingers",
+//     bootstrapServers: ["localhost:9092"],
+//     topic: "Twitter-Kafka"
+// };
 
-const kafka = new Kafka({
-    clientId: 'my-app',
-    brokers: kafka_config.bootstrapServers
-});
+// const kafka = new Kafka({
+//     clientId: 'my-app',
+//     brokers: kafka_config.bootstrapServers
+// });
 
-const consumer = kafka.consumer({
-    groupId: kafka_config.groupId,
-    bootstrapServers: kafka_config.bootstrapServers
-}
-);
+// const consumer = kafka.consumer({
+//     groupId: kafka_config.groupId,
+//     bootstrapServers: kafka_config.bootstrapServers
+// }
+// );
 
-const addPost = async (text) => {
-  const emojiRegex = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
-  const hashtagRegex = /#(\w+)/g;
+// const addPost = async (text) => {
+//   const emojiRegex = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+//   const hashtagRegex = /#(\w+)/g;
 
-  var cleanText = text.replace(emojiRegex, "").replace(/"/g, '\\"');
+//   var cleanText = text.replace(emojiRegex, "").replace(/"/g, '\\"');
 
-  var hashtags = [];
+//   var hashtags = [];
 
-  let match;
+//   let match;
 
-  while ((match = hashtagRegex.exec(cleanText)) !== null) {
-      hashtags.push(match[1]); // Capture group 1 contains the alphanumeric characters following the "#"
-  }
+//   while ((match = hashtagRegex.exec(cleanText)) !== null) {
+//       hashtags.push(match[1]); // Capture group 1 contains the alphanumeric characters following the "#"
+//   }
 
-  var existingResults = await db.send_sql(`
-    SELECT COUNT(*) FROM posts WHERE content = "${cleanText}";
-  `);
+//   var existingResults = await db.send_sql(`
+//     SELECT COUNT(*) FROM posts WHERE content = "${cleanText}";
+//   `);
 
-  if (existingResults[0]["COUNT(*)"] == 0) {
-    var results = await db.send_sql(`
-      INSERT INTO posts (title, media, content, user_id) VALUES ("title", null, "${cleanText}", 5);
-    `);
+//   if (existingResults[0]["COUNT(*)"] == 0) {
+//     var results = await db.send_sql(`
+//       INSERT INTO posts (title, media, content, user_id) VALUES ("title", null, "${cleanText}", 5);
+//     `);
 
-    var post_id = results.insertId;
+//     var post_id = results.insertId;
 
-    // link hashtags to posts
-    for (const tag of hashtags) {
-      let existingHashtag = await db.send_sql(`SELECT COUNT(*) FROM hashtags WHERE tag = "${tag}"`);
+//     // link hashtags to posts
+//     for (const tag of hashtags) {
+//       let existingHashtag = await db.send_sql(`SELECT COUNT(*) FROM hashtags WHERE tag = "${tag}"`);
 
-      if (existingHashtag[0]["COUNT(*)"] == 0) {
-          await db.send_sql(`INSERT INTO hashtags(tag) VALUE ("${tag}")`);
-      }
+//       if (existingHashtag[0]["COUNT(*)"] == 0) {
+//           await db.send_sql(`INSERT INTO hashtags(tag) VALUE ("${tag}")`);
+//       }
 
-      await db.send_sql(`
-          UPDATE hashtags SET count = count + 1 WHERE tag = "${tag}"
-      `);
+//       await db.send_sql(`
+//           UPDATE hashtags SET count = count + 1 WHERE tag = "${tag}"
+//       `);
 
-      let hashtag = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
+//       let hashtag = await db.send_sql(`SELECT hashtag_id FROM hashtags WHERE tag = "${tag}";`);
 
-      await db.insert_items(`INSERT INTO hashtags_to_posts (post_id, hashtag_id) VALUES (${post_id}, ${hashtag[0].hashtag_id});`);
-    }
-  }  
-};
+//       await db.insert_items(`INSERT INTO hashtags_to_posts (post_id, hashtag_id) VALUES (${post_id}, ${hashtag[0].hashtag_id});`);
+//     }
+//   }  
+// };
 
-const run = async () => {
-    // Consuming
-    await consumer.connect();
-    console.log(`Following topic ${kafka_config.topic}`);
-    await consumer.subscribe({ topic: kafka_config.topic, fromBeginning: true });
+// const run = async () => {
+//     // Consuming
+//     await consumer.connect();
+//     console.log(`Following topic ${kafka_config.topic}`);
+//     await consumer.subscribe({ topic: kafka_config.topic, fromBeginning: true });
 
-    await consumer.run({
-        eachMessage: async ({ topic, partition, message }) => {
-            let post = JSON.parse(message.value.toString());
-            console.log(post);
-            await addPost(post.text);
-        },
-    });
-};
+//     await consumer.run({
+//         eachMessage: async ({ topic, partition, message }) => {
+//             let post = JSON.parse(message.value.toString());
+//             console.log(post);
+//             await addPost(post.text);
+//         },
+//     });
+// };
 
-run().catch(console.error);
+// run().catch(console.error);
 
 chromadb.initializeCollection()
     .then(() => {

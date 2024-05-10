@@ -79,7 +79,11 @@ const ChatHeader = ({ username, onBack, onLeaveChat, chatName, chatId, anouncer 
         console.log(username);
         let result = await axios.get(`${rootURL}/${username}/inviteToChat?friend_id=${friend_id}&chatId=${chatId}`);
         console.log(result.status);
-        if (result.status == 200) {
+
+        if (result.status === 205) {
+            alert("Chat room with user already exists.");
+            console.log("cannot add... shat itself");
+        } else if (result.status == 200) {
             setFriends(prevData => prevData.filter(friend => friend.user_id !== friend_id));
             anouncer(`Invitation sent to ${friend_name} by ${username}`);
         }

@@ -42,6 +42,8 @@ var get_online_friends = async function (req, res) {
 }
 
 var invite_to_chat = async function (req, res) {
+    console.log("SENDING INVITE TO CHAT");
+
     const username = req.params.username;
     const chatId = req.query.chatId;
     let invite_user_id = req.query.friend_id;
@@ -52,6 +54,39 @@ var invite_to_chat = async function (req, res) {
     }
 
     try {
+        var currMemberQuery = await db.send_sql(`
+            SELECT GROUP_CONCAT(user_id), chat_id from users_to_chat WHERE chat_id = ${chatId} GROUP BY (chat_id);
+        `);
+
+        var currentMember = currMemberQuery[0]["GROUP_CONCAT(user_id)"];
+        var idCount = currentMember.split(",").length;
+
+        console.log("Current Member:");
+        console.log(currentMember);
+
+        console.log("ID Count:");
+        console.log(idCount);
+
+
+        var existingRoomCheck = await db.send_sql(`
+            SELECT COUNT(*) AS room_count
+            FROM (
+                SELECT chat_id
+                FROM users_to_chat
+                WHERE user_id IN (${currentMember})
+                GROUP BY chat_id
+                HAVING COUNT(DISTINCT user_id) = ${idCount}
+            ) AS chat_rooms;
+        `);
+
+        console.log("\nRESPONSE:");
+        console.log(existingRoomCheck);
+
+        if (existingRoomCheck[0]["COUNT(*)"] != 0) {
+            return res.status(205).json({error: "Chat room already exists with new user."});
+        }
+
+
         const query = `INSERT IGNORE INTO chat_invites(sender_id, reciever_id, chat_id, status) values(${userId}, ${invite_user_id}, ${chatId}, 'pending');`;
         console.log(query);
         result = await db.send_sql(query);
@@ -167,12 +202,16 @@ var sendInvite = async function (req, res) {
         return res.status(403).send({ error: 'Not logged in.' });
     }
     try {
-        const userId = req.session.user_id;
         await db.send_sql('INSERT INTO chat_rooms VALUES();');
         const result1 = await db.send_sql('SELECT LAST_INSERT_ID() as id;');
         const chat_id = result1[0].id;
+
+        const userId = req.session.user_id;
+        
+
         await db.send_sql(`INSERT INTO users_to_chat (user_id, chat_id) VALUES(${userId}, ${chat_id})`);
         await db.send_sql(`INSERT INTO chat_invites (sender_id, reciever_id, chat_id, status) VALUES(${userId}, ${friendId}, ${chat_id}, 'pending')`);
+
         res.status(200).json({ result: `Created chat ${chat_id} succesfully` });
     } catch (error) {
         console.log(error);
@@ -191,27 +230,18 @@ var invitable_to_chat = async function (req, res) {
     try {
         const userId = req.session.user_id;
         let result = await db.send_sql(`
-            SELECT DISTINCT followed as user_id, username FROM friends f
-            LEFT JOIN users u ON f.followed=u.user_id
-            WHERE followed NOT IN (SELECT user_id FROM users_to_chat WHERE chat_id = ${chatId})
-            AND followed NOT IN (SELECT reciever_id FROM chat_invites WHERE chat_id =${chatId} AND sender_id=${userId})
-            AND follower=${userId}
-            AND NOT EXISTS (
-                SELECT 1 
-                FROM users_to_chat uc
-                WHERE uc.user_id = followed
-                AND uc.chat_id IN (
-                    SELECT chat_id 
-                    FROM users_to_chat 
-                    WHERE user_id IN (
-                        SELECT user_id 
-                        FROM users_to_chat 
-                        WHERE chat_id = ${chatId}
-                    )
-                )
-            )
+            SELECT DISTINCT f.followed AS user_id, u.username 
+            FROM friends f
+            LEFT JOIN users u ON f.followed = u.user_id
+            WHERE f.followed NOT IN (
+                SELECT user_id FROM users_to_chat WHERE chat_id = ${chatId}
+            ) 
+            AND f.followed NOT IN (
+                SELECT reciever_id FROM chat_invites WHERE chat_id = ${chatId} AND sender_id = ${userId}
+            ) 
+            AND f.follower = ${userId}
         `);
-
+        
         res.status(200).json({ friends: result });
     } catch (error) {
         console.log(error);
