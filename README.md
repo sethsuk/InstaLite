@@ -1,5 +1,4 @@
-## Names & group number
-Group 18, Java Swingers
+## Team members
 - Seth Sukboontip: sethsuk@seas.upenn.edu
 - Sam Wang: swang27@seas.upenn.edu
 - Zimo Huang: zimoh@sas.upenn.edu
@@ -10,7 +9,7 @@ Group 18, Java Swingers
 InstaLite is a social media platform built to emulate Instagram. The platform includes a host of features such as creating user profiles, associating users with actors based on matching images, posting and interacting with image content, chatting with friends, and searching for posts and profiles
 
 
-## Extra Credit Claimed
+## Feature Highlights
 - LinkedIn-style friend requests, with accept and reject
     In the Friends tab, users can receive friend request invitations and choose to either accept or reject them. If accepted, the friends table will be updated, as well as the status in the friend_requests table
 - Infinite scrolling on the Feed 
@@ -19,12 +18,6 @@ InstaLite is a social media platform built to emulate Instagram. The platform in
     We use socket io to implement chat. This makes the speed of chatting very fast and efficient and also makes sure that there is temporal consistency in the message display for different chat end users
 - Returning valid links to posts for Search 
     We directly display posts that the user is looking for (like in Feed) along with GPT’s response in search results. We also enable users to directly like and view comments by clicking on the post.
-
-## List of source files included
-Reference Attached Repository
-
-## Declaration
-We declare that all code in this project was written by us and not copied from the internet or any other source nor group.
 
 
 ## Instructions for building and running this project
