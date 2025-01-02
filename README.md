@@ -26,12 +26,12 @@ InstaLite is a social media platform built to emulate Instagram. The platform in
 - Run “npm install” from the server folder
 - Run “npm install” from the frontend folder
 - Create .env file and input the corresponding information
-    export AWS_ACCESS_KEY_ID=[access key]
-    export AWS_SECRET_ACCESS_KEY=[secret key]
-    export AUTH_TOKEN=[auth token]
-    export RDS_USER=[admin]
-    export RDS_PWD=[rds-password]
-    export USE_PERSISTENCE=TRUE
+    - export AWS_ACCESS_KEY_ID=[access key]
+    - export AWS_SECRET_ACCESS_KEY=[secret key]
+    - export AUTH_TOKEN=[auth token]
+    - export RDS_USER=[admin]
+    - export RDS_PWD=[rds-password]
+    - export USE_PERSISTENCE=TRUE
 - Run “source .env” in terminal
 - Create a tunnel to the RDS table
 - In a new tab, initialize the ChromaDB with “chroma run --host 0.0.0.0”
